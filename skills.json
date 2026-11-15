@@ -1,0 +1,76 @@
+{
+  "name": "avengers-skills",
+  "version": "1.1.0",
+  "description": "Avengers Protocol - Open Multi-Agent Skills Specification for AI-Assisted Development",
+  "homepage": "https://github.com/avengers-protocol/avengers-end-code",
+  "author": "Avengers Engineering Team",
+  "license": "MIT",
+  "skills": [
+    {
+      "name": "requirement-brainstorming",
+      "path": ".agents/skills/requirement-brainstorming/SKILL.md",
+      "description": "Systematic product ideation, SCAMPER analysis, reverse brainstorming, and anti-bias validation."
+    },
+    {
+      "name": "requirement-discovery",
+      "path": ".agents/skills/requirement-discovery/SKILL.md",
+      "description": "Client interview workflows, scope boundary clarification, and requirement extraction."
+    },
+    {
+      "name": "project-planning",
+      "path": ".agents/skills/project-planning/SKILL.md",
+      "description": "Deconstruction of requirements into technical specifications, tasks, and architecture spine."
+    },
+    {
+      "name": "design-system",
+      "path": ".agents/skills/design-system/SKILL.md",
+      "description": "Design tokens, typography scale, 6 mandatory UI states, and tactile UX primitives."
+    },
+    {
+      "name": "frontend-development",
+      "path": ".agents/skills/frontend-development/SKILL.md",
+      "description": "Stack-agnostic and Next.js frontend engineering, client state, forms, and responsive screens."
+    },
+    {
+      "name": "backend-development",
+      "path": ".agents/skills/backend-development/SKILL.md",
+      "description": "Modular REST/GraphQL backend architecture, ORMs, relational schemas, caching, and auth."
+    },
+    {
+      "name": "api-contract-validation",
+      "path": ".agents/skills/api-contract-validation/SKILL.md",
+      "description": "Automated synchronization and validation of contracts between backend and client applications."
+    },
+    {
+      "name": "task-execution",
+      "path": ".agents/skills/task-execution/SKILL.md",
+      "description": "Standard task execution loop with strict context isolation and token budget control."
+    },
+    {
+      "name": "testing",
+      "path": ".agents/skills/testing/SKILL.md",
+      "description": "Unit, integration, E2E test verification, acceptance gates, and bug snapping."
+    },
+    {
+      "name": "multi-perspective-code-review",
+      "path": ".agents/skills/multi-perspective-code-review/SKILL.md",
+      "description": "Adversarial code review featuring Blind Hunter, Contract Auditor, Architecture Guard, and UX Auditor."
+    },
+    {
+      "name": "chaos-engineering",
+      "path": ".agents/skills/chaos-engineering/SKILL.md",
+      "description": "Adversarial edge-case fuzzing, crash resilience, payload corruption, and anti-fragility auditing."
+    },
+    {
+      "name": "deployment-security",
+      "path": ".agents/skills/deployment-security/SKILL.md",
+      "description": "Containerization, reverse proxies, CI/CD pipelines, and cyber security hardening."
+    },
+    {
+      "name": "agile-retrospective",
+      "path": ".agents/skills/agile-retrospective/SKILL.md",
+      "description": "Post-milestone retrospective analysis of Git commits, model friction, and self-learning adaptation."
+    }
+  ]
+}
+
