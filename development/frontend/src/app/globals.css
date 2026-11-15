@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Surfaces & Backgrounds */
+  --bg-primary: #f8fafc;        /* Owtlet Mist */
+  --bg-secondary: #bbd7d1;      /* Owtlet Sage */
+  --bg-card: #ffffff;
+  --border-subtle: #d6e6e2;     /* Sage tint */
+
+  /* Typography */
+  --text-primary: #0d221e;      /* Owtlet Ink */
+  --text-secondary: #3d524e;    /* Ink 80% */
+  --text-muted: #6e7f7c;        /* Ink 60% */
+
+  /* Brand / Primary */
+  --primary: #70f1c7;           /* Owtlet Mint */
+  --primary-hover: #dffe52;     /* Owtlet Volt (matches Shopify hover) */
+  --primary-foreground: #0d221e;
+  --secondary: #bbd7d1;         /* Owtlet Sage */
+  --secondary-foreground: #0d221e;
+  --accent: #ed742e;            /* Owtlet Ember — LIVE badges, sale tags */
+  --accent-foreground: #ffffff;
+  --ink: #0d221e;
+  --ring: #0d221e;
+
+  /* Semantic Feedback */
+  --success: #1f9d72;
+  --warning: #f59e0b;
+  --danger: #d93f3f;
+  --info: #2f7fd1;
+
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* Used for live/video surfaces and dark sections (Shopify color-scheme-4) */
+  --bg-primary: #040b0a;        /* Owtlet Night */
+  --bg-secondary: #0d221e;      /* Owtlet Ink */
+  --bg-card: #12302a;
+  --border-subtle: #1f4a41;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #bbd7d1;
+  --text-muted: #7fa39b;
+
+  --primary: #70f1c7;           /* Owtlet Mint */
+  --primary-hover: #dffe52;     /* Owtlet Volt */
+  --primary-foreground: #0d221e;
+  --secondary: #0d221e;
+  --secondary-foreground: #f8fafc;
+  --accent: #ed742e;
+  --accent-foreground: #ffffff;
+  --ink: #0d221e;
+  --ring: #70f1c7;
+
+  /* Semantic Feedback */
+  --success: #1f9d72;
+  --warning: #f59e0b;
+  --danger: #d93f3f;
+  --info: #2f7fd1;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: var(--font-body), var(--font-rose), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+::selection {
+  background-color: #70f1c7;
+  color: #0d221e;
+}
