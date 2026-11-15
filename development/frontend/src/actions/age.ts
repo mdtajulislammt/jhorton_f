@@ -62,3 +62,4 @@ export async function confirmAge(confirmed21Plus: boolean): Promise<ConfirmAgeRe
     expiresAt: expiresAt.toISOString(),
   };
 }
+
