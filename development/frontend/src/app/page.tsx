@@ -19,7 +19,7 @@ export default function HomePage() {
               System Health
             </Button>
           </Link>
-          <Link href="/age-gate">
+          <Link href="/shop">
             <Button variant="default" size="sm" className="bg-owtlet-mint text-owtlet-ink hover:bg-owtlet-volt font-semibold">
               Enter Storefront
             </Button>
@@ -45,7 +45,7 @@ export default function HomePage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Link href="/age-gate">
+          <Link href="/shop">
             <Button size="lg" className="w-full sm:w-auto bg-owtlet-ink text-owtlet-mint hover:bg-owtlet-ink/90 font-semibold px-8 py-6 text-base shadow-lg">
               <ShoppingBag className="mr-2 h-5 w-5" />
               Explore Marketplace
