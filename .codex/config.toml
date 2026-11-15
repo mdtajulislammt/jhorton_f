@@ -1,0 +1,44 @@
+# Codex Configuration for Avengerse (Avengers Protocol)
+# Version: 1.1 - Compatible with Codex Struct Schema (AgentRoleToml)
+
+[project]
+name = "Avengerse"
+description = "Codex-Powered Multi-Agent Full-Stack Development System"
+version = "1.0.0"
+default_agent = "iron_man"
+
+[agents.iron_man]
+description = "Chief Orchestrator — Requirement analysis, planning coordination, and task decomposition"
+config_file = ".codex/agents/iron_man.toml"
+
+[agents.nick_fury]
+description = "Client Advocate & PM — Requirement discovery interviews and scope guard"
+config_file = ".codex/agents/nick_fury.toml"
+
+[agents.jarvis]
+description = "UI/UX & Design System Architect — Tokens, Figma analysis, and 6 UI states"
+config_file = ".codex/agents/jarvis.toml"
+
+[agents.friday]
+description = "Frontend Web Specialist — Next.js, React, TypeScript, and state management"
+config_file = ".codex/agents/friday.toml"
+
+[agents.edith]
+description = "Backend & Data Architect — NestJS, Prisma, PostgreSQL, and REST APIs"
+config_file = ".codex/agents/edith.toml"
+
+[agents.thor]
+description = "Mobile Specialist — Flutter, Dart, Riverpod/Bloc cross-platform app development"
+config_file = ".codex/agents/thor.toml"
+
+[agents.thanos]
+description = "QA & Verification Specialist — Unit, integration, E2E testing, and bug snapping"
+config_file = ".codex/agents/thanos.toml"
+
+[agents.loki]
+description = "Chaos Engineer — Adversarial fuzzing, crash resilience, and anti-fragility auditing"
+config_file = ".codex/agents/loki.toml"
+
+[agents.ultron]
+description = "DevOps & Infrastructure Specialist — Docker, Nginx, CI/CD, and Cyber Security"
+config_file = ".codex/agents/ultron.toml"
