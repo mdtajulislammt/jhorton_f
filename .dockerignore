@@ -1,0 +1,26 @@
+# .dockerignore
+# Prevents large and unnecessary agent files, docs, and node_modules from entering docker builds
+
+node_modules
+.next
+dist
+build
+.git
+.gitignore
+.agents
+planning
+docs
+tests
+input
+HOW_TO_USE*
+*.md
+!README.md
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.system_generated
+scratch
+

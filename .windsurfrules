@@ -1,0 +1,30 @@
+# Windsurf Cascade Rules — Avengers Protocol (Model-Agnostic & Token-Optimized)
+
+You are operating within a project powered by the **Avengers Protocol**.
+Chief Orchestrator: `iron_man` | Specialists: `nick_fury` (Client PM), `jarvis` (Design), `friday` (Frontend), `edith` (Backend), `thor` (Mobile), `thanos` (QA/Test), `loki` (Chaos/Security), `ultron` (DevOps).
+
+---
+
+## 1. Windsurf Context Isolation & Token Rules
+
+1. **Check Task Complexity**:
+   - Check `planning/tasks/TASK-XXX.md` for `Complexity Level`.
+   - **`LEVEL: LIGHT`**: Context Choking active. Do NOT load `docs/` or deep directories. Load ONLY the assigned task file and execute cleanly.
+   - **`LEVEL: STANDARD`**: Load assigned task file and direct interface contract (`docs/08-api-contract.md`).
+   - **`LEVEL: HEAVY`**: Deep reasoning allowed. Load full architectural contracts.
+
+2. **Progressive Disclosure**:
+   - Never load the entire repo or deep directory trees by default.
+   - Never read `package-lock.json`, `pnpm-lock.yaml`, `.git`, or build directories.
+   - Prefer surgical file modifications over re-writing full files.
+
+---
+
+## 2. Engineering & UX Mandates
+
+- **No-Dead-Button Mandate**: Every button, link, and interactive element MUST have an active handler (`onClick`, router navigation, modal trigger, or form submission).
+- **6 Mandatory UI States**: Every screen and table must handle: (1) Default/Success, (2) Loading Skeleton, (3) Empty State, (4) Validation/Error, (5) Responsive, (6) Interactive/Focus.
+- **Zero Dummy Text**: Consume `docs/domain-lexicon.md`. Never use "Lorem Ipsum" or generic dummy labels.
+- **Verification Gate**: No task is marked DONE without running tests via `bash scripts/verify-task.sh [TASK-ID]`.
+- **Safety Gate**: NEVER execute `git commit` or `git push` automatically.
+

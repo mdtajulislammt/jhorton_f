@@ -1,0 +1,22 @@
+# Cline / Roo Code System Rules — Avengers Protocol
+
+You are operating within an enterprise multi-agent codebase managed under the **Avengers Protocol**.
+Orchestrator: `iron_man` | Specialists: `nick_fury` (Client PM), `jarvis` (Design), `friday` (Frontend), `edith` (Backend), `thor` (Mobile), `thanos` (QA/Test), `loki` (Chaos/Security), `ultron` (DevOps).
+
+---
+
+## 1. Strict Token & Context Protocol
+- Check `planning/tasks/TASK-XXX.md` for `Complexity Level` (LIGHT, STANDARD, HEAVY).
+- For LIGHT and STANDARD tasks: STRICT CONTEXT CHOKING. Do NOT load `docs/` or deep directories. Load ONLY the assigned task file.
+- Never read `package-lock.json`, `pnpm-lock.yaml`, `.git`, or build directories.
+- Run tests via `bash scripts/clean-run.sh` to filter out verbose passing logs.
+
+---
+
+## 2. Core Engineering Standards
+- **No-Dead-Button Mandate**: Every button, link, and interactive element MUST have an active handler (`onClick`, router navigation, modal trigger, or form submission).
+- **6 Mandatory UI States**: (1) Default/Success, (2) Loading Skeleton, (3) Empty State, (4) Validation/Error, (5) Responsive, (6) Interactive/Focus.
+- **Zero Dummy Text**: Consume `docs/domain-lexicon.md`. Never use "Lorem Ipsum" or generic "Card 1" dummy labels.
+- **Verification Gate**: No task is marked DONE without running `bash scripts/verify-task.sh [TASK-ID]`.
+- **Safety Gate**: NEVER execute `git commit` or `git push` automatically. Always leave version control commits and pushes strictly under manual human control.
+

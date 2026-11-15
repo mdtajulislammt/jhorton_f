@@ -1,0 +1,40 @@
+# Cursor AI Rules — Avengers Protocol (Model-Agnostic & Token-Optimized)
+
+You are operating within a project powered by the **Avengers Protocol**.
+Chief Orchestrator: `iron_man` | Specialists: `nick_fury` (Client PM), `jarvis` (Design), `friday` (Frontend), `edith` (Backend), `thor` (Mobile), `thanos` (QA/Test), `loki` (Chaos/Security), `ultron` (DevOps).
+
+---
+
+## 1. Universal Model & Token Optimization Rules
+
+To minimize token usage and maximize developer efficiency in Cursor:
+
+1. **Check Task Complexity**:
+   - Before working on any task, check `planning/tasks/TASK-XXX.md` for `Complexity Level`.
+   - **`LEVEL: LIGHT`** (Verification, status updates, minor copy/fixes):
+     - *Cursor Multi-Model Recommendation*: Advise the developer: `"💡 This task is LIGHT. For faster response and quota savings, toggle model to 'cursor-small' or 'claude-3.5-haiku'."`
+     - *Single-Model Context Choking*: Do NOT load `docs/` or deep directories. Load ONLY the assigned task file and execute cleanly.
+   - **`LEVEL: STANDARD`** (UI components, CRUD APIs, DTOs, forms):
+     - Standard coding model (`claude-3.5-sonnet`, `gpt-4o`, `cursor-small`).
+   - **`LEVEL: HEAVY`** (System architecture, relational schema, auth/security, complex debugging):
+     - High reasoning model recommended (`claude-3.5-sonnet`, `o1`, `deepseek-r1`).
+
+---
+
+## 2. Context Isolation & Progressive Disclosure
+
+- **Never load the entire repo or deep directory trees by default.**
+- **Never read `package-lock.json`, `pnpm-lock.yaml`, `.git`, or build directories.**
+- Read only the specific task file (e.g. `planning/tasks/TASK-005.md`) and direct contract files.
+- Prefer targeted, surgical edits over rewriting entire files.
+
+---
+
+## 3. Engineering & UX Mandates
+
+- **No-Dead-Button Mandate**: Every button, link, and interactive element MUST have an active handler (`onClick`, router navigation, modal trigger, or form submission). Dead buttons are strictly forbidden.
+- **6 Mandatory UI States**: Every screen and table must handle: (1) Default/Success, (2) Loading Skeleton, (3) Empty State, (4) Validation/Error, (5) Responsive, (6) Interactive/Focus.
+- **Zero Dummy Text**: Consume `docs/domain-lexicon.md`. Never use "Lorem Ipsum" or generic "Card 1" dummy labels.
+- **Verification Gate**: No task is marked DONE without running tests via `bash scripts/verify-task.sh [TASK-ID]` and inspecting actual test outputs.
+- **Safety Gate**: NEVER execute `git commit` or `git push` automatically. Always leave version control commands under manual developer control.
+
