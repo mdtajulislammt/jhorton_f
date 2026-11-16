@@ -9,6 +9,8 @@ export default defineConfig({
     exclude: ['node_modules/**', 'dist/**'],
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@prisma/client': path.resolve(__dirname, '../frontend/node_modules/@prisma/client'),
+      'zod': path.resolve(__dirname, '../frontend/node_modules/zod'),
     },
   },
 });

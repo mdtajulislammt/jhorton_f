@@ -8,6 +8,7 @@ import { DispensariesModule } from './modules/dispensaries/dispensaries.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { CheckoutModule } from './modules/checkout/checkout.module';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CheckoutModule } from './modules/checkout/checkout.module';
     CartModule,
     OrdersModule,
     CheckoutModule,
+    WebhooksModule,
   ],
 })
 export class AppModule {}

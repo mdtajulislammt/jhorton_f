@@ -204,3 +204,22 @@ export interface CheckoutHandoffResponseData {
   handoffs: CheckoutHandoffItemDto[];
 }
 
+export interface StoreConfirmationRequestDto {
+  subOrderId: string;
+  status: 'CONFIRMED' | 'REJECTED';
+  confirmationRef?: string | null;
+  confirmationUrl?: string | null;
+}
+
+export interface StoreConfirmationResponseData {
+  subOrderId: string;
+  orderId: string;
+  orderNumber: string;
+  status: string;
+  orderStatus: string;
+  confirmationRef: string | null;
+  confirmationUrl: string | null;
+  confirmedAt: string | null;
+  idempotent?: boolean;
+}
+

@@ -6,7 +6,7 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Global Middlewares
   app.use(cookieParser());
@@ -32,6 +32,8 @@ async function bootstrap() {
       'Accept',
       'X-Cart-Token',
       'X-Owtlet-Signature',
+      'X-Owtlet-Timestamp',
+      'X-Owtlet-Dispensary',
     ],
   });
 

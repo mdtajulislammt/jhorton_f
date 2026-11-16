@@ -3,12 +3,12 @@
 ## Current Status
 
 - **Project**: Owtlet™ — cannabis marketplace + live shopping (`owtlet.com`) · Client: Jesce Horton (Grand National Agency) · Deadline: **Dec 1, 2026**
-- **Project Phase**: Phase 0 complete (planning & scaffolding filled) → Phase 1 Foundation 100% COMPLETE → **Phase 2 In Progress**
+- **Project Phase**: Phase 0 complete (planning & scaffolding filled) → Phase 1 Foundation 100% COMPLETE → Phase 2 Complete → **Phase 3 In Progress**
 - **Last Updated**: 2026-11-16
-- **Current Task**: Completed [`TASK-013`](tasks/TASK-013.md) (Cannabis checkout handoff providers — Leafly & direct retailer redirect)
-- **Next Dependency-Ready Task**: [`TASK-014`](tasks/TASK-014.md) (Dispensary confirmation webhook & order tracking)
+- **Current Task**: Completed [`TASK-014`](tasks/TASK-014.md) (Dispensary confirmation webhook & order status tracking)
+- **Next Dependency-Ready Task**: [`TASK-015`](tasks/TASK-015.md) (Admin console for products, inventory, hours, brands, and order overrides)
 - **Overall Status**: `IN_PROGRESS` (Phase 3 In Progress)
-- **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 387 total tests passing (263 frontend + 124 backend).
+- **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 432 total tests passing (296 frontend + 136 backend).
 - **Client-answer gap closure (2026-11-15)**: Audited against Jesce's written answers (saved verbatim in `input/client-docs/`). Added REQ-F-011…019 (brand storefronts, pickup/delivery, store change + default store, guest checkout + optional profile, one price for show products, cart hold until 30 min after the show ends, out-of-stock suggestions, delivery hours, owtlet.live redirect; shoppable video in REQ-F-003), AC-BRD/FUL/SEL/PRF/PRC/HOLD/OOS/DLH/RDR + AC-LIVE-04, ADR-009…015, TASK-020/021 (BACKLOG). Schema in docs/07 now 21 models (`prisma validate` ✅).
 - **Scope change (2026-11-15)**: Platform is **cannabis-only**; accessories / `owtlet.shop` Shopify are out of scope (separate team member). REQ-F-005 removed, TASK-009 CANCELLED, Q-005 resolved, `AccessoryRef`/`ProductKind`/Shopify endpoints removed from docs (ADR-008).
 
@@ -95,16 +95,29 @@
   - Thanos Verification:
     - 30 new unit, route, and component tests added (263 total frontend Vitest tests passing with 100% pass rate).
     - Tri-Platform verification `bash scripts/verify-task.sh TASK-013` passed.
+- [x] [`TASK-014`](tasks/TASK-014.md): Store Confirmation Webhook & Real-Time Order Tracking (docs/08 §10, AC-CNF-01, T-WH-01).
+  - Edith (Backend Domain Services):
+    - `src/server/orders/confirm.ts`: Cryptographic HMAC-SHA256 signature verification (`X-Owtlet-Signature`), ±5-minute timestamp replay protection (`X-Owtlet-Timestamp`), signed token links for direct confirmation (`?token=<jwt-hmac-token>`), and atomic order status roll-up (`confirmSubOrder`, `processStoreConfirmationWebhook`).
+    - Enforced idempotency on repeated confirmations (`idempotent: true`) and strict conflict rejection (`409 CONFIRMATION_CONFLICT`) when conflicting confirmation references or invalid state transitions occur.
+  - Edith (NestJS Controller & Module):
+    - `src/modules/webhooks/webhooks.controller.ts` & `src/modules/webhooks/webhooks.module.ts`: `@Controller('webhooks')` with `@Post('store-confirmation')` and `@Get('store-confirmation')` registered in `app.module.ts`.
+    - Configured NestJS with `{ rawBody: true }` and enabled `X-Owtlet-Timestamp` and `X-Owtlet-Dispensary` in CORS.
+  - Friday (Route Handler & Order Status Tracking UI):
+    - `src/app/api/webhooks/store-confirmation/route.ts`: Next.js public webhook Route Handler supporting both `POST` (HMAC-signed payload) and `GET` (signed link variant with browser redirect to `/order/[id]?confirmed=true`).
+    - `src/app/order/[id]/page.tsx`: Upgraded storefront order status tracking page displaying real-time confirmed badges (`CheckCircle2`), store confirmation references (`STORE-A-xxxx`), confirmed timestamp in `America/New_York` (EST), direct store tracking links, and helpful dispensary decline alerts.
+  - Thanos Verification:
+    - 45 new unit, route, and domain tests added (296 frontend Vitest tests + 136 backend Vitest tests = 432 total passing tests with 100% pass rate).
+    - Tri-Platform verification `bash scripts/verify-task.sh TASK-014` passed.
 
 ---
 
 ## In Progress
 
-- **Task ID**: None (TASK-013 Complete)
-- **Next Task ID**: [`TASK-014`](tasks/TASK-014.md) (Dispensary confirmation webhook & order status roll-up)
-- **Assigned Agent**: `edith`
-- **Current Checkpoint**: Ready for TASK-014.
-- **Next Expected Action**: Implement `POST /api/webhooks/store-confirmation` with HMAC signature validation / signed token link and order status progression to CONFIRMED.
+- **Task ID**: None (TASK-014 Complete)
+- **Next Task ID**: [`TASK-015`](tasks/TASK-015.md) (Admin console for inventory, hours, and live show pricing)
+- **Assigned Agent**: `friday` & `edith`
+- **Current Checkpoint**: Ready for TASK-015.
+- **Next Expected Action**: Build `/admin` dashboard and Route Handlers for products, inventory stock/price, store hours, and live show pricing overrides.
 
 ---
 
@@ -112,7 +125,6 @@
 
 - _No foundation task is blocked._
 - Late-stage tasks waiting on clarifications (client questions sent Nov 14–15, awaiting reply; Q-006 internal):
-  - TASK-014 (webhook format) ← Q-001 Leafly, Q-002 dispensaries/POS
   - TASK-017 (final product data) ← Q-004
   - TASK-019 (deploy) ← Q-003 VPS/DNS (owtlet.com + owtlet.live)
   - Production password-reset email (TASK-021/019) ← Q-006 SMTP sender
@@ -121,19 +133,19 @@
 
 ## Next Actions
 
-- [ ] Execute TASK-014 (Dispensary confirmation webhook & order tracking).
-- [ ] Proceed to TASK-015 (Admin console for inventory, hours, and live show pricing).
+- [ ] Execute TASK-015 (Admin console for inventory, hours, and live show pricing).
+- [ ] Proceed to TASK-016 (Live shows + replays + shoppable videos; start/end show).
 - [ ] Follow up with the client on Q-001…Q-004 (needed by ~Nov 22 to keep Phase 3–5 on schedule).
 
 ---
 
 ## Verification Summary
 
-- **Tests Executed**: 387 Vitest unit & integration tests (263 frontend + 124 backend) + Playwright E2E specs
-- **Tests Passed**: 387 (100%)
+- **Tests Executed**: 432 Vitest unit & integration tests (296 frontend + 136 backend) + Playwright E2E specs
+- **Tests Passed**: 432 (100%)
 - **Tests Failed**: 0
 - **TypeScript**: `tsc --noEmit` passed across both `development/frontend` and `development/backend` (0 errors)
-- **Structure Validation**: `bash scripts/verify-task.sh TASK-013` passed (Edith NestJS backend & Friday frontend verified).
+- **Structure Validation**: `bash scripts/verify-task.sh TASK-014` passed (Edith NestJS backend & Friday frontend verified).
 
 ---
 
@@ -143,5 +155,5 @@
 > **টোকেন সাশ্রয়ের নিয়ম**: প্রতি ১-২টি টাস্ক শেষ হলে বর্তমান চ্যাট বন্ধ করে **নতুন চ্যাট উইন্ডো** খুলুন এবং নিচের এক লাইন পেস্ট করুন:
 >
 > ```text
-> planning/updateplanning.md পড়ে TASK-014 শুরু করো। [Tier: LEVEL: STANDARD]
+> planning/updateplanning.md পড়ে TASK-015 শুরু করো। [Tier: LEVEL: STANDARD]
 > ```

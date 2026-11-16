@@ -32,7 +32,7 @@ case "$CMD" in
   test-backend)
     if [ -d "development/backend" ]; then
       cd development/backend
-      npm test -- --silent 2>&1 | grep -E "(FAIL|Error|failed|passed|Tests:)" || echo "✅ All Backend Tests Passed"
+      (../frontend/node_modules/.bin/vitest run --silent 2>&1 || npm test -- --silent 2>&1) | grep -E "(FAIL|Error|failed|passed|Tests:)" || echo "✅ All Backend Tests Passed"
       cd - > /dev/null
     else
       echo "ℹ Backend directory not found."
