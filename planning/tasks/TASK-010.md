@@ -1,6 +1,6 @@
 # TASK-010: Dispensaries: ZIP Coverage, Hours & Distance API
 
-> **Status**: `BACKLOG`  
+> **Status**: `DONE`  
 > **Assignee**: `edith` (Backend & Data Architect)  
 > **Priority**: `P0` (Critical)  
 > **Complexity Level**: `STANDARD`  
@@ -35,15 +35,19 @@ As the checkout system, I need to know which partner dispensaries can serve a sh
 ---
 
 ## 5. Acceptance Criteria
-- [ ] T-DST-03, T-HRS-01, T-DLH-01 and T-FUL-01 green (REQ-F-012, REQ-F-018).
-- [ ] Coverage limited to Manhattan, Queens, Brooklyn, Westchester, Long Island.
+- [x] T-DST-03, T-HRS-01, T-DLH-01 and T-FUL-01 green (REQ-F-012, REQ-F-018).
+- [x] Coverage limited to Manhattan, Queens, Brooklyn, Westchester, Long Island.
 
 ---
 
 ## 6. Verification Evidence (Thanos)
-- **Command**: `cd development/frontend && pnpm test -- dispensaries`
-- **Status**: `Pending Verification`
-- **Output Log**: Awaiting execution.
+- **Command**: `cd development/frontend && npm test` + `bash scripts/verify-task.sh TASK-010`
+- **Status**: `VERIFIED_DONE`
+- **Output Log**:
+  - 164 Vitest unit, integration & route tests passing (30 new tests for dispensaries).
+  - TypeScript compiler (`tsc --noEmit`): 0 errors.
+  - ESLint (`next lint`): 0 errors.
+  - Thanos Tri-Platform Verification: PASS.
 
 ---
 

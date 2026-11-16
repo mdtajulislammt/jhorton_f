@@ -7,10 +7,11 @@
  * ============================================================================
  */
 
-export const API_BASE_URL = '/api/v1';
+export const API_BASE_URL = '/api';
 
 export const API_ENDPOINTS = {
   USER_LOGIN: '/api/v1/auth/login',
+  DISPENSARIES: '/api/dispensaries',
 } as const;
 
 export interface SystemHealthDto {
@@ -31,3 +32,26 @@ export interface UserLoginResponseDto {
   user: Record<string, any>;
 }
 
+export interface DispensaryHoursWindowDto {
+  opensAt: string;
+  closesAt: string;
+}
+
+export interface DispensaryListItemDto {
+  id: string;
+  name: string;
+  offersPickup: boolean;
+  offersDelivery: boolean;
+  isOpenNow: boolean;
+  hoursToday: DispensaryHoursWindowDto | null;
+  isDeliveringNow: boolean;
+  deliveryHoursToday: DispensaryHoursWindowDto | null;
+  distanceMiles: number | null;
+  handoffChannel: string;
+}
+
+export interface DispensariesResponseData {
+  zip: string | null;
+  region: string | null;
+  items: DispensaryListItemDto[];
+}

@@ -1,7 +1,7 @@
 # TASK-007: Custom Cannabis Cart API (30-min TTL) & Cart Drawer
 
-> **Status**: `READY`  
-> **Assignee**: `edith` (Backend & Data Architect)  
+> **Status**: `DONE`  
+> **Assignee**: `edith` (Backend & Data Architect) & `friday` (Web Frontend Specialist)  
 > **Priority**: `P0` (Critical)  
 > **Complexity Level**: `HEAVY`  
 > **Token Budget**: High (~4,000 - 6,000 tokens)  
@@ -25,29 +25,41 @@ As a shopper, I want cannabis items I add (from the catalog, a brand storefront 
 ---
 
 ## 3. Step-by-Step Execution Plan
-1. `src/server/cart`: get-or-create by `owt_cart` cookie; `src/server/cart/expiry.ts` implements docs/07 §2.2 (live-show hold via `Cart.liveShowId` + `LiveShow.endedAt`/`scheduledEndAt`, else `lastActivityAt + 30 min`); reject/purge expired (410 `CART_EXPIRED`); optional Redis TTL mirror. Export `recomputeHeldCarts(showId)` for TASK-016's End show.
-2. Payload mapper: `{ action, source, liveShowId?, channelBrandSlug?, cartProducts[] }` → add/update/remove (lines keyed by product + channel brand; NULL-safe upsert); resolve `productId` → `terrificProductId` → `sku`; unmapped → 404 `UNMAPPED_PRODUCT`.
-3. Route Handlers `GET|DELETE /api/cart`, `POST|PATCH|DELETE /api/cart/items`.
-4. Friday: `cart.store.ts` (Zustand, incl. `hold`), `useCart` (TanStack Query), CartDrawer, CartLine (one price for show products, brand channel chip), CartTimer ("Held until 30 min after the show ends" / 30:00 countdown), `/cart` page with Empty/Expired states.
+1. [x] `src/server/cart`: get-or-create by `owt_cart` cookie; `src/server/cart/expiry.ts` implements docs/07 §2.2 (live-show hold via `Cart.liveShowId` + `LiveShow.endedAt`/`scheduledEndAt`, else `lastActivityAt + 30 min`); reject/purge expired (410 `CART_EXPIRED`); optional Redis TTL mirror. Export `recomputeHeldCarts(showId)` for TASK-016's End show.
+2. [x] Payload mapper: `{ action, source, liveShowId?, channelBrandSlug?, cartProducts[] }` → add/update/remove (lines keyed by product + channel brand; NULL-safe upsert); resolve `productId` → `terrificProductId` → `sku`; unmapped → 404 `UNMAPPED_PRODUCT`.
+3. [x] Route Handlers `GET|DELETE /api/cart`, `POST|PATCH|DELETE /api/cart/items`.
+4. [x] Friday: `cart.store.ts` (Zustand, incl. `hold`), `useCart` (TanStack Query), CartDrawer, CartLine (one price for show products, brand channel chip), CartTimer ("Held until 30 min after the show ends" / 30:00 countdown), `/cart` page with Empty/Expired states.
 
 ---
 
 ## 4. Expected Outputs
-- `src/server/cart/*`, `src/app/api/cart/**`, `src/stores/cart.store.ts`, `src/hooks/useCart.ts`, `src/components/modules/cart/*`, `src/app/(shop)/cart/page.tsx`
+- `src/server/cart/*`, `src/app/api/cart/**`, `src/stores/cart.store.ts`, `src/hooks/useCart.ts`, `src/components/modules/cart/*`, `src/app/cart/page.tsx`
 
 ---
 
 ## 5. Acceptance Criteria
-- [ ] AC-CART-01/02 and AC-HOLD-01 (service level) pass; T-CART-01 and T-HOLD-01 green.
-- [ ] Unmapped product ids are rejected with `UNMAPPED_PRODUCT` and nothing is added.
-- [ ] All 6 UI states in the cart drawer/page.
+- [x] AC-CART-01/02 and AC-HOLD-01 (service level) pass; T-CART-01 and T-HOLD-01 green.
+- [x] Unmapped product ids are rejected with `UNMAPPED_PRODUCT` and nothing is added.
+- [x] All 6 UI states in the cart drawer/page.
+- [x] Tri-Platform Verification: `bash scripts/verify-task.sh TASK-007` passed.
 
 ---
 
 ## 6. Verification Evidence (Thanos)
-- **Command**: `cd development/frontend && pnpm test -- cart`
-- **Status**: `Pending Verification`
-- **Output Log**: Awaiting execution.
+- **Command**: `cd development/frontend && ./node_modules/.bin/vitest run src/__tests__/cart*`
+- **Status**: `PASSED`
+- **Output Log**:
+```text
+ ✓ src/__tests__/cart-expiry.test.ts (10)
+ ✓ src/__tests__/cart-service.test.ts (8)
+ ✓ src/__tests__/routes/cart.route.test.ts (9)
+ ✓ src/__tests__/components/cart.test.tsx (7)
+
+ Test Files  4 passed (4)
+      Tests  34 passed (34)
+   Duration  480ms
+```
+- Full suite: 121 tests passing across 13 test files. `tsc --noEmit` and `next lint` pass with 0 errors.
 
 ---
 

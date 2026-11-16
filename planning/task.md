@@ -24,10 +24,10 @@
 | [`TASK-004`](tasks/TASK-004.md) | Prisma schema + migration + coverage ZIP seed | `edith` | `TASK-002` | `DONE` | `P0` | `HEAVY` | Phase 1 — Passed |
 | [`TASK-005`](tasks/TASK-005.md) | 21+ age gate (middleware + cookie + UI) | `edith` | `TASK-002`, `TASK-003`, `TASK-004` | `DONE` | `P0` | `STANDARD` | Phase 1 — Passed |
 | [`TASK-006`](tasks/TASK-006.md) | Catalog API + pages + one-price pricing + Shopify test-data import | `edith` | `TASK-003`, `TASK-004` | `DONE` | `P0` | `STANDARD` | Phase 1 — Passed |
-| [`TASK-007`](tasks/TASK-007.md) | Custom cannabis cart (show-end + 30 min / 30-min sliding hold) | `edith` | `TASK-006` | `READY` | `P0` | `HEAVY` | Phase 1 — Pending |
-| [`TASK-008`](tasks/TASK-008.md) | Terrific embed + cartSync/goToCheckout bridge (live, replay, video) | `friday` | `TASK-007` | `READY` | `P0` | `HEAVY` | Phase 1 — Pending |
+| [`TASK-007`](tasks/TASK-007.md) | Custom cannabis cart (show-end + 30 min / 30-min sliding hold) | `edith` | `TASK-006` | `DONE` | `P0` | `HEAVY` | Phase 1 — Passed |
+| [`TASK-008`](tasks/TASK-008.md) | Terrific embed + cartSync/goToCheckout bridge (live, replay, video) | `friday` | `TASK-007` | `DONE` | `P0` | `HEAVY` | Phase 1 — Passed |
 | [`TASK-009`](tasks/TASK-009.md) | Shopify accessories bridge (Cancelled per ADR-008) | `edith` | `TASK-007` | `CANCELLED` | `P1` | `STANDARD` | Phase 1 — Cancelled |
-| [`TASK-010`](tasks/TASK-010.md) | Dispensary eligibility (pickup/delivery ZIPs, brand), hours, distance API | `edith` | `TASK-004` | `BACKLOG` | `P0` | `STANDARD` | Phase 2 — Pending |
+| [`TASK-010`](tasks/TASK-010.md) | Dispensary eligibility (pickup/delivery ZIPs, brand), hours, distance API | `edith` | `TASK-004` | `DONE` | `P0` | `STANDARD` | Phase 2 — Verified |
 | [`TASK-011`](tasks/TASK-011.md) | Distribution allocator (fulfillment, store change, OOS) + parent/sub-orders | `edith` | `TASK-007`, `TASK-010` | `BACKLOG` | `P0` | `HEAVY` | Phase 2 — Pending |
 | [`TASK-012`](tasks/TASK-012.md) | Checkout UI (pickup/delivery → split → change store → OOS fixes → guest) | `friday` | `TASK-011`, `TASK-003` | `BACKLOG` | `P0` | `STANDARD` | Phase 2 — Pending |
 | [`TASK-013`](tasks/TASK-013.md) | Cannabis handoff (Leafly / retailer page) | `edith` | `TASK-011` | `BACKLOG` | `P0` | `HEAVY` | Phase 3 — Pending |
@@ -48,16 +48,16 @@
 - `TASK-001`: Extract requirements, architecture spine, domain contracts, and initialize master task board. [Status: `DONE`]
 
 ### Phase 1: Core Foundation, Catalog & Cart (Current Sprint)
-- `TASK-002`: Scaffold Next.js 14 App Router, Prisma ORM singleton, Docker Compose. [Status: `READY`]
+- `TASK-002`: Scaffold Next.js 14 App Router, Prisma ORM singleton, Docker Compose. [Status: `DONE`]
 - `TASK-003`: Configure brand tokens (Mint `#70F1C7`, Ink `#0D221E`, Dela Gothic One) and 6 UI state primitives. [Status: `DONE`]
 - `TASK-004`: Database migrations, seed NY coverage ZIPs (Manhattan, Queens, Brooklyn, Westchester, Long Island). [Status: `DONE`]
 - `TASK-005`: 21+ Age Gate Edge Middleware (`middleware.ts`) and HMAC-signed attestation cookie (`owt_age`). [Status: `DONE`]
 - `TASK-006`: PostgreSQL cannabis catalog API, filter bar, single show price, and Shopify test data import. [Status: `DONE`]
-- `TASK-007`: Custom PostgreSQL cannabis cart API with 30-min-post-show hold rule (REQ-F-016). [Status: `READY`]
-- `TASK-008`: Client-side Terrific Live SDK v2 integration (`cartSyncHandler` & `goToCheckoutHandler`). [Status: `READY`]
+- `TASK-007`: Custom PostgreSQL cannabis cart API with 30-min-post-show hold rule (REQ-F-016). [Status: `DONE`]
+- `TASK-008`: Client-side Terrific Live SDK v2 integration (`cartSyncHandler` & `goToCheckoutHandler`). [Status: `DONE`]
 
 ### Phase 2: Fulfillment, Routing & Checkout Experience
-- `TASK-010`: Dispensary eligibility engine (pickup/delivery ZIPs, STORE/DELIVERY hours in America/New_York). [Status: `BACKLOG`]
+- `TASK-010`: Dispensary eligibility engine (pickup/delivery ZIPs, STORE/DELIVERY hours in America/New_York). [Status: `DONE`]
 - `TASK-011`: Multi-dispensary greedy order distribution (Parent Order + SubOrders) with OOS suggestions. [Status: `BACKLOG`]
 - `TASK-012`: Interactive checkout page with fulfillment toggle, store split cards, and change store picker. [Status: `BACKLOG`]
 

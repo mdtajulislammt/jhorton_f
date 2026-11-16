@@ -83,8 +83,8 @@ class ApiClient {
         const error: ApiError = {
           success: false,
           statusCode: response.status,
-          message: data.message || `Request failed with status ${response.status}`,
-          errors: data.errors,
+          message: data.error?.message || data.message || `Request failed with status ${response.status}`,
+          errors: data.error?.details || data.errors,
           timestamp: data.timestamp || new Date().toISOString(),
         };
         throw error;

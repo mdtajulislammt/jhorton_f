@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Dela_Gothic_One, Red_Rose } from 'next/font/google';
 import './globals.css';
+import { QueryProvider } from '@/components/providers/query-provider';
+import { Toaster } from '@/components/ui/toaster';
 
 const delaGothic = Dela_Gothic_One({
   weight: '400',
@@ -28,7 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${delaGothic.variable} ${redRose.variable}`}>
       <body className="antialiased min-h-screen bg-background text-foreground font-body">
-        {children}
+        <QueryProvider>
+          {children}
+          <Toaster />
+        </QueryProvider>
       </body>
     </html>
   );

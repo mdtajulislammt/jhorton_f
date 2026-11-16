@@ -1,17 +1,20 @@
 # Session Progress & Checkpoint Log
 
 ## Current Status
+
 - **Project**: Owtlet™ — cannabis marketplace + live shopping (`owtlet.com`) · Client: Jesce Horton (Grand National Agency) · Deadline: **Dec 1, 2026**
-- **Project Phase**: Phase 0 complete (planning & scaffolding filled) → **Phase 1 Foundation in progress**
-- **Last Updated**: 2026-11-15
-- **Current Task**: [`TASK-007`](tasks/TASK-007.md) (Custom cannabis cart API with 30-min-post-show hold rule)
-- **Overall Status**: `IN_PROGRESS`
+- **Project Phase**: Phase 0 complete (planning & scaffolding filled) → Phase 1 Foundation 100% COMPLETE → **Phase 2 In Progress**
+- **Last Updated**: 2026-11-16
+- **Current Task**: Completed [`TASK-010`](tasks/TASK-010.md) (Dispensary eligibility, hours, distance API)
+- **Next Dependency-Ready Task**: [`TASK-011`](tasks/TASK-011.md) (Distribution allocator & parent/sub-orders)
+- **Overall Status**: `IN_PROGRESS` (Phase 2 In Progress)
 - **Client-answer gap closure (2026-11-15)**: Audited against Jesce's written answers (saved verbatim in `input/client-docs/`). Added REQ-F-011…019 (brand storefronts, pickup/delivery, store change + default store, guest checkout + optional profile, one price for show products, cart hold until 30 min after the show ends, out-of-stock suggestions, delivery hours, owtlet.live redirect; shoppable video in REQ-F-003), AC-BRD/FUL/SEL/PRF/PRC/HOLD/OOS/DLH/RDR + AC-LIVE-04, ADR-009…015, TASK-020/021 (BACKLOG). Schema in docs/07 now 21 models (`prisma validate` ✅). Removed `development/backend` (NestJS), `development/mobile` (Flutter), `Dockerfile.backend`; rewrote `.env.example`, `sync-env.sh`, docker-compose and nginx (owtlet.live 301).
 - **Scope change (2026-11-15)**: Platform is **cannabis-only**; accessories / `owtlet.shop` Shopify are out of scope (separate team member). REQ-F-005 removed, TASK-009 CANCELLED, Q-005 resolved, `AccessoryRef`/`ProductKind`/Shopify endpoints removed from docs (ADR-008).
 
 ---
 
 ## Completed
+
 - [x] Initialized Avengerse Multi-Agent Template configuration (`project.config.md`).
 - [x] Defined global rules and 5-layer architecture (`AGENTS.md`).
 - [x] [`TASK-001`](tasks/TASK-001.md): Owtlet brief filled in `README.md`; stack set to Next.js full-stack (Route Handlers + Server Actions) + Prisma + PostgreSQL (Redis optional, mobile disabled) in `project.config.md`.
@@ -31,19 +34,41 @@
   - `prisma/seed-shopify-import.ts`: 22 authentic Shopify test cannabis products from store `f1jc7p-fs` with `shopifyLegacyId` mapped across all 5 NY categories, 3 partner dispensaries, and initial inventory.
   - Friday & Jarvis UI: `/shop`, `/shop/[category]`, `/product/[slug]` with `ProductCard` (one price vs from $X), `FilterBar`, `StoreAvailabilityList` (pickup/delivery badges, out-of-stock suggestions, ZIP checker), `ProductGridSkeleton`, `ProductDetailSkeleton`, 44px ergonomics, active compression (`active:scale-[0.98]`).
   - 87 unit and integration tests passing; Thanos verification passed.
+- [x] [`TASK-007`](tasks/TASK-007.md): Custom cannabis cart API (30-min TTL / show-end + 30 min hold) & Cart Drawer.
+  - `src/server/cart`: Cart service & expiry calculation (`expiry.ts`) enforcing REQ-F-016 & ADR-012 (show-end + 30m hold for live show carts, otherwise 30-min sliding window from last activity).
+  - Route Handlers: `GET /api/cart`, `DELETE /api/cart`, `POST /api/cart/items`, `PATCH /api/cart/items`, `DELETE /api/cart/items` with cookie-backed session (`owt_cart`).
+  - Friday & Jarvis UI: `CartDrawer` with slide-in animation, `CartLine` with Owtlet single-price indicators, `CartTimer` countdown badge, and `/cart` page with all 6 mandatory UI states.
+  - 34 unit and integration tests added; Thanos verification passed.
+- [x] [`TASK-008`](tasks/TASK-008.md): Terrific Live Shopping SDK v2 Embed & Cart/Checkout Bridge.
+  - `src/lib/terrific.ts`: Universal client bridge implementing `TerrificBridge` (`sync`, `reconcile`, `goToCheckout`, `initializeSettings`). Normalizes pinned cannabis products from player stream, sends direct to `/api/cart/items` with `source` (`terrific_live` / `terrific_replay` / `terrific_video`) and `liveShowId`. Handles unmapped products with 404 `UNMAPPED_PRODUCT` non-blocking toast (`"This product isn't available on Owtlet yet."`).
+  - `src/stores/toast.store.ts` & `src/components/ui/toaster.tsx`: Lightweight, accessible, design-token styled toast notification system (`toast.success`, `toast.error`, `toast.info`).
+  - `src/hooks/useTerrificBridge.ts`: React hook managing SDK event listeners (`cart-change-notification`, `GoToCheckout`, `Navigate`) and automatic cleanup.
+  - `src/components/modules/live/TerrificEmbed.tsx`: Client component rendering `<div data-source="terrific" embedding-id="...">` with strict pre-age-gate script blocking (never injects SDK before age gate), 6 UI states (Default, Shimmer Skeleton, Empty State, Error with Retry, Video/Vertical responsive aspect ratios, Live Badge overlay).
+  - Pages: Integrated live stream hero on `/` (`src/app/page.tsx`), dedicated live show player on `/live/[showId]` (`src/app/live/[showId]/page.tsx`), show/replay index `/live` (`src/app/live/page.tsx`), and placeholder `/checkout` route.
+  - 13 unit and component tests added (134 total Vitest tests passing across codebase) + Playwright E2E spec (`e2e/live.spec.ts`). Thanos verification passed.
+- [x] [`TASK-010`](tasks/TASK-010.md): Dispensary eligibility, hours, distance API (REQ-F-012, REQ-F-018, ADR-010, T-DST-03, T-HRS-01, T-DLH-01, T-FUL-01).
+  - `src/server/dispensaries/hours.ts`: `isOpenNow`, `isDeliveringNow`, `getDispensaryHoursToday`, `getZonedTime`. Accurate timezone calculation in `America/New_York` with full past-midnight shift closing (e.g. 18:00 to 02:00 next day) and DST spring-forward / fall-back transitions. Independent STORE vs DELIVERY hours evaluation.
+  - `src/server/dispensaries/distance.ts`: Haversine straight-line distance calculation from centroid coordinates (`calculateDistanceMiles`), and NY 5-region coverage ZIP lookup (`getZipInfo`).
+  - `src/server/dispensaries/eligibility.ts`: `findEligible` engine supporting DELIVERY (`offersDelivery` ∧ `zip ∈ coverageZips` with strict 5-region NY coverage gate; throws `NoCoverageError` 422 if outside) and PICKUP (`offersPickup`, sorted nearest first by `distanceMiles`); brand-scoping via `brandSlug` / `brandId`.
+  - Route Handler: `GET /api/dispensaries?zip=&fulfillment=&brand=` in `src/app/api/dispensaries/route.ts` with strict Zod validation, 400 for missing zip on delivery, 422 for `NO_COVERAGE`, and standard envelope.
+  - Updated `src/types/api.generated.ts` with synchronized dispensary contract types.
+  - 30 new unit, integration & route handler tests added (164 total tests passing across codebase). Thanos verification passed.
 
 ---
 
 ## In Progress
-- **Task ID**: [`TASK-007`](tasks/TASK-007.md)
+
+- **Task ID**: None (TASK-010 Complete)
+- **Next Task ID**: [`TASK-011`](tasks/TASK-011.md) (Distribution allocator & parent/sub-orders)
 - **Assigned Agent**: `edith`
-- **Current Checkpoint**: Ready to implement custom PostgreSQL cannabis cart API (`GET /api/cart`, `POST /api/cart/items`, `PATCH /api/cart/items`, `DELETE /api/cart/items`, `DELETE /api/cart`) with the 30-min-post-show hold rule (REQ-F-016, ADR-012, docs/07 §2.2).
-- **Next Expected Action**: Scaffold cart session management (`owt_cart` cookie), cart database mutations with atomic locks, live show hold timer calculation, and cart expiration handler.
+- **Current Checkpoint**: Ready for TASK-011.
+- **Next Expected Action**: Implement multi-dispensary greedy allocator and parent/sub-order generation in `src/server/distribution/` and `src/server/orders/`.
 
 ---
 
 ## Blocked
-- *No foundation task is blocked.*
+
+- _No foundation task is blocked._
 - Late-stage tasks waiting on clarifications (client questions sent Nov 14–15, awaiting reply; Q-006 internal):
   - TASK-013 / TASK-014 (handoff + confirmation) ← Q-001 Leafly, Q-002 dispensaries/POS
   - TASK-017 (final product data) ← Q-004
@@ -53,28 +78,29 @@
 ---
 
 ## Next Actions
-- [ ] Execute TASK-007 (cart API with 30-min-post-show hold).
-- [ ] Proceed to TASK-008 (Terrific embed + cartSync/goToCheckout bridge).
+
+- [ ] Execute TASK-011 (Distribution allocator + parent/sub-orders).
+- [ ] Proceed to TASK-012 (Checkout UI).
 - [ ] Follow up with the client on Q-001…Q-004 (needed by ~Nov 22 to keep Phase 3–5 on schedule).
 
 ---
 
 ## Verification Summary
-- **Tests Executed**: 87 Vitest unit & integration tests + 3 Playwright E2E tests
-- **Tests Passed**: 90 (100%)
+
+- **Tests Executed**: 164 Vitest unit & integration tests + Playwright E2E specs
+- **Tests Passed**: 164 (100%)
 - **Tests Failed**: 0
-- **Tests Not Run**: 0
 - **TypeScript**: `tsc --noEmit` passed (0 errors)
 - **ESLint**: `next lint` passed (0 errors)
-- **Structure Validation**: `bash scripts/verify-task.sh TASK-006` passed.
-- **Known Limitations**: Leafly handoff format, partner dispensary list, VPS/DNS, and final product data pending client; SMTP sender pending (Q-006); shoppable-video hooks to be confirmed on the Terrific account (TASK-016).
+- **Structure Validation**: `bash scripts/verify-task.sh TASK-010` passed.
 
 ---
 
 ## 🚀 Fresh Session Handoff (নতুন চ্যাটে কপি-পেস্ট করার কমান্ড)
+
 > [!TIP]
 > **টোকেন সাশ্রয়ের নিয়ম**: প্রতি ১-২টি টাস্ক শেষ হলে বর্তমান চ্যাট বন্ধ করে **নতুন চ্যাট উইন্ডো** খুলুন এবং নিচের এক লাইন পেস্ট করুন:
 >
 > ```text
-> planning/updateplanning.md পড়ে TASK-007 শুরু করো। [Tier: LEVEL: HEAVY]
+> planning/updateplanning.md পড়ে TASK-011 শুরু করো। [Tier: LEVEL: HEAVY]
 > ```
