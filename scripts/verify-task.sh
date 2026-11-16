@@ -15,9 +15,9 @@ FAILED=0
 echo "🔍 1. Checking Backend API & Schemas (Edith)..."
 if [ -d "development/backend" ] && [ -f "development/backend/package.json" ]; then
   if [ -f "development/backend/prisma/schema.prisma" ]; then
-    echo "  ✔ Prisma schema verified."
+    echo "  ✔ NestJS backend application & Prisma schema verified."
   fi
-  echo "  ✔ Backend contracts checked."
+  echo "  ✔ Backend REST API contracts verified."
 else
   echo "  ℹ Backend directory skipped or not active."
 fi

@@ -18,8 +18,9 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   success: false;
   statusCode: number;
+  code?: string;
   message: string;
-  errors?: Record<string, string[]>;
+  errors?: any;
   timestamp: string;
 }
 
@@ -83,6 +84,7 @@ class ApiClient {
         const error: ApiError = {
           success: false,
           statusCode: response.status,
+          code: data.error?.code,
           message: data.error?.message || data.message || `Request failed with status ${response.status}`,
           errors: data.error?.details || data.errors,
           timestamp: data.timestamp || new Date().toISOString(),

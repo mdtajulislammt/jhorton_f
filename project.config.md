@@ -18,7 +18,7 @@
 ## 1. Project Information & Metadata
 
 - **Project Name**: Owtlet™ — Live Shopping for Cannabis (`owtlet.com`)
-- **Project Type**: Full-Stack Web (single Next.js app: UI + API routes). Mobile: N/A
+- **Project Type**: Decoupled Full-Stack Web (Frontend: Next.js 14+, Backend: NestJS 10+ REST API). Mobile: N/A
 - **Project Status**: `new` <!-- Options: new / existing / migration -->
 - **Client Requirements Source**: [README.md](README.md)
 - **Problem & Product Summary**: Custom 21+ cannabis marketplace with Terrific-powered live shopping & shoppable replays; cannabis items go to Owtlet's own cart and are handed off to Leafly/retailer checkout (no cannabis payment or ID stored), split across partner dispensaries by stock, pickup/delivery eligibility and the shopper's store choice; brand storefronts (channels), one Owtlet price for show products, guest checkout + optional profile, carts held until 30 min after the show ends (client answers in `input/client-docs/`). **Cannabis-only** — accessories are out of scope (separate `owtlet.shop` Shopify project).
@@ -51,7 +51,7 @@
 | **`iron_man`** | **Chief Orchestrator** | Planning, Delegation, Work Breakdown & Verification | `.codex/agents/iron_man.toml` | Root, `planning/`, `docs/` |
 | **`jarvis`** | **UI/UX & Design** | Design Tokens, Typography, Figma Parsing, 6 UI States | `.codex/agents/jarvis.toml` | `development/frontend/src/styles/`, UI Primitives |
 | **`friday`** | **Frontend Web** | Next.js, React, TypeScript, Forms, Client State | `.codex/agents/friday.toml` | `development/frontend/` |
-| **`edith`** | **Backend & Data** | Next.js Route Handlers + Server Actions, Prisma, PostgreSQL, Redis (optional), REST APIs | `.codex/agents/edith.toml` | `development/frontend/src/app/api/`, `development/frontend/src/server/`, `development/frontend/prisma/` |
+| **`edith`** | **Backend & Data** | NestJS REST API, Prisma ORM, PostgreSQL, Redis (optional), API Contracts & Domain Services | `.codex/agents/edith.toml` | `development/backend/src/`, `development/backend/prisma/` |
 | **`thor`** | **Mobile (Optional)** | **Disabled for Owtlet** (mobile = false) | `.codex/agents/thor.toml` | — (no `development/mobile/`; removed, ADR-015) |
 | **`thanos`** | **QA & Verification** | Unit, Integration, E2E, Acceptance, Bug Snapping | `.codex/agents/thanos.toml` | Test suites across repository |
 | **`loki`** | **Chaos & Security Tester** | Edge-Case Fuzzing, Adversarial Attacks, Crash Resilience | `.codex/agents/loki.toml` | Test suites, API security |
@@ -62,14 +62,15 @@
 ## 3. Technology Stack Specification (Stack-Agnostic with Production Defaults)
 
 > [!IMPORTANT]
-> **Stack-Agnostic Core Policy**:  
-> Avengers Protocol is **100% stack-agnostic**. While sensible, production-ready defaults (Next.js, NestJS, Flutter) are pre-populated below, the developer or client can change any framework, language, ORM, or database.  
-> **Owtlet override**: ONE full-stack Next.js app — UI and backend (Route Handlers + Server Actions) live together in `development/frontend/`. The template's NestJS (`development/backend/`) and Flutter (`development/mobile/`) scaffolds were **removed** (ADR-015) so no agent builds on them.  
-> Specialist agents (`friday`, `edith`, `thor`, `ultron`) dynamically adapt their code generation and validation rules to whatever is declared in this section.
+> **Decoupled Architecture Directive (ADR-016)**:  
+> Per explicit human instruction, Owtlet is structured into two dedicated development directories:  
+> - **Frontend Web**: `development/frontend/` (Next.js 14+ App Router, TypeScript, Tailwind CSS, Zustand, TanStack Query)  
+> - **Backend API**: `development/backend/` (NestJS 10+, TypeScript, Prisma ORM, PostgreSQL, Swagger docs at `http://localhost:4000/api/docs`)  
+> Next.js proxies `/api/*` to the NestJS backend via `rewrites()` in `next.config.mjs`.
 
 ### 3.1 Frontend Configuration (`development/frontend/`)
 > *Friday and Jarvis strictly adhere to these frontend choices.*
-- **Directory**: `development/frontend/` (single Next.js app — also hosts the API)
+- **Directory**: `development/frontend/` (Next.js 14+ Storefront Web application)
 - **Framework**: `Next.js 14+ (App Router, React Server Components)` <!-- Supported: Next.js (App Router) / React (Vite) / Vue / Nuxt / SvelteKit / Angular / Remix / Astro -->
 - **Language**: `TypeScript` (Strict Mode) <!-- Options: TypeScript / JavaScript -->
 - **Styling**: `Tailwind CSS` + Semantic CSS Variables (`globals.css`, Owtlet brand tokens from `docs/04-design-system.md`) <!-- Options: Tailwind CSS / CSS Modules / Emotion / Styled Components / Sass -->
@@ -80,18 +81,18 @@
 - **Testing**: `Vitest` + `React Testing Library` + `Playwright` (E2E) <!-- Options: Jest / Vitest / Cypress / Playwright -->
 - **Third-party client SDKs**: Terrific live-shopping SDK v2 (`https://terrific.live/terrific-sdk.js`). No Shopify integration (accessories out of scope)
 
-### 3.2 Backend Configuration (inside the Next.js app — `development/frontend/src/app/api/`)
+### 3.2 Backend Configuration (`development/backend/`)
 > *Edith strictly adheres to these backend choices.*
-- **Directory**: `development/frontend/src/app/api/` (Route Handlers), `development/frontend/src/server/` (domain services), `development/frontend/prisma/` (schema & migrations)
-- **Framework**: `Next.js Route Handlers + Server Actions (API routes in app/api)` <!-- Supported: NestJS / Express / Fastify / Django / FastAPI / Go (Gin/Fiber) / Laravel / Spring Boot / ASP.NET Core -->
+- **Directory**: `development/backend/` (NestJS 10+ REST API Service)
+- **Framework**: `NestJS (TypeScript modular architecture)` <!-- Supported: NestJS / Express / Fastify / Django / FastAPI / Go (Gin/Fiber) / Laravel / Spring Boot / ASP.NET Core -->
 - **Language**: `TypeScript` (Strict Mode) <!-- Options: TypeScript / Python / Go / PHP / Java / C# -->
 - **ORM / Database Client**: `Prisma ORM` <!-- Supported: Prisma / Drizzle / TypeORM / SQLAlchemy / Tortoise / GORM / Eloquent / Hibernate / EF Core -->
 - **Primary Database**: `PostgreSQL (v15+)` <!-- Supported: PostgreSQL / MySQL / MongoDB / SQLite / CockroachDB / DynamoDB -->
 - **Cache & Queue**: `Redis` (**optional** — 30-min cart TTL & session cache; falls back to PostgreSQL `expiresAt`) <!-- Supported: Redis / Memcached / RabbitMQ / BullMQ / Kafka / Celery -->
 - **Object Storage**: `Local Storage` / `Cloudflare R2` / `AWS S3 compatible`
-- **API Documentation**: `REST under /api` — contract in `docs/08-api-contract.md` (Zod schemas as source of truth) <!-- Options: REST (OpenAPI/Swagger) / GraphQL / gRPC / tRPC -->
-- **Validation**: `Zod` (shared between Route Handlers, Server Actions and forms) <!-- Options: class-validator / Pydantic (Python) / Zod / Joi -->
-- **Testing**: `Vitest` (services + route handler integration against a test PostgreSQL) <!-- Options: Jest / Pytest / Go Test / PHPUnit -->
+- **API Documentation**: `REST under /api` with Swagger OpenAPI at `http://localhost:4000/api/docs` — contract in `docs/08-api-contract.md` (Zod & class-validator schemas) <!-- Options: REST (OpenAPI/Swagger) / GraphQL / gRPC / tRPC -->
+- **Validation**: `Zod` & `class-validator` <!-- Options: class-validator / Pydantic (Python) / Zod / Joi -->
+- **Testing**: `Vitest` (services + controller integration against PostgreSQL) <!-- Options: Jest / Pytest / Go Test / PHPUnit -->
 
 ### 3.3 Mobile Configuration (`development/mobile/` — Optional)
 > *Thor is activated only when mobile is set to true.*

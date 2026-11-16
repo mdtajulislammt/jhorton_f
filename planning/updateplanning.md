@@ -5,10 +5,11 @@
 - **Project**: Owtlet™ — cannabis marketplace + live shopping (`owtlet.com`) · Client: Jesce Horton (Grand National Agency) · Deadline: **Dec 1, 2026**
 - **Project Phase**: Phase 0 complete (planning & scaffolding filled) → Phase 1 Foundation 100% COMPLETE → **Phase 2 In Progress**
 - **Last Updated**: 2026-11-16
-- **Current Task**: Completed [`TASK-010`](tasks/TASK-010.md) (Dispensary eligibility, hours, distance API)
-- **Next Dependency-Ready Task**: [`TASK-011`](tasks/TASK-011.md) (Distribution allocator & parent/sub-orders)
+- **Current Task**: Completed [`TASK-012`](tasks/TASK-012.md) (Checkout UI) & Decoupled into `development/frontend` and `development/backend` (NestJS)
+- **Next Dependency-Ready Task**: [`TASK-013`](tasks/TASK-013.md) (Compliant checkout handoff provider — Leafly & direct retailer redirect)
 - **Overall Status**: `IN_PROGRESS` (Phase 2 In Progress)
-- **Client-answer gap closure (2026-11-15)**: Audited against Jesce's written answers (saved verbatim in `input/client-docs/`). Added REQ-F-011…019 (brand storefronts, pickup/delivery, store change + default store, guest checkout + optional profile, one price for show products, cart hold until 30 min after the show ends, out-of-stock suggestions, delivery hours, owtlet.live redirect; shoppable video in REQ-F-003), AC-BRD/FUL/SEL/PRF/PRC/HOLD/OOS/DLH/RDR + AC-LIVE-04, ADR-009…015, TASK-020/021 (BACKLOG). Schema in docs/07 now 21 models (`prisma validate` ✅). Removed `development/backend` (NestJS), `development/mobile` (Flutter), `Dockerfile.backend`; rewrote `.env.example`, `sync-env.sh`, docker-compose and nginx (owtlet.live 301).
+- **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 357 total tests passing (233 frontend + 124 backend).
+- **Client-answer gap closure (2026-11-15)**: Audited against Jesce's written answers (saved verbatim in `input/client-docs/`). Added REQ-F-011…019 (brand storefronts, pickup/delivery, store change + default store, guest checkout + optional profile, one price for show products, cart hold until 30 min after the show ends, out-of-stock suggestions, delivery hours, owtlet.live redirect; shoppable video in REQ-F-003), AC-BRD/FUL/SEL/PRF/PRC/HOLD/OOS/DLH/RDR + AC-LIVE-04, ADR-009…015, TASK-020/021 (BACKLOG). Schema in docs/07 now 21 models (`prisma validate` ✅).
 - **Scope change (2026-11-15)**: Platform is **cannabis-only**; accessories / `owtlet.shop` Shopify are out of scope (separate team member). REQ-F-005 removed, TASK-009 CANCELLED, Q-005 resolved, `AccessoryRef`/`ProductKind`/Shopify endpoints removed from docs (ADR-008).
 
 ---
@@ -53,16 +54,42 @@
   - Route Handler: `GET /api/dispensaries?zip=&fulfillment=&brand=` in `src/app/api/dispensaries/route.ts` with strict Zod validation, 400 for missing zip on delivery, 422 for `NO_COVERAGE`, and standard envelope.
   - Updated `src/types/api.generated.ts` with synchronized dispensary contract types.
   - 30 new unit, integration & route handler tests added (164 total tests passing across codebase). Thanos verification passed.
+- [x] [`TASK-011`](tasks/TASK-011.md): Multi-dispensary distribution allocator & parent/sub-order generation (docs/06 §4, docs/08 §8, ADR-005, ADR-007, ADR-011, ADR-012, T-DST-01..04, T-ORD-01, T-FUL-01, T-SEL-01, T-OOS-01, T-BRD-01, T-PRC-01, AC-SEC-01).
+  - `src/server/distribution/allocate.ts`: Pure greedy allocator. Evaluates per-line candidate stores (fulfillment type: DELIVERY `offersDelivery` ∧ `zip ∈ coverageZips`, PICKUP `offersPickup`, and brand channel scoping `channelBrandId ∈ dispensary.brandIds`). Applies shopper `itemOverrides` (validating store eligibility → 422 `STORE_NOT_ELIGIBLE`; out-of-stock → unfulfillable `NOT_AT_SELECTED_STORE` with stock suggestions), then assigns remaining lines to `preferredDispensaryId` (`SHOPPER_CHANGED` / `PROFILE_DEFAULT`). Executes greedy auto-allocation loop for remaining lines: selects store supplying the most items in stock (`stockQty >= qty`, never splits a line), with deterministic tie-breaks: lowest subtotal → nearest distance → preferred store hint → name ASC. Outputs sub-orders with lead store covering most items, alternatives per sub-order (`canSupplyAll`, `missingProductIds`, distance), out-of-stock suggestions (≤ 3 nearest active stores with stock), prices via `pricing.unitPrice` (`owtletPrice` uniformity), and SHA-256 `previewHash`.
+  - `src/server/distribution/preview.ts`: `createDistributionPreview()` loading cart, active dispensaries, operating hours (America/New_York), distance, and product inventories from PostgreSQL with 21-region NY coverage gate (`NoCoverageError` 422).
+  - `src/server/orders/types.ts`: Strict Zod validation schemas (`createOrderSchema`, `previewDistributionSchema`, `contactSchema`, `deliveryAddressSchema`) enforcing `.strict()` on all object levels — rejects any DOB, government ID, or cannabis payment data (AC-SEC-01).
+  - `src/server/orders/order-number.ts` & `status.ts`: Collision-free `OWT-xxxxxx` order number generator and status roll-up logic (CONFIRMED when all sub-orders confirmed, PARTIALLY_CONFIRMED, HANDED_OFF, CANCELLED).
+  - `src/server/orders/create.ts`: Atomic transaction creating parent `Order`, child `SubOrder` records, and `OrderItem` rows. Validates cart hold expiration (410 `CART_EXPIRED`), unfulfillable items (422 `UNFULFILLABLE_ITEMS`), and stale preview hashes (409 `PREVIEW_STALE`). Idempotent per cart (returns existing order 200 on repeated checkout). Updates cart `status = CHECKED_OUT`.
+  - `src/server/orders/get.ts`: `getOrderById()` with ownership access control (cookie cart session or authenticated shopper ID; 403 `FORBIDDEN` / 404 `NOT_FOUND`).
+  - Route Handlers: `POST /api/orders/preview`, `POST /api/orders`, and `GET /api/orders/[id]`.
+  - Synchronized `src/types/api.generated.ts` with complete order and preview contract DTOs.
+  - 50 new unit, integration & route handler tests added (214 total Vitest tests passing across codebase with 100% pass rate). Thanos verification passed.
+- [x] [`TASK-012`](tasks/TASK-012.md): Interactive Cannabis Checkout Page, Multi-Store Split, Hours & Distance, and Guest Routing (AC-HRS-01, AC-DLH-01, AC-FUL-01/02, AC-SEL-01, AC-OOS-01, AC-PRF-01, AC-SEC-01).
+  - `src/stores/checkout.store.ts`: LocalStorage-persisted Zustand store managing fulfillment method (PICKUP/DELIVERY), NY delivery address, proximity ZIP, customer contact info, preferred dispensary ID, and per-line store overrides (`itemOverrides`).
+  - `src/hooks/useCheckoutPreview.ts`: React Query integration orchestrating distribution preview, error states (`NO_COVERAGE`, `CART_EXPIRED`, `STORE_NOT_ELIGIBLE`), atomic order creation mutation, item removal, and auto-refetch on store changes.
+  - `src/components/modules/checkout/`:
+    - `FulfillmentToggle.tsx`: Tactile pill toggle between Delivery and Dispensary Pickup.
+    - `DeliveryAddressForm.tsx` & `PickupLocationForm.tsx`: 5-digit NY coverage validation and proximity ZIP locator for pickup.
+    - `SubOrderCard.tsx`: Multi-dispensary split card with live NY operating/delivery hours (`America/New_York`), open/closed status, distance, single Owtlet live show pricing, and assignment badge.
+    - `StorePickerDialog.tsx`: Alternative dispensary picker modal with distance, stock coverage ("In Stock - All Items" vs "Missing X items"), and real-time re-allocation.
+    - `UnfulfillableList.tsx`: Out-of-stock resolution card with suggested alternatives and item removal (blocks Place Order until resolved).
+    - `ContactForm.tsx`: Guest contact form with zero ID / zero payment policy compliance banner and optional profile save.
+    - `NoCoverageAlert.tsx`: 5-region NY coverage warning with instant "Switch to Dispensary Pickup" CTA.
+    - `CheckoutSummary.tsx`: Order summary with subtotal, dispensary count, zero-payment regulatory disclaimer, and Place Cannabis Order CTA.
+    - `CheckoutSkeleton.tsx`: Complete pulse skeleton fulfilling 6 mandatory UI states.
+  - `src/app/checkout/page.tsx`: Full storefront checkout page integration.
+  - `src/app/order/[id]/page.tsx`: Order confirmation and routing handoff status page.
+  - 19 new Vitest unit and component tests added (233 total Vitest tests passing across codebase with 100% pass rate). Playwright E2E spec added. Thanos verification passed.
 
 ---
 
 ## In Progress
 
-- **Task ID**: None (TASK-010 Complete)
-- **Next Task ID**: [`TASK-011`](tasks/TASK-011.md) (Distribution allocator & parent/sub-orders)
+- **Task ID**: None (TASK-012 Complete)
+- **Next Task ID**: [`TASK-013`](tasks/TASK-013.md) (Compliant checkout handoff provider — Leafly & direct retailer redirect)
 - **Assigned Agent**: `edith`
-- **Current Checkpoint**: Ready for TASK-011.
-- **Next Expected Action**: Implement multi-dispensary greedy allocator and parent/sub-order generation in `src/server/distribution/` and `src/server/orders/`.
+- **Current Checkpoint**: Ready for TASK-013.
+- **Next Expected Action**: Implement `HandoffProvider` interface, Leafly URL generator/mock, retailer direct page fallback, and handoff execution service.
 
 ---
 
@@ -79,20 +106,19 @@
 
 ## Next Actions
 
-- [ ] Execute TASK-011 (Distribution allocator + parent/sub-orders).
-- [ ] Proceed to TASK-012 (Checkout UI).
+- [ ] Execute TASK-013 (Compliant checkout handoff provider).
+- [ ] Proceed to TASK-014 (Order confirmation & webhook confirmation).
 - [ ] Follow up with the client on Q-001…Q-004 (needed by ~Nov 22 to keep Phase 3–5 on schedule).
 
 ---
 
 ## Verification Summary
 
-- **Tests Executed**: 164 Vitest unit & integration tests + Playwright E2E specs
-- **Tests Passed**: 164 (100%)
+- **Tests Executed**: 357 Vitest unit & integration tests (233 frontend + 124 backend) + Playwright E2E specs
+- **Tests Passed**: 357 (100%)
 - **Tests Failed**: 0
-- **TypeScript**: `tsc --noEmit` passed (0 errors)
-- **ESLint**: `next lint` passed (0 errors)
-- **Structure Validation**: `bash scripts/verify-task.sh TASK-010` passed.
+- **TypeScript**: `tsc --noEmit` passed across both `development/frontend` and `development/backend` (0 errors)
+- **Structure Validation**: `bash scripts/verify-task.sh TASK-012` passed (Edith NestJS backend & Friday frontend verified).
 
 ---
 
@@ -102,5 +128,5 @@
 > **টোকেন সাশ্রয়ের নিয়ম**: প্রতি ১-২টি টাস্ক শেষ হলে বর্তমান চ্যাট বন্ধ করে **নতুন চ্যাট উইন্ডো** খুলুন এবং নিচের এক লাইন পেস্ট করুন:
 >
 > ```text
-> planning/updateplanning.md পড়ে TASK-011 শুরু করো। [Tier: LEVEL: HEAVY]
+> planning/updateplanning.md পড়ে TASK-013 শুরু করো। [Tier: LEVEL: HEAVY]
 > ```

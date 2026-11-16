@@ -1,6 +1,6 @@
 # TASK-011: Multi-Dispensary Distribution & Parent/Sub-Order Creation
 
-> **Status**: `BACKLOG`  
+> **Status**: `DONE`  
 > **Assignee**: `edith` (Backend & Data Architect)  
 > **Priority**: `P0` (Critical)  
 > **Complexity Level**: `HEAVY`  
@@ -37,16 +37,24 @@ As Owtlet, I want each cart split into a parent order plus per-dispensary sub-or
 ---
 
 ## 5. Acceptance Criteria
-- [ ] T-DST-01/02/04, T-ORD-01, T-FUL-01, T-SEL-01, T-OOS-01, T-BRD-01 (allocator part) green; AC-DST-01/02, AC-FUL-01/02, AC-SEL-01, AC-OOS-01, AC-PRC-01 pass at API level.
-- [ ] Order rejects DOB/ID/payment keys (`.strict()`).
-- [ ] Order creation is atomic; stale preview → 409.
+- [x] T-DST-01/02/04, T-ORD-01, T-FUL-01, T-SEL-01, T-OOS-01, T-BRD-01 (allocator part) green; AC-DST-01/02, AC-FUL-01/02, AC-SEL-01, AC-OOS-01, AC-PRC-01 pass at API level.
+- [x] Order rejects DOB/ID/payment keys (`.strict()`).
+- [x] Order creation is atomic; stale preview → 409.
 
 ---
 
 ## 6. Verification Evidence (Thanos)
-- **Command**: `cd development/frontend && pnpm test -- distribution orders`
-- **Status**: `Pending Verification`
-- **Output Log**: Awaiting execution.
+- **Command**: `cd development/frontend && npx vitest run src/__tests__/distribution-allocate.test.ts src/__tests__/orders-service.test.ts src/__tests__/routes/orders.route.test.ts`
+- **Status**: `PASSED` (50/50 tests passing in new suites; 214/214 tests passing across full codebase)
+- **Output Log**:
+```
+ ✓ src/__tests__/distribution-allocate.test.ts (17)
+ ✓ src/__tests__/orders-service.test.ts (17)
+ ✓ src/__tests__/routes/orders.route.test.ts (16)
+ Test Files  3 passed (3)
+      Tests  50 passed (50)
+```
+- **Thanos Gate**: `bash scripts/verify-task.sh TASK-011` -> `VERIFICATION PASSED: Task TASK-011 meets all criteria.`
 
 ---
 

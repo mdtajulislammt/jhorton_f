@@ -12,6 +12,8 @@ export const API_BASE_URL = '/api';
 export const API_ENDPOINTS = {
   USER_LOGIN: '/api/v1/auth/login',
   DISPENSARIES: '/api/dispensaries',
+  ORDERS_PREVIEW: '/api/orders/preview',
+  ORDERS: '/api/orders',
 } as const;
 
 export interface SystemHealthDto {
@@ -55,3 +57,134 @@ export interface DispensariesResponseData {
   region: string | null;
   items: DispensaryListItemDto[];
 }
+
+export interface PreviewOrderItemDto {
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice: string;
+  priceMode: string;
+  lineTotal: string;
+}
+
+export interface AlternativeDispensaryDto {
+  dispensaryId: string;
+  dispensaryName: string;
+  canSupplyAll: boolean;
+  missingProductIds: string[];
+  distanceMiles: number | null;
+  isOpenNow: boolean;
+}
+
+export interface PreviewSubOrderDto {
+  dispensaryId: string;
+  dispensaryName: string;
+  fulfillmentType: string;
+  assignment: string;
+  channelBrandId: string | null;
+  channelBrand: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  isOpenNow: boolean;
+  hoursToday: DispensaryHoursWindowDto | null;
+  isDeliveringNow: boolean;
+  deliveryHoursToday: DispensaryHoursWindowDto | null;
+  distanceMiles: number | null;
+  items: PreviewOrderItemDto[];
+  subtotal: string;
+  handoffChannel: string;
+  alternatives: AlternativeDispensaryDto[];
+}
+
+export interface DispensarySuggestionDto {
+  dispensaryId: string;
+  dispensaryName: string;
+  fulfillmentTypes: string[];
+  distanceMiles: number | null;
+}
+
+export interface UnfulfillableLineDto {
+  productId: string;
+  name: string;
+  reason: string;
+  suggestions: DispensarySuggestionDto[];
+}
+
+export interface OrderPreviewResponseData {
+  zip: string | null;
+  fulfillmentType: string;
+  subOrders: PreviewSubOrderDto[];
+  unfulfillable: UnfulfillableLineDto[];
+  total: string;
+  previewHash: string;
+}
+
+export interface OrderCreationResponseData {
+  orderId: string;
+  orderNumber: string;
+  status: string;
+  subtotal: string;
+  subOrders: Array<{
+    id: string;
+    dispensaryId: string;
+    status: string;
+    subtotal: string;
+  }>;
+}
+
+export interface OrderDetailItemDto {
+  id: string;
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+}
+
+export interface OrderDetailSubOrderDto {
+  id: string;
+  dispensaryId: string;
+  dispensaryName: string;
+  fulfillmentType: string;
+  assignment: string;
+  channelBrandId: string | null;
+  status: string;
+  handoffChannel: string;
+  handoffUrl: string | null;
+  handedOffAt: string | null;
+  confirmationRef: string | null;
+  confirmationUrl: string | null;
+  confirmedAt: string | null;
+  subtotal: string;
+  items: OrderDetailItemDto[];
+}
+
+export interface OrderDetailResponseData {
+  id: string;
+  orderNumber: string;
+  cartId: string | null;
+  shopperId: string | null;
+  fulfillmentType: string;
+  zip: string;
+  status: string;
+  subtotal: string;
+  contact: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  deliveryAddress: {
+    line1: string;
+    line2?: string | null;
+    city: string;
+    state: string;
+    zip: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+  subOrders: OrderDetailSubOrderDto[];
+}
+

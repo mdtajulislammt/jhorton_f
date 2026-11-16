@@ -15,7 +15,7 @@ case "$TARGET" in
     echo "🌐 URL: http://localhost:3000"
     if [ -d "development/frontend" ]; then
       cd development/frontend
-      npm run dev
+      pnpm dev
     else
       echo "❌ Directory development/frontend not found."
       exit 1
@@ -28,11 +28,10 @@ case "$TARGET" in
     echo "📚 Swagger Docs: http://localhost:4000/api/docs"
     if [ -d "development/backend" ]; then
       cd development/backend
-      npm run start:dev 2>/dev/null || npm run dev 2>/dev/null || npm start
+      pnpm dev || pnpm start:dev
     else
-      echo "ℹ️  Owtlet has no separate backend — the API is /api/* inside the Next.js app (ADR-015)."
-      echo "   Run: bash scripts/run-local.sh frontend"
-      exit 0
+      echo "❌ Directory development/backend not found."
+      exit 1
     fi
     ;;
 
@@ -40,13 +39,18 @@ case "$TARGET" in
     echo "🚀 Launching Full-Stack Services..."
     echo "--------------------------------------------------------"
     echo "  📱 Frontend: http://localhost:3000"
-    echo "  ⚙️ API:      http://localhost:3000/api (same Next.js app)"
+    echo "  ⚙️ Backend:  http://localhost:4000/api"
+    echo "  📚 Swagger:  http://localhost:4000/api/docs"
     echo "--------------------------------------------------------"
     echo ""
-    echo "Starting Frontend in this terminal (Ctrl+C to stop)..."
-    if [ -d "development/frontend" ]; then
-      cd development/frontend
-      npm run dev
+    echo "To run both services side-by-side in separate terminals:"
+    echo "  Terminal 1: bash scripts/run-local.sh backend"
+    echo "  Terminal 2: bash scripts/run-local.sh frontend"
+    echo ""
+    echo "Starting Backend now..."
+    if [ -d "development/backend" ]; then
+      cd development/backend
+      pnpm dev
     fi
     ;;
 
@@ -55,4 +59,3 @@ case "$TARGET" in
     exit 1
     ;;
 esac
-

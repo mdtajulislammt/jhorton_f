@@ -125,3 +125,16 @@
 - **Context**: ADR-003 chose one Next.js app, but the template's `development/backend` (NestJS) and `development/mobile` (Flutter) scaffolds, a JWT/S3-style `.env.example`, a backend Dockerfile and an Nginx config proxying `/api` to a backend container were still present — a coding agent could build on them.
 - **Decision**: Delete `development/backend/`, `development/mobile/` and `infrastructure/docker/Dockerfile.backend`. Rewrite `.env.example` (DATABASE_URL, AGE/ADMIN/SHOPPER session secrets, CONFIRMATION_LINK_SECRET, IP_HASH_SALT, seed admin, Terrific, SMTP, Leafly, NEXT_PUBLIC_APP_URL), `scripts/sync-env.sh` (root `.env` → `development/frontend/.env`), `infrastructure/docker/docker-compose.yml` (postgres, optional redis, web + nginx `prod` profile) and `infrastructure/nginx/nginx.conf` (single `web` upstream + owtlet.live redirect). `scripts/validate-project.sh` checks backend/mobile AGENTS.md only if those folders exist.
 - **Consequences**: Template scripts keep working (all backend/mobile references are guarded by directory checks).
+
+### ADR-016: Decouple into Separate development/frontend and development/backend (NestJS)
+- **Date**: 2026-11-16
+- **Status**: APPROVED (explicit developer/human instruction)
+- **Context**: Per developer instruction: "na ami cacchi tumi alada folder koro development/frontend, ar development/backend". Supersedes ADR-003 and ADR-015 monolithic single-folder consolidation.
+- **Decision**:
+  - Re-establish strict two-tier architecture with separate folders:
+    - `development/frontend/`: Next.js 14+ App Router storefront web application (Zustand, React Query, Tailwind CSS, Radix UI). Proxies `/api/*` to the backend via Next.js `rewrites()`.
+    - `development/backend/`: Dedicated NestJS 10+ REST API application with TypeScript, Prisma ORM, Swagger OpenAPI documentation (`/api/docs`), and standard API envelopes. Runs on `http://localhost:4000/api`.
+  - Future tasks: Edith builds exclusively in `development/backend/`; Friday builds in `development/frontend/`.
+- **Consequences**:
+  - Positive: Clean micro-service/decoupled boundary, independent deployment and scaling, clear domain ownership between Edith and Friday.
+  - Development: Backend runs on port 4000; frontend runs on port 3000.
