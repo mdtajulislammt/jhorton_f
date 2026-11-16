@@ -1,6 +1,6 @@
 # TASK-013: Cannabis Checkout Handoff Providers (Leafly / Retailer Page)
 
-> **Status**: `BACKLOG`  
+> **Status**: `DONE`  
 > **Assignee**: `edith` (Backend & Data Architect)  
 > **Priority**: `P0` (Critical)  
 > **Complexity Level**: `HEAVY`  
@@ -36,14 +36,23 @@ As Owtlet, I want each cannabis sub-order handed off to Leafly or the retailer's
 ---
 
 ## 5. Acceptance Criteria
-- [ ] AC-HND-01 / T-HND-01 green; no payment/ID fields anywhere.
+- [x] AC-HND-01 / T-HND-01 green; no payment/ID fields anywhere.
 
 ---
 
 ## 6. Verification Evidence (Thanos)
 - **Command**: `cd development/frontend && pnpm test -- handoff`
-- **Status**: `Pending Verification`
-- **Output Log**: Awaiting execution.
+- **Status**: `Passed`
+- **Output Log**:
+```text
+ ✓ src/__tests__/handoff-service.test.ts (17)
+ ✓ src/__tests__/routes/checkout-handoff.route.test.ts (7)
+ ✓ src/__tests__/components/handoff-button.test.tsx (6)
+ Test Files  25 passed (25)
+      Tests  263 passed (263)
+```
+- **Tri-Platform Verification**: `bash scripts/verify-task.sh TASK-013` (Passed)
+
 
 ---
 

@@ -188,3 +188,19 @@ export interface OrderDetailResponseData {
   subOrders: OrderDetailSubOrderDto[];
 }
 
+export interface CheckoutHandoffRequestDto {
+  orderId: string;
+  subOrderId?: string;
+}
+
+export interface CheckoutHandoffItemDto {
+  subOrderId: string;
+  channel: 'LEAFLY' | 'RETAILER_PAGE';
+  url: string;
+  dispensaryName: string;
+}
+
+export interface CheckoutHandoffResponseData {
+  handoffs: CheckoutHandoffItemDto[];
+}
+

@@ -5,10 +5,10 @@
 - **Project**: Owtlet™ — cannabis marketplace + live shopping (`owtlet.com`) · Client: Jesce Horton (Grand National Agency) · Deadline: **Dec 1, 2026**
 - **Project Phase**: Phase 0 complete (planning & scaffolding filled) → Phase 1 Foundation 100% COMPLETE → **Phase 2 In Progress**
 - **Last Updated**: 2026-11-16
-- **Current Task**: Completed [`TASK-012`](tasks/TASK-012.md) (Checkout UI) & Decoupled into `development/frontend` and `development/backend` (NestJS)
-- **Next Dependency-Ready Task**: [`TASK-013`](tasks/TASK-013.md) (Compliant checkout handoff provider — Leafly & direct retailer redirect)
-- **Overall Status**: `IN_PROGRESS` (Phase 2 In Progress)
-- **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 357 total tests passing (233 frontend + 124 backend).
+- **Current Task**: Completed [`TASK-013`](tasks/TASK-013.md) (Cannabis checkout handoff providers — Leafly & direct retailer redirect)
+- **Next Dependency-Ready Task**: [`TASK-014`](tasks/TASK-014.md) (Dispensary confirmation webhook & order tracking)
+- **Overall Status**: `IN_PROGRESS` (Phase 3 In Progress)
+- **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 387 total tests passing (263 frontend + 124 backend).
 - **Client-answer gap closure (2026-11-15)**: Audited against Jesce's written answers (saved verbatim in `input/client-docs/`). Added REQ-F-011…019 (brand storefronts, pickup/delivery, store change + default store, guest checkout + optional profile, one price for show products, cart hold until 30 min after the show ends, out-of-stock suggestions, delivery hours, owtlet.live redirect; shoppable video in REQ-F-003), AC-BRD/FUL/SEL/PRF/PRC/HOLD/OOS/DLH/RDR + AC-LIVE-04, ADR-009…015, TASK-020/021 (BACKLOG). Schema in docs/07 now 21 models (`prisma validate` ✅).
 - **Scope change (2026-11-15)**: Platform is **cannabis-only**; accessories / `owtlet.shop` Shopify are out of scope (separate team member). REQ-F-005 removed, TASK-009 CANCELLED, Q-005 resolved, `AccessoryRef`/`ProductKind`/Shopify endpoints removed from docs (ADR-008).
 
@@ -80,16 +80,31 @@
   - `src/app/checkout/page.tsx`: Full storefront checkout page integration.
   - `src/app/order/[id]/page.tsx`: Order confirmation and routing handoff status page.
   - 19 new Vitest unit and component tests added (233 total Vitest tests passing across codebase with 100% pass rate). Playwright E2E spec added. Thanos verification passed.
+- [x] [`TASK-013`](tasks/TASK-013.md): Compliant Cannabis Checkout Handoff Providers (Leafly & Retailer Page) (docs/08 §9, ADR-005, T-HND-01, AC-HND-01, AC-SEC-01).
+  - Edith (Backend Domain Services):
+    - `src/server/checkout-handoff/types.ts`: `HandoffProvider` interface, `HandoffPayload`, `CheckoutHandoffResult`, and strict Zod validation schema `checkoutHandoffSchema` enforcing Zero ID & Zero Payment policy (`.strict()` rejects any payment/ID fields).
+    - `src/server/checkout-handoff/providers/retailer-page.provider.ts`: `RetailerPageProvider` supporting template interpolation (`{subOrderId}`, `{orderId}`, `{orderNumber}`, `{dispensaryId}`, `{ref}`) and slug-based fallback URLs.
+    - `src/server/checkout-handoff/providers/leafly.provider.ts`: `LeaflyProvider` compliant deep-link stub per Q-001 with `leaflyStoreId` and `owtlet_ref` tracking.
+    - `src/server/checkout-handoff/handoff-service.ts`: `executeCheckoutHandoff()` with strict session/shopper ownership verification, atomic SubOrder status transition to `HANDED_OFF`, `handoffUrl` recording, and parent Order status roll-up.
+  - Edith (NestJS Controller & Module):
+    - `src/modules/checkout/checkout.controller.ts` & `src/modules/checkout/checkout.module.ts`: `@Controller('checkout')` with `@Post('handoff')` registered in `app.module.ts`.
+  - Friday (Route Handler & UI Components):
+    - `src/app/api/checkout/handoff/route.ts`: Next.js Route Handler for `POST /api/checkout/handoff`.
+    - `src/components/modules/checkout/HandoffButton.tsx`: Tactile handoff button (Mint `#70F1C7` → Volt hover, 44px ergonomics, `active:scale-[0.98]`) with Leafly/Retailer badges, 6 UI states (default, connecting spinner, transferred to store, error retry), and domain compliance copy.
+    - `src/app/order/[id]/page.tsx`: Upgraded order status screen rendering dispensary sub-orders, product breakdowns, line totals, and live `HandoffButton` per sub-order.
+  - Thanos Verification:
+    - 30 new unit, route, and component tests added (263 total frontend Vitest tests passing with 100% pass rate).
+    - Tri-Platform verification `bash scripts/verify-task.sh TASK-013` passed.
 
 ---
 
 ## In Progress
 
-- **Task ID**: None (TASK-012 Complete)
-- **Next Task ID**: [`TASK-013`](tasks/TASK-013.md) (Compliant checkout handoff provider — Leafly & direct retailer redirect)
+- **Task ID**: None (TASK-013 Complete)
+- **Next Task ID**: [`TASK-014`](tasks/TASK-014.md) (Dispensary confirmation webhook & order status roll-up)
 - **Assigned Agent**: `edith`
-- **Current Checkpoint**: Ready for TASK-013.
-- **Next Expected Action**: Implement `HandoffProvider` interface, Leafly URL generator/mock, retailer direct page fallback, and handoff execution service.
+- **Current Checkpoint**: Ready for TASK-014.
+- **Next Expected Action**: Implement `POST /api/webhooks/store-confirmation` with HMAC signature validation / signed token link and order status progression to CONFIRMED.
 
 ---
 
@@ -97,7 +112,7 @@
 
 - _No foundation task is blocked._
 - Late-stage tasks waiting on clarifications (client questions sent Nov 14–15, awaiting reply; Q-006 internal):
-  - TASK-013 / TASK-014 (handoff + confirmation) ← Q-001 Leafly, Q-002 dispensaries/POS
+  - TASK-014 (webhook format) ← Q-001 Leafly, Q-002 dispensaries/POS
   - TASK-017 (final product data) ← Q-004
   - TASK-019 (deploy) ← Q-003 VPS/DNS (owtlet.com + owtlet.live)
   - Production password-reset email (TASK-021/019) ← Q-006 SMTP sender
@@ -106,19 +121,19 @@
 
 ## Next Actions
 
-- [ ] Execute TASK-013 (Compliant checkout handoff provider).
-- [ ] Proceed to TASK-014 (Order confirmation & webhook confirmation).
+- [ ] Execute TASK-014 (Dispensary confirmation webhook & order tracking).
+- [ ] Proceed to TASK-015 (Admin console for inventory, hours, and live show pricing).
 - [ ] Follow up with the client on Q-001…Q-004 (needed by ~Nov 22 to keep Phase 3–5 on schedule).
 
 ---
 
 ## Verification Summary
 
-- **Tests Executed**: 357 Vitest unit & integration tests (233 frontend + 124 backend) + Playwright E2E specs
-- **Tests Passed**: 357 (100%)
+- **Tests Executed**: 387 Vitest unit & integration tests (263 frontend + 124 backend) + Playwright E2E specs
+- **Tests Passed**: 387 (100%)
 - **Tests Failed**: 0
 - **TypeScript**: `tsc --noEmit` passed across both `development/frontend` and `development/backend` (0 errors)
-- **Structure Validation**: `bash scripts/verify-task.sh TASK-012` passed (Edith NestJS backend & Friday frontend verified).
+- **Structure Validation**: `bash scripts/verify-task.sh TASK-013` passed (Edith NestJS backend & Friday frontend verified).
 
 ---
 
@@ -128,5 +143,5 @@
 > **টোকেন সাশ্রয়ের নিয়ম**: প্রতি ১-২টি টাস্ক শেষ হলে বর্তমান চ্যাট বন্ধ করে **নতুন চ্যাট উইন্ডো** খুলুন এবং নিচের এক লাইন পেস্ট করুন:
 >
 > ```text
-> planning/updateplanning.md পড়ে TASK-013 শুরু করো। [Tier: LEVEL: HEAVY]
+> planning/updateplanning.md পড়ে TASK-014 শুরু করো। [Tier: LEVEL: STANDARD]
 > ```

@@ -30,8 +30,8 @@
 | [`TASK-010`](tasks/TASK-010.md) | Dispensary eligibility (pickup/delivery ZIPs, brand), hours, distance API | `edith` | `TASK-004` | `DONE` | `P0` | `STANDARD` | Phase 2 — Verified |
 | [`TASK-011`](tasks/TASK-011.md) | Distribution allocator (fulfillment, store change, OOS) + parent/sub-orders | `edith` | `TASK-007`, `TASK-010` | `DONE` | `P0` | `HEAVY` | Phase 2 — Verified |
 | [`TASK-012`](tasks/TASK-012.md) | Checkout UI (pickup/delivery → split → change store → OOS fixes → guest) | `friday` | `TASK-011`, `TASK-003` | `DONE` | `P0` | `STANDARD` | Phase 2 — Verified ✅ |
-| [`TASK-013`](tasks/TASK-013.md) | Cannabis handoff (Leafly / retailer page) | `edith` | `TASK-011` | `BACKLOG` | `P0` | `HEAVY` | Phase 3 — Pending |
-| [`TASK-014`](tasks/TASK-014.md) | Store confirmation webhook + order status | `edith` | `TASK-013` | `BACKLOG` | `P1` | `STANDARD` | Phase 3 — Pending |
+| [`TASK-013`](tasks/TASK-013.md) | Cannabis handoff (Leafly / retailer page) | `edith` | `TASK-011` | `DONE` | `P0` | `HEAVY` | Phase 3 — Verified ✅ |
+| [`TASK-014`](tasks/TASK-014.md) | Store confirmation webhook + order status | `edith` | `TASK-013` | `READY` | `P1` | `STANDARD` | Phase 3 — Pending |
 | [`TASK-015`](tasks/TASK-015.md) | Admin console (incl. brands, pickup/delivery, delivery hours, Owtlet price) | `friday` | `TASK-006`, `TASK-010` | `BACKLOG` | `P1` | `STANDARD` | Phase 4 — Pending |
 | [`TASK-016`](tasks/TASK-016.md) | Live shows + replays + shoppable videos; start/end show | `friday` | `TASK-008` | `BACKLOG` | `P1` | `STANDARD` | Phase 4 — Pending |
 | [`TASK-017`](tasks/TASK-017.md) | Final cannabis product dataset load | `edith` | `TASK-006` | `BACKLOG` | `P1` | `LIGHT` | Phase 4 — Pending |
@@ -62,8 +62,8 @@
 - `TASK-012`: Interactive checkout page with fulfillment toggle, store split cards, and change store picker. [Status: `DONE` ✅]
 
 ### Phase 3: Checkout Handoff & Channels
-- `TASK-013`: Resilient `HandoffProvider` (Leafly primary, retailer web page fallback). [Status: `BACKLOG`]
-- `TASK-014`: Dispensary order confirmation webhook (`POST /api/webhooks/store-confirmation`) and order tracking. [Status: `BACKLOG`]
+- `TASK-013`: Resilient `HandoffProvider` (Leafly primary, retailer web page fallback). [Status: `DONE` ✅]
+- `TASK-014`: Dispensary order confirmation webhook (`POST /api/webhooks/store-confirmation`) and order tracking. [Status: `READY`]
 - `TASK-020`: Brand storefronts (`/brands/[slug]`) and brand-restricted dispensary checkout. [Status: `BACKLOG`]
 - `TASK-021`: Optional shopper profile (`owt_shopper`), address book, and default store preference. [Status: `BACKLOG`]
 
