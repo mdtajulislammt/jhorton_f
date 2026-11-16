@@ -1,0 +1,88 @@
+# ==============================================================================
+# Owtlet CI/CD Pipeline Reference Specification (infrastructure/ci-cd/ci-cd.yml)
+# Mirror of .github/workflows/deploy.yml
+# ==============================================================================
+name: Owtlet CI/CD & Production Build Gate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality:
+    name: Code Quality & Type Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - name: Frontend Checks
+        working-directory: development/frontend
+        run: |
+          pnpm install --frozen-lockfile
+          npx prisma generate
+          pnpm run tsc
+      - name: Backend Checks
+        working-directory: development/backend
+        run: |
+          pnpm install --frozen-lockfile
+          npx prisma generate
+          pnpm run tsc
+
+  automated-tests:
+    name: Test Suite Execution (592 Unit & Integration Tests)
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - name: Run All Tests
+        working-directory: development/frontend
+        run: |
+          pnpm install --frozen-lockfile
+          npx vitest run
+          npx vitest run --root ../backend
+      - name: Thanos Verification Gate
+        run: bash scripts/verify-task.sh ALL
+
+  security-audit:
+    name: Cyber Security & Secret Hygiene Audit (Ultron)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secret Hygiene Check
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.local)'; then
+            echo "❌ CRITICAL SECURITY ERROR: Unencrypted .env file found in Git index!"
+            exit 1
+          fi
+          echo "✅ Secret hygiene passed: No .env tracked."
+
+  docker-validation:
+    name: Docker Multi-Stage Build & Compose Verification
+    runs-on: ubuntu-latest
+    needs: [code-quality, automated-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Validate Compose Config
+        run: |
+          cd infrastructure/docker
+          docker compose --profile prod config
+

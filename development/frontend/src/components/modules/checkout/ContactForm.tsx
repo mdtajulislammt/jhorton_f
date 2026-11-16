@@ -6,6 +6,7 @@ import { User, ShieldCheck, Mail, Phone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useCheckoutStore } from '@/stores/checkout.store';
 import { useAuthStore } from '@/stores/auth.store';
+import { useShopperProfile } from '@/hooks/useShopperAccount';
 
 interface ContactFormProps {
   className?: string;
@@ -14,10 +15,18 @@ interface ContactFormProps {
 export function ContactForm({ className }: ContactFormProps) {
   const { contact, setContact, saveToProfile, setSaveToProfile } = useCheckoutStore();
   const { isAuthenticated, user } = useAuthStore();
+  const { data: shopperProfile } = useShopperProfile();
 
-  // If user is authenticated, pre-fill contact info
+  // If user or shopper is authenticated, pre-fill contact info
   React.useEffect(() => {
-    if (isAuthenticated && user) {
+    if (shopperProfile) {
+      setContact({
+        firstName: contact.firstName || shopperProfile.firstName || '',
+        lastName: contact.lastName || shopperProfile.lastName || '',
+        email: contact.email || shopperProfile.email || '',
+        phone: contact.phone || shopperProfile.phone || '',
+      });
+    } else if (isAuthenticated && user) {
       const nameParts = (user.name || '').trim().split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -29,7 +38,9 @@ export function ContactForm({ className }: ContactFormProps) {
         phone: contact.phone || user.phone || '',
       });
     }
-  }, [isAuthenticated, user, setContact]);
+  }, [shopperProfile, isAuthenticated, user, setContact]);
+
+  const isSignedIn = Boolean(shopperProfile || isAuthenticated);
 
   return (
     <div
@@ -44,9 +55,9 @@ export function ContactForm({ className }: ContactFormProps) {
           </h3>
         </div>
 
-        {!isAuthenticated && (
+        {!isSignedIn && (
           <Link
-            href="/login?redirect=/checkout"
+            href="/account/login?redirect=/checkout"
             className="text-xs text-primary hover:text-owtlet-volt font-medium transition-colors"
           >
             Sign in for faster checkout

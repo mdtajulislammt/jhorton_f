@@ -176,3 +176,17 @@ Iron Man must present these interactive questions to the developer:
 *A successful agent response alone is NOT proof that the task passed. Actual test output from `bash scripts/verify-task.sh` must be provided.*
 *Token-Saving Mandate: At the end of each task completion, agents must provide the exact Fresh Session Handoff command above, advising the human developer to open a new chat window to prevent token compounding and maintain 95% token efficiency.*
 
+
+---
+
+## 🎨 Theme-Ready UI Rule (MANDATORY for every frontend task)
+
+Owtlet will get a full visual redesign **after** all features are done (layout style like dutchie.com / leafly.com, keeping Owtlet brand colors). Build every UI so that redesign only touches styling, never logic:
+
+1. **No hardcoded colors.** Never write hex/rgb values or raw Tailwind palette colors (`bg-green-500`, `text-gray-700`, `#70F1C7`) in components. Use only tokens from `development/frontend/tailwind.config.ts` / `src/app/globals.css` (`owtlet-*`, `primary`, `secondary`, `accent`, `background`, `foreground`, `card`, `border`, `muted`, `success`, `warning`, `danger`, `info`).
+2. **No hardcoded fonts.** Use `font-heading` / `font-body` only.
+3. **Reuse shared UI.** Use `src/components/ui/*` (button, card, badge, input, dialog, skeleton, empty-state) instead of re-styling raw elements. If a new variant is needed, add it to the shared component, not inline.
+4. **Keep logic out of view components.** Data fetching, cart, pricing, checkout and Terrific logic stay in `src/server`, `src/hooks`, `src/stores`, `src/lib`. Page/component files only render.
+5. **Don't redesign now.** Do not change overall layout/theme during feature tasks; the redesign is a separate later phase.
+
+Full token table: `development/frontend/DESIGN_GUIDELINES.md`.

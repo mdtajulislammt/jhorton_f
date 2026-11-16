@@ -98,6 +98,10 @@ vi.mock('../server/db', () => ({
       upsert: vi.fn(),
       deleteMany: vi.fn(),
     },
+    cart: {
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn(),
+    },
     $transaction: vi.fn((cbOrPromises) => {
       if (typeof cbOrPromises === 'function') {
         return cbOrPromises(prisma);

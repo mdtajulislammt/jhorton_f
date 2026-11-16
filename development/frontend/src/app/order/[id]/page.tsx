@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { HandoffButton } from '@/components/modules/checkout/HandoffButton';
 import { CART_COOKIE_NAME } from '@/server/cart/session';
 import { getOrderById, OrderDetailDto } from '@/server/orders';
+import { verifyShopperToken } from '@/server/shopper-account/crypto';
 import {
   CheckCircle2,
   ShieldCheck,
@@ -41,14 +42,21 @@ export default async function OrderConfirmationPage({
 }: OrderConfirmationPageProps) {
   const cookieStore = cookies();
   const cartToken = cookieStore.get(CART_COOKIE_NAME)?.value || null;
-  const shopperCookie = cookieStore.get('owt_shopper')?.value || null;
+  const rawShopperCookie = cookieStore.get('owt_shopper')?.value || null;
+  let shopperId: string | null = null;
+  if (rawShopperCookie) {
+    const verification = await verifyShopperToken(rawShopperCookie);
+    if (verification.valid && verification.shopperId) {
+      shopperId = verification.shopperId;
+    }
+  }
   const isJustConfirmed = searchParams?.confirmed === 'true';
 
   let order: OrderDetailDto | null = null;
   try {
     order = await getOrderById(params.id, {
       cartSessionToken: cartToken,
-      shopperId: shopperCookie,
+      shopperId,
       isAdmin: false,
     });
   } catch {
@@ -333,6 +341,29 @@ export default async function OrderConfirmationPage({
                 Your order details have been recorded. If you do not see the dispensary handoff
                 buttons, please refresh this page with your active session.
               </p>
+            </div>
+          )}
+
+          {/* Guest Shopper: Save Info for Next Time Prompt */}
+          {order && !order.shopperId && (
+            <div className="p-5 rounded-2xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-heading font-semibold text-foreground text-sm flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  Save your info for next time
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Create an optional shopper profile to remember your default store and addresses for faster future checkouts.
+                </p>
+              </div>
+              <Link
+                href={`/account/register?email=${encodeURIComponent(order.contact.email)}&firstName=${encodeURIComponent(order.contact.firstName)}&lastName=${encodeURIComponent(order.contact.lastName)}&phone=${encodeURIComponent(order.contact.phone)}&zip=${encodeURIComponent(order.zip)}`}
+                className="shrink-0"
+              >
+                <Button className="min-h-[40px] text-xs font-bold px-4 active:scale-[0.98]">
+                  Create Profile
+                </Button>
+              </Link>
             </div>
           )}
 

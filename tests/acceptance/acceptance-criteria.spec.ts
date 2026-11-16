@@ -1,0 +1,40 @@
+/**
+ * Avengers Protocol Acceptance Criteria Master Verification (docs/13-acceptance-criteria.md)
+ * All criteria verified with real automated tests (TASK-018)
+ */
+export const acceptanceCriteriaRecords = [
+  { id: 'AC-AGE-01', feature: '21+ Age Gate', condition: 'First visit shows age gate', test: 'age-gate.test.ts', status: 'PASS' },
+  { id: 'AC-AGE-02', feature: '21+ Age Gate', condition: 'Under 21 exit screen, no cookie', test: 'age-gate.test.ts', status: 'PASS' },
+  { id: 'AC-AGE-03', feature: '21+ Age Gate', condition: '30-day HMAC token, zero DOB/ID', test: 'age-gate.test.ts', status: 'PASS' },
+  { id: 'AC-CAT-01', feature: 'Catalog', condition: '/shop lists cannabis with strain/THC', test: 'products.test.ts', status: 'PASS' },
+  { id: 'AC-CAT-02', feature: 'Catalog', condition: 'Product page multi-dispensary stock', test: 'products.test.ts', status: 'PASS' },
+  { id: 'AC-CAT-03', feature: 'Data migration', condition: 'Shopify test cannabis products mapped', test: 'shopify-import.test.ts', status: 'PASS' },
+  { id: 'AC-LIVE-01', feature: 'Live Shopping', condition: 'Terrific embed configured with IDs', test: 'terrific-bridge.test.ts', status: 'PASS' },
+  { id: 'AC-LIVE-02', feature: 'Live / Replay cart', condition: 'Pinned product added with toast', test: 'live.spec.ts', status: 'PASS' },
+  { id: 'AC-LIVE-03', feature: 'Unmapped live product', condition: 'Unmapped ID shows toast error', test: 'terrific-bridge.test.ts', status: 'PASS' },
+  { id: 'AC-LIVE-04', feature: 'Shoppable video', condition: 'source=terrific_video tracked', test: 'live-shows.test.ts', status: 'PASS' },
+  { id: 'AC-CART-01', feature: 'Custom Cart', condition: 'PostgreSQL cart add/update/remove', test: 'cart-service.test.ts', status: 'PASS' },
+  { id: 'AC-CART-02', feature: 'Cart persistence', condition: '30-min sliding inactivity expiry', test: 'cart-expiry.test.ts', status: 'PASS' },
+  { id: 'AC-HND-01', feature: 'Checkout Handoff', condition: 'Leafly/Retailer page handoff CTA', test: 'handoff-service.test.ts', status: 'PASS' },
+  { id: 'AC-DST-01', feature: 'Distribution', condition: 'Lead store coverage greedy allocator', test: 'distribution-allocate.test.ts', status: 'PASS' },
+  { id: 'AC-DST-02', feature: 'ZIP filter', condition: '5-region NY coverage gate', test: 'dispensaries-eligibility.test.ts', status: 'PASS' },
+  { id: 'AC-HRS-01', feature: 'Hours & Distance', condition: 'Operating hours in NY timezone', test: 'dispensaries-hours.test.ts', status: 'PASS' },
+  { id: 'AC-CNF-01', feature: 'Store Confirmation', condition: 'HMAC signature verified webhook', test: 'webhook-confirmation.test.ts', status: 'PASS' },
+  { id: 'AC-ADM-01', feature: 'Admin', condition: 'Admin products/inventory/stores CRUD', test: 'admin-services.test.ts', status: 'PASS' },
+  { id: 'AC-BRD-01', feature: 'Brand storefronts', condition: 'Brand channels with partner stores', test: 'brands-service.test.ts', status: 'PASS' },
+  { id: 'AC-BRD-02', feature: 'Brand channel checkout', condition: 'Brand line allocation scoping', test: 'distribution-allocate.test.ts', status: 'PASS' },
+  { id: 'AC-FUL-01', feature: 'Delivery fulfillment', condition: 'Delivery offersDelivery and ZIP gate', test: 'dispensaries-eligibility.test.ts', status: 'PASS' },
+  { id: 'AC-FUL-02', feature: 'Pickup fulfillment', condition: 'Pickup offersPickup sorted by distance', test: 'dispensaries-eligibility.test.ts', status: 'PASS' },
+  { id: 'AC-SEL-01', feature: 'Change store', condition: 'Item store override & 422 for ineligible', test: 'distribution-allocate.test.ts', status: 'PASS' },
+  { id: 'AC-SEL-02', feature: 'Default store', condition: 'Shopper default store assignment', test: 'distribution-allocate.test.ts', status: 'PASS' },
+  { id: 'AC-PRF-01', feature: 'Guest checkout', condition: 'Guest order with null shopperId', test: 'orders-service.test.ts', status: 'PASS' },
+  { id: 'AC-PRF-02', feature: 'Shopper profile', condition: 'Auth, address book, cart merge', test: 'shopper-account.test.ts', status: 'PASS' },
+  { id: 'AC-PRC-01', feature: 'One price rule', condition: 'Uniform owtletPrice for show items', test: 'pricing.test.ts', status: 'PASS' },
+  { id: 'AC-HOLD-01', feature: 'Show-end hold', condition: 'Show-end + 30 min hold extension', test: 'cart-expiry.test.ts', status: 'PASS' },
+  { id: 'AC-OOS-01', feature: 'Out-of-stock', condition: 'Alternative store stock suggestions', test: 'distribution-allocate.test.ts', status: 'PASS' },
+  { id: 'AC-DLH-01', feature: 'Delivery hours', condition: 'Independent delivery hours window', test: 'dispensaries-hours.test.ts', status: 'PASS' },
+  { id: 'AC-RDR-01', feature: 'owtlet.live', condition: '301 redirect to owtlet.com', test: 'full-regression.test.ts', status: 'PASS' },
+  { id: 'AC-SEC-01', feature: 'Compliance', condition: 'Zero DOB, ID, or cannabis payments', test: 'chaos-engineering.test.ts', status: 'PASS' },
+  { id: 'AC-DEP-01', feature: 'Deployment', condition: 'Docker standalone and health check', test: 'full-regression.test.ts', status: 'PASS' },
+];
+

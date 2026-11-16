@@ -1,6 +1,6 @@
 # TASK-016: Live Shows Model, Show Rail & Replays
 
-> **Status**: `BACKLOG`  
+> **Status**: `DONE`  
 > **Assignee**: `friday` (Web Frontend Specialist)  
 > **Priority**: `P1` (High)  
 > **Complexity Level**: `STANDARD`  
@@ -36,15 +36,19 @@ As a shopper, I want to see what is live now, upcoming shows, replays and shoppa
 ---
 
 ## 5. Acceptance Criteria
-- [ ] Live/upcoming/replay/shoppable-video states render with skeleton & empty states.
-- [ ] AC-LIVE-04, AC-HOLD-01 (End show) and AC-PRC-01 (pinning guard) pass; T-HOLD-01 green.
+- [x] Live/upcoming/replay/shoppable-video states render with skeleton & empty states.
+- [x] AC-LIVE-04, AC-HOLD-01 (End show) and AC-PRC-01 (pinning guard) pass; T-HOLD-01 green.
 
 ---
 
 ## 6. Verification Evidence (Thanos)
-- **Command**: `cd development/frontend && pnpm test -- live-shows`
-- **Status**: `Pending Verification`
-- **Output Log**: Awaiting execution.
+- **Command**: `cd development/frontend && npx vitest run src/__tests__/live-shows.test.ts src/__tests__/routes/live-shows.route.test.ts src/__tests__/components/live-shows.test.tsx`
+- **Status**: `PASSED`
+- **Output Log**: 
+  - `src/__tests__/live-shows.test.ts`: 9/9 passed (ordering, filtering, AC-PRC-01 price guard, AC-HOLD-01 cart hold recomputation)
+  - `src/__tests__/routes/live-shows.route.test.ts`: 4/4 passed (`GET /api/live-shows` and `GET /api/live-shows/[id]`)
+  - `src/__tests__/components/live-shows.test.tsx`: 9/9 passed (`LiveBadge`, `ShowCard`, `ShowRail`, `PinnedProductRail` with AC-LIVE-04)
+  - Tri-Platform verification: `bash scripts/verify-task.sh TASK-016` PASSED.
 
 ---
 

@@ -291,6 +291,37 @@ describe('Distribution Allocator (docs/06 §4, ADR-007, ADR-011, ADR-012, T-DST-
       expect(result.subOrders).toHaveLength(1);
       expect(['disp-a', 'disp-c']).toContain(result.subOrders[0].dispensaryId);
     });
+
+    it('limits out-of-stock suggestions to brand partner stores when line is restricted to a brand (AC-BRD-02)', () => {
+      // prod-3 has quantity 50 (exceeds all stock: storeB has 15, storeC has 8).
+      // If channelBrandId is 'brand-2', suggestions should only consider storeA and storeC (brand-2 partners),
+      // and NOT storeB (brand-1 partner only).
+      const lines: AllocatorCartLine[] = [
+        {
+          id: 'l-oos',
+          productId: 'prod-3',
+          name: 'Rare Brand-2 Flower',
+          quantity: 50, // exceeds available stock
+          channelBrandId: 'brand-2',
+        },
+      ];
+
+      const result = allocateCart({
+        lines,
+        fulfillmentType: FulfillmentType.PICKUP,
+        zip: '11201',
+        candidates: allStores,
+      });
+
+      expect(result.unfulfillable).toHaveLength(1);
+      const unfulfillableLine = result.unfulfillable[0];
+      expect(unfulfillableLine.productId).toBe('prod-3');
+      // All suggestions must carry brand-2
+      for (const suggestion of unfulfillableLine.suggestions) {
+        expect(['disp-a', 'disp-c']).toContain(suggestion.dispensaryId);
+        expect(suggestion.dispensaryId).not.toBe('disp-b');
+      }
+    });
   });
 
   describe('T-SEL-01: Store Overrides & Preferred Dispensary', () => {

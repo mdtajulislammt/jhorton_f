@@ -10,6 +10,9 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { CheckoutModule } from './modules/checkout/checkout.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { LiveShowsModule } from './modules/live-shows/live-shows.module';
+import { BrandsModule } from './modules/brands/brands.module';
+import { AccountModule } from './modules/account/account.module';
 
 @Module({
   imports: [
@@ -27,6 +30,9 @@ import { AdminModule } from './modules/admin/admin.module';
     CheckoutModule,
     WebhooksModule,
     AdminModule,
+    LiveShowsModule,
+    BrandsModule,
+    AccountModule,
   ],
 })
 export class AppModule {}

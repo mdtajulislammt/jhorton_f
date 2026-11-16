@@ -723,6 +723,135 @@ async function main() {
   });
   console.log(`  ✔ Live show active: "${liveShow.title}" with 3 pinned products.`);
 
+  // 10b. Upcoming Show, Replay & Shoppable Video Reels (TASK-016)
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const tomorrowEnd = new Date(tomorrow.getTime() + 60 * 60 * 1000);
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+  const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+
+  const upcomingShow = await prisma.liveShow.upsert({
+    where: { terrificShowId: 'terrific-show-upcoming-002' },
+    update: {
+      title: 'Hudson Valley Craft Harvest: Live Terpene Masterclass',
+      description: 'Exclusive first look at small-batch craft cultivars with master extractors from Hudson Valley Botanics.',
+      format: VideoFormat.LIVE_SHOW,
+      status: ShowStatus.SCHEDULED,
+      scheduledAt: tomorrow,
+      scheduledEndAt: tomorrowEnd,
+      thumbnailUrl: '/shows/upcoming-drop-thumb.jpg',
+      brandId: brand1.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+    },
+    create: {
+      title: 'Hudson Valley Craft Harvest: Live Terpene Masterclass',
+      description: 'Exclusive first look at small-batch craft cultivars with master extractors from Hudson Valley Botanics.',
+      format: VideoFormat.LIVE_SHOW,
+      status: ShowStatus.SCHEDULED,
+      scheduledAt: tomorrow,
+      scheduledEndAt: tomorrowEnd,
+      thumbnailUrl: '/shows/upcoming-drop-thumb.jpg',
+      brandId: brand1.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+      terrificShowId: 'terrific-show-upcoming-002',
+    },
+  });
+  await prisma.showProduct.upsert({
+    where: { showId_productId: { showId: upcomingShow.id, productId: prod1.id } },
+    update: { sortOrder: 1 },
+    create: { showId: upcomingShow.id, productId: prod1.id, sortOrder: 1 },
+  });
+
+  const replayShow = await prisma.liveShow.upsert({
+    where: { terrificShowId: 'terrific-show-replay-003' },
+    update: {
+      title: 'Empire Terpenes & Live Rosin Showcase (Replay)',
+      description: 'Rewatch our premier live drop covering premium solventless rosin and live hash extraction.',
+      format: VideoFormat.LIVE_SHOW,
+      status: ShowStatus.REPLAY,
+      scheduledAt: threeHoursAgo,
+      startedAt: threeHoursAgo,
+      endedAt: twoHoursAgo,
+      thumbnailUrl: '/shows/replay-show-thumb.jpg',
+      brandId: brand2.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+    },
+    create: {
+      title: 'Empire Terpenes & Live Rosin Showcase (Replay)',
+      description: 'Rewatch our premier live drop covering premium solventless rosin and live hash extraction.',
+      format: VideoFormat.LIVE_SHOW,
+      status: ShowStatus.REPLAY,
+      scheduledAt: threeHoursAgo,
+      startedAt: threeHoursAgo,
+      endedAt: twoHoursAgo,
+      thumbnailUrl: '/shows/replay-show-thumb.jpg',
+      brandId: brand2.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+      terrificShowId: 'terrific-show-replay-003',
+    },
+  });
+  await prisma.showProduct.upsert({
+    where: { showId_productId: { showId: replayShow.id, productId: prod2.id } },
+    update: { sortOrder: 1 },
+    create: { showId: replayShow.id, productId: prod2.id, sortOrder: 1 },
+  });
+
+  const videoReel1 = await prisma.liveShow.upsert({
+    where: { terrificShowId: 'terrific-video-reel-001' },
+    update: {
+      title: 'Cultivator Spotlight: Sour Diesel Full-Spectrum Resin',
+      description: 'Quick 60-second strain deep-dive: pungent diesel terpenes, citrus undertones, and clean vaporization.',
+      format: VideoFormat.SHOPPABLE_VIDEO,
+      status: ShowStatus.REPLAY,
+      thumbnailUrl: '/shows/shoppable-reel-1.jpg',
+      brandId: brand1.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+    },
+    create: {
+      title: 'Cultivator Spotlight: Sour Diesel Full-Spectrum Resin',
+      description: 'Quick 60-second strain deep-dive: pungent diesel terpenes, citrus undertones, and clean vaporization.',
+      format: VideoFormat.SHOPPABLE_VIDEO,
+      status: ShowStatus.REPLAY,
+      thumbnailUrl: '/shows/shoppable-reel-1.jpg',
+      brandId: brand1.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+      terrificShowId: 'terrific-video-reel-001',
+    },
+  });
+  await prisma.showProduct.upsert({
+    where: { showId_productId: { showId: videoReel1.id, productId: prod3.id } },
+    update: { sortOrder: 1 },
+    create: { showId: videoReel1.id, productId: prod3.id, sortOrder: 1 },
+  });
+
+  const videoReel2 = await prisma.liveShow.upsert({
+    where: { terrificShowId: 'terrific-video-reel-002' },
+    update: {
+      title: 'Craft Cannabis Unboxing: Gotham Select Sunset Sherbet',
+      description: 'Hand-trimmed organic indoor flower. Tap to lock in exclusive Owtlet show pricing.',
+      format: VideoFormat.SHOPPABLE_VIDEO,
+      status: ShowStatus.REPLAY,
+      thumbnailUrl: '/shows/shoppable-reel-2.jpg',
+      brandId: brand2.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+    },
+    create: {
+      title: 'Craft Cannabis Unboxing: Gotham Select Sunset Sherbet',
+      description: 'Hand-trimmed organic indoor flower. Tap to lock in exclusive Owtlet show pricing.',
+      format: VideoFormat.SHOPPABLE_VIDEO,
+      status: ShowStatus.REPLAY,
+      thumbnailUrl: '/shows/shoppable-reel-2.jpg',
+      brandId: brand2.id,
+      embeddingId: 'Cki70GhqvLgWGhJbSxg2',
+      terrificShowId: 'terrific-video-reel-002',
+    },
+  });
+  await prisma.showProduct.upsert({
+    where: { showId_productId: { showId: videoReel2.id, productId: prod1.id } },
+    update: { sortOrder: 1 },
+    create: { showId: videoReel2.id, productId: prod1.id, sortOrder: 1 },
+  });
+  console.log('  ✔ Additional upcoming shows, replays, and shoppable video reels seeded.');
+
   // 11. Demo Shopper Profile (Optional shopper profile — guest checkout is default)
   console.log('👤 Seeding demo shopper profile with saved address & default store...');
   const shopperPasswordHash = await argon2.hash('shopper_secure_password_2026');

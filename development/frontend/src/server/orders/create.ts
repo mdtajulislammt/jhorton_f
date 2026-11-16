@@ -197,23 +197,38 @@ export async function createOrder(
       },
     });
 
-    // Optional: Save delivery address to shopper profile if requested
-    if (
-      input.saveToProfile &&
-      (shopperId || cart.shopperId) &&
-      input.deliveryAddress
-    ) {
+    // Optional: Save delivery address and contact info to shopper profile if requested
+    if (input.saveToProfile && (shopperId || cart.shopperId)) {
       const targetShopperId = (shopperId || cart.shopperId)!;
-      await tx.shopperAddress.create({
+
+      // Update contact details on profile if provided
+      await tx.shopper.update({
+        where: { id: targetShopperId },
         data: {
-          shopperId: targetShopperId,
-          line1: input.deliveryAddress.line1,
-          line2: input.deliveryAddress.line2 || null,
-          city: input.deliveryAddress.city,
-          state: input.deliveryAddress.state || 'NY',
-          zip: input.deliveryAddress.zip,
+          firstName: input.contact.firstName || undefined,
+          lastName: input.contact.lastName || undefined,
+          phone: input.contact.phone || undefined,
+          homeZip: input.zip || undefined,
         },
       });
+
+      if (input.deliveryAddress) {
+        const addressCount = await tx.shopperAddress.count({
+          where: { shopperId: targetShopperId },
+        });
+
+        await tx.shopperAddress.create({
+          data: {
+            shopperId: targetShopperId,
+            line1: input.deliveryAddress.line1,
+            line2: input.deliveryAddress.line2 || null,
+            city: input.deliveryAddress.city,
+            state: input.deliveryAddress.state || 'NY',
+            zip: input.deliveryAddress.zip,
+            isDefault: addressCount === 0,
+          },
+        });
+      }
     }
 
     return {

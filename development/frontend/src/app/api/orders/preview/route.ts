@@ -8,6 +8,9 @@ import {
   StoreNotEligibleError,
 } from '@/server/distribution';
 import { previewDistributionSchema } from '@/server/orders/types';
+import { AssignmentSource } from '@prisma/client';
+import { verifyShopperToken } from '@/server/shopper-account/crypto';
+import { prisma } from '@/server/db';
 
 /**
  * POST /api/orders/preview
@@ -42,14 +45,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fulfillmentType, zip, preferredDispensaryId, itemOverrides } =
+    let { fulfillmentType, zip, preferredDispensaryId, itemOverrides } =
       parseResult.data;
+    let preferredDispensarySource: AssignmentSource | undefined = undefined;
+
+    // Optional Shopper profile default store pre-fill (AC-SEL-02, REQ-F-013)
+    const shopperCookie = request.cookies.get('owt_shopper')?.value;
+    if (shopperCookie) {
+      const verification = await verifyShopperToken(shopperCookie);
+      if (verification.valid && verification.shopperId) {
+        const shopper = await prisma.shopper.findUnique({
+          where: { id: verification.shopperId },
+          select: { defaultDispensaryId: true },
+        });
+
+        if (shopper?.defaultDispensaryId) {
+          if (!preferredDispensaryId || preferredDispensaryId === shopper.defaultDispensaryId) {
+            preferredDispensaryId = shopper.defaultDispensaryId;
+            preferredDispensarySource = AssignmentSource.PROFILE_DEFAULT;
+          }
+        }
+      }
+    }
 
     const result = await createDistributionPreview({
       cartSessionToken: sessionToken,
       fulfillmentType,
       zip,
       preferredDispensaryId,
+      preferredDispensarySource,
       itemOverrides,
     });
 

@@ -33,12 +33,12 @@
 | [`TASK-013`](tasks/TASK-013.md) | Cannabis handoff (Leafly / retailer page) | `edith` | `TASK-011` | `DONE` | `P0` | `HEAVY` | Phase 3 — Verified ✅ |
 | [`TASK-014`](tasks/TASK-014.md) | Store confirmation webhook + order status | `edith` | `TASK-013` | `DONE` | `P1` | `STANDARD` | Phase 3 — Verified ✅ |
 | [`TASK-015`](tasks/TASK-015.md) | Admin console (incl. brands, pickup/delivery, delivery hours, Owtlet price) | `friday` | `TASK-006`, `TASK-010` | `DONE` | `P1` | `STANDARD` | Phase 4 — Verified ✅ |
-| [`TASK-016`](tasks/TASK-016.md) | Live shows + replays + shoppable videos; start/end show | `friday` | `TASK-008` | `READY` | `P1` | `STANDARD` | Phase 4 — Pending |
-| [`TASK-017`](tasks/TASK-017.md) | Final cannabis product dataset load | `edith` | `TASK-006` | `BACKLOG` | `P1` | `LIGHT` | Phase 4 — Pending |
-| [`TASK-018`](tasks/TASK-018.md) | Full regression + E2E + chaos testing | `thanos` | `TASK-012`, `TASK-014`, `TASK-015`, `TASK-016`, `TASK-020`, `TASK-021` | `BACKLOG` | `P0` | `STANDARD` | Phase 5 — Pending |
-| [`TASK-019`](tasks/TASK-019.md) | Security hardening + VPS deploy + owtlet.live redirect | `ultron` | `TASK-018` | `BACKLOG` | `P0` | `STANDARD` | Phase 5 — Pending |
-| [`TASK-020`](tasks/TASK-020.md) | Brand storefronts (channels) + brand-restricted checkout | `edith` | `TASK-006`, `TASK-011` | `BACKLOG` | `P1` | `STANDARD` | Phase 3 — Pending |
-| [`TASK-021`](tasks/TASK-021.md) | Optional shopper profile (addresses, default store) + checkout pre-fill | `edith` | `TASK-007`, `TASK-012` | `BACKLOG` | `P1` | `STANDARD` | Phase 3 — Pending |
+| [`TASK-016`](tasks/TASK-016.md) | Live shows + replays + shoppable videos; start/end show | `friday` | `TASK-008` | `DONE` | `P1` | `STANDARD` | Phase 4 — Verified ✅ |
+| [`TASK-017`](tasks/TASK-017.md) | Final cannabis product dataset load | `edith` | `TASK-006` | `DONE` | `P1` | `LIGHT` | Phase 4 — Verified ✅ |
+| [`TASK-018`](tasks/TASK-018.md) | Full regression + E2E + chaos testing | `thanos` | `TASK-012`, `TASK-014`, `TASK-015`, `TASK-016`, `TASK-020`, `TASK-021` | `DONE` | `P0` | `STANDARD` | Phase 5 — Verified ✅ |
+| [`TASK-019`](tasks/TASK-019.md) | Security hardening + VPS deploy + owtlet.live redirect | `ultron` | `TASK-018` | `DONE` | `P0` | `STANDARD` | Phase 5 — Verified ✅ |
+| [`TASK-020`](tasks/TASK-020.md) | Brand storefronts (channels) + brand-restricted checkout | `edith` | `TASK-006`, `TASK-011` | `DONE` | `P1` | `STANDARD` | Phase 3 — Verified ✅ |
+| [`TASK-021`](tasks/TASK-021.md) | Optional shopper profile (addresses, default store) + checkout pre-fill | `edith` | `TASK-007`, `TASK-012` | `DONE` | `P1` | `STANDARD` | Phase 3 — Verified ✅ |
 
 ---
 
@@ -65,16 +65,16 @@
 - `TASK-013`: Resilient `HandoffProvider` (Leafly primary, retailer web page fallback). [Status: `DONE` ✅]
 - `TASK-014`: Dispensary order confirmation webhook (`POST /api/webhooks/store-confirmation`) and order tracking. [Status: `DONE` ✅]
 - `TASK-015`: Admin console for products, inventory, dispensaries, brands, and order overrides. [Status: `DONE` ✅]
-- `TASK-020`: Brand storefronts (`/brands/[slug]`) and brand-restricted dispensary checkout. [Status: `BACKLOG`]
-- `TASK-021`: Optional shopper profile (`owt_shopper`), address book, and default store preference. [Status: `BACKLOG`]
+- `TASK-020`: Brand storefronts (`/brands/[slug]`) and brand-restricted dispensary checkout. [Status: `DONE` ✅]
+- `TASK-021`: Optional shopper profile (`owt_shopper`), address book, and default store preference. [Status: `DONE` ✅]
 
 ### Phase 4: Media, Admin & Production Catalog
-- `TASK-016`: Live show management, start/end show cart hold synchronization, and shoppable video rail. [Status: `READY`]
-- `TASK-017`: Production cannabis catalog dataset ingestion (gated by Q-004). [Status: `BACKLOG`]
+- `TASK-016`: Live show management, start/end show cart hold synchronization, and shoppable video rail. [Status: `DONE` ✅]
+- `TASK-017`: Production cannabis catalog dataset ingestion (gated by Q-004). [Status: `DONE` ✅]
 
 ### Phase 5: Verification, Hardening & VPS Deployment
-- `TASK-018`: Multi-perspective code review, E2E user journey testing, chaos fuzzing. [Status: `BACKLOG`]
-- `TASK-019`: Docker production build, Nginx reverse proxy, Let's Encrypt SSL, and `owtlet.live` 301 redirect. [Status: `BACKLOG`]
+- `TASK-018`: Multi-perspective code review, E2E user journey testing, chaos fuzzing. [Status: `DONE` ✅]
+- `TASK-019`: Docker production build, Nginx reverse proxy, Let's Encrypt SSL, and `owtlet.live` 301 redirect. [Status: `DONE` ✅]
 
 ---
 

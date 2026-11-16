@@ -1,5 +1,6 @@
 import { prisma } from '../db';
 import { ShowStatus, VideoFormat } from '@prisma/client';
+import { recomputeHeldCarts } from '../cart/expiry';
 
 export class AdminShowError extends Error {
   constructor(
@@ -244,6 +245,9 @@ export async function endShow(id: string) {
       endedAt,
     },
   });
+
+  // Recompute expiration time for all active carts linked to this show (AC-HOLD-01, T-HOLD-01)
+  await recomputeHeldCarts(id);
 
   return ended;
 }

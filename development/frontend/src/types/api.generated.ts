@@ -411,3 +411,168 @@ export interface AdminLiveShowDto {
   updatedAt: string;
 }
 
+export interface PinnedProductDto {
+  productId: string;
+  slug: string;
+  name: string;
+  terrificProductId: string | null;
+  owtletPrice: string;
+  imageUrls: string[];
+  categoryName?: string | null;
+  strainName?: string | null;
+  sortOrder: number;
+}
+
+export interface LiveShowDto {
+  id: string;
+  title: string;
+  description: string | null;
+  format: 'LIVE_SHOW' | 'SHOPPABLE_VIDEO';
+  status: 'SCHEDULED' | 'LIVE' | 'REPLAY' | 'ARCHIVED';
+  scheduledAt: string | null;
+  scheduledEndAt: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  thumbnailUrl: string | null;
+  embeddingId: string;
+  terrificShowId: string | null;
+  brand: {
+    id: string;
+    slug: string;
+    name: string;
+  } | null;
+  products: PinnedProductDto[];
+}
+
+export interface BrandSummaryDto {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  bannerUrl: string | null;
+  sortOrder: number;
+}
+
+export interface BrandDispensarySummaryDto {
+  id: string;
+  name: string;
+  slug: string;
+  zip: string;
+  city: string;
+  offersPickup: boolean;
+  offersDelivery: boolean;
+}
+
+export interface BrandStorefrontDto {
+  brand: BrandSummaryDto;
+  products: any[];
+  dispensaries: BrandDispensarySummaryDto[];
+  shows: LiveShowDto[];
+}
+
+// ----------------------------------------------------------------------------
+// Shopper Account & Profile DTOs (docs/08 §13, REQ-F-013, REQ-F-014, AC-PRF-02)
+// ----------------------------------------------------------------------------
+
+export interface ShopperDispensarySummaryDto {
+  id: string;
+  name: string;
+  slug: string;
+  address: string;
+  city: string;
+  zip: string;
+  offersPickup: boolean;
+  offersDelivery: boolean;
+}
+
+export interface ShopperProfileDto {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  homeZip: string | null;
+  defaultDispensaryId: string | null;
+  defaultDispensary: ShopperDispensarySummaryDto | null;
+  createdAt: string;
+}
+
+export interface ShopperAddressDto {
+  id: string;
+  shopperId: string;
+  label: string | null;
+  line1: string;
+  line2: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface ShopperOrderItemDto {
+  id: string;
+  productId: string;
+  productName: string;
+  brandName: string | null;
+  strainType: string | null;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+}
+
+export interface ShopperSubOrderSummaryDto {
+  id: string;
+  subOrderNumber: string;
+  dispensaryId: string;
+  dispensaryName: string;
+  dispensarySlug: string;
+  status: string;
+  subtotal: string;
+  handoffUrl: string | null;
+  confirmedAt: string | null;
+  items: ShopperOrderItemDto[];
+}
+
+export interface ShopperOrderSummaryDto {
+  id: string;
+  orderNumber: string;
+  fulfillmentType: string;
+  status: string;
+  subtotal: string;
+  zip: string;
+  createdAt: string;
+  subOrders: ShopperSubOrderSummaryDto[];
+}
+
+export interface UpdateShopperProfileInput {
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  homeZip?: string | null;
+  defaultDispensaryId?: string | null;
+}
+
+export interface CreateShopperAddressInput {
+  label?: string | null;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state?: string;
+  zip: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateShopperAddressInput {
+  label?: string | null;
+  line1?: string;
+  line2?: string | null;
+  city?: string;
+  state?: string;
+  zip?: string;
+  isDefault?: boolean;
+}
+
+
+

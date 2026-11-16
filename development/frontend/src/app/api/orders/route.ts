@@ -12,6 +12,7 @@ import {
   PreviewStaleError,
   UnfulfillableItemsError,
 } from '@/server/orders';
+import { verifyShopperToken } from '@/server/shopper-account/crypto';
 
 /**
  * POST /api/orders
@@ -49,10 +50,17 @@ export async function POST(request: NextRequest) {
 
     // Shopper session token cookie (if present in optional profile phase)
     const shopperCookie = request.cookies.get('owt_shopper')?.value || null;
+    let validatedShopperId: string | null = null;
+    if (shopperCookie) {
+      const verification = await verifyShopperToken(shopperCookie);
+      if (verification.valid && verification.shopperId) {
+        validatedShopperId = verification.shopperId;
+      }
+    }
 
     const result = await createOrder(parseResult.data, {
       cartSessionToken: sessionToken,
-      shopperId: shopperCookie,
+      shopperId: validatedShopperId,
     });
 
     if (result.isExisting) {

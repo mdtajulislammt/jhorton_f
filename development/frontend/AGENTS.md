@@ -42,3 +42,5 @@ Every page, table, and form must handle:
 ## 5. Context & Boundaries
 - Do not load backend implementation files, Dockerfiles, or Flutter code.
 - Report test execution and linter output (`npm run type-check`) to Thanos.
+
+- Theme-ready UI rule: no hardcoded colors/fonts in components; use only Tailwind/CSS tokens from tailwind.config.ts and globals.css, reuse src/components/ui, keep logic out of views. Full redesign comes later. See AGENTS.md "Theme-Ready UI Rule".

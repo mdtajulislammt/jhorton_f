@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyAgeToken, AGE_COOKIE_NAME } from './server/age-session/crypto';
 import { verifyAdminToken, ADMIN_COOKIE_NAME } from './server/admin/crypto';
+import { verifyShopperToken, SHOPPER_COOKIE_NAME } from './server/shopper-account/edge-crypto';
 
 // Public endpoints that do not require 21+ age cookie
 const PUBLIC_BYPASS_PREFIXES = [
@@ -17,6 +18,7 @@ const PUBLIC_BYPASS_PREFIXES = [
 const PUBLIC_ACCOUNT_ROUTES = [
   '/account/login',
   '/account/register',
+  '/account/reset',
   '/account/forgot-password',
   '/account/reset-password',
 ];
@@ -104,16 +106,21 @@ export async function middleware(request: NextRequest) {
   // 4. Shopper Account Guard (/account routes)
   if (pathname.startsWith('/account')) {
     const isPublicAccount = PUBLIC_ACCOUNT_ROUTES.some((route) => pathname.startsWith(route));
-    const shopperSession = request.cookies.get('owt_shopper')?.value;
+    const rawShopperCookie = request.cookies.get(SHOPPER_COOKIE_NAME)?.value;
+    const shopperVerification = await verifyShopperToken(rawShopperCookie);
 
-    if (!shopperSession && !isPublicAccount) {
+    if (!shopperVerification.valid && !isPublicAccount) {
       const loginUrl = new URL('/account/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+      const redirectRes = NextResponse.redirect(loginUrl);
+      if (rawShopperCookie) {
+        redirectRes.cookies.delete(SHOPPER_COOKIE_NAME);
+      }
+      return redirectRes;
     }
 
-    if (shopperSession && isPublicAccount) {
-      return NextResponse.redirect(new URL('/account/profile', request.url));
+    if (shopperVerification.valid && isPublicAccount) {
+      return NextResponse.redirect(new URL('/account', request.url));
     }
   }
 

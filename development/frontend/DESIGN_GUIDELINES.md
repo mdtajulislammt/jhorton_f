@@ -205,3 +205,9 @@ Visible keyboard focus ring (`focus-visible:ring-2 focus-visible:ring-ring`), ta
 3. **Shopping Mediums**: Use "Live Show", "Replay", and "Shoppable Video", never "Webinar" or "Event".
 4. **Fulfillment**: Use "Pickup" or "Delivery", never "Shipping".
 5. **No Lorem Ipsum**: All empty states, banners, buttons, and helper texts must feature realistic New York adult-use cannabis information.
+
+---
+
+## 9. Theme-Ready Rule (until the redesign phase)
+
+A full redesign (dutchie.com / leafly.com style layout, Owtlet brand colors) happens after all features ship. Until then: no hex/rgb or raw Tailwind palette colors in components, only the tokens above; only `font-heading` / `font-body`; reuse `src/components/ui/*` and add variants there; keep all logic in `src/server`, `src/hooks`, `src/stores`, `src/lib`. Do not change the overall layout/theme inside feature tasks.

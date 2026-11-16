@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Radio, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Radio, ShieldCheck, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
@@ -71,8 +71,18 @@ export function StoreHeader() {
             </Link>
           </nav>
 
-          {/* Actions: Live Show & Cart */}
-          <div className="flex items-center gap-2.5">
+          {/* Actions: Live Show, Shoppable Videos, Brands & Cart */}
+          <div className="flex items-center gap-2">
+            <Link href="/brands">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex text-muted-foreground hover:text-foreground font-semibold"
+              >
+                Brands
+              </Button>
+            </Link>
+
             <Link href="/live">
               <Button
                 variant="ghost"
@@ -81,6 +91,28 @@ export function StoreHeader() {
               >
                 <Radio className="mr-1.5 h-4 w-4 animate-pulse" />
                 Live Shows
+              </Button>
+            </Link>
+
+            <Link href="/videos">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:inline-flex text-muted-foreground hover:text-foreground font-semibold"
+              >
+                Videos
+              </Button>
+            </Link>
+
+            <Link href="/account">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground font-semibold"
+                aria-label="Account Profile"
+              >
+                <User className="mr-1.5 h-4 w-4" />
+                Account
               </Button>
             </Link>
 

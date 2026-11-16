@@ -159,6 +159,54 @@ describe('Cart Route Handlers (docs/08 §4)', () => {
       expect(json.data.itemCount).toBe(1);
     });
 
+    it('accepts brand storefront items with channelBrandSlug and brand_storefront source (REQ-F-011, TASK-020)', async () => {
+      const updatedDto = {
+        ...mockCartDto,
+        itemCount: 1,
+        items: [
+          {
+            id: 'line-brand-1',
+            productId: 'e925b035-7729-43c9-83bc-6644fcf64551',
+            quantity: 1,
+            source: 'brand_storefront',
+            channelBrand: {
+              id: 'brand-1',
+              name: 'Hudson Cannabis',
+              slug: 'hudson-cannabis',
+            },
+          },
+        ],
+      };
+      (syncCartItems as any).mockResolvedValue(updatedDto);
+
+      const req = new NextRequest('http://localhost:3000/api/cart/items', {
+        method: 'POST',
+        headers: {
+          cookie: 'owt_cart=token-1',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'addProductToCart',
+          source: 'brand_storefront',
+          channelBrandSlug: 'hudson-cannabis',
+          cartProducts: [
+            {
+              productId: 'e925b035-7729-43c9-83bc-6644fcf64551',
+              quantity: 1,
+            },
+          ],
+        }),
+      });
+
+      const res = await addItemsHandler(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.success).toBe(true);
+      expect(json.data.items[0].source).toBe('brand_storefront');
+      expect(json.data.items[0].channelBrand?.slug).toBe('hudson-cannabis');
+    });
+
     it('returns 404 UNMAPPED_PRODUCT when an unknown product id is submitted', async () => {
       (syncCartItems as any).mockRejectedValue(
         new UnmappedProductException([

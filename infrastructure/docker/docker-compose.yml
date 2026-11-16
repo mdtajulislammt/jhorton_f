@@ -1,6 +1,10 @@
-# Owtlet — single Next.js app (UI + /api) + PostgreSQL (+ optional Redis, Nginx in production)
-# Local dev:   docker compose up -d postgres          (then `pnpm dev` in development/frontend)
-# Production:  docker compose --profile prod up -d --build   (finalised in TASK-019, Q-003)
+# ==============================================================================
+# Owtlet™ Production Docker Compose (infrastructure/docker/docker-compose.yml)
+# Decoupled Architecture: Next.js Frontend (port 3000) + NestJS Backend (port 4000)
+# Reverse Proxy: Nginx 1.27 + Let's Encrypt SSL + owtlet.live 301 Redirect
+# Local dev:   docker compose up -d postgres (or with --profile redis)
+# Production:  docker compose --profile prod up -d --build
+# ==============================================================================
 services:
   postgres:
     image: postgres:16-alpine
@@ -14,12 +18,48 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-owtlet} -d ${POSTGRES_DB:-owtlet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
     container_name: owtlet_redis
     restart: unless-stopped
     profiles: ["redis"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../../development/backend
+      dockerfile: ../../infrastructure/docker/Dockerfile.backend
+    container_name: owtlet_backend
+    restart: unless-stopped
+    profiles: ["prod"]
+    env_file:
+      - ../../.env
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-owtlet}:${POSTGRES_PASSWORD:-owtlet}@postgres:5432/${POSTGRES_DB:-owtlet}?schema=public
+    expose:
+      - "4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   web:
     build:
@@ -32,11 +72,22 @@ services:
       - ../../.env
     environment:
       NODE_ENV: production
+      PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-owtlet}:${POSTGRES_PASSWORD:-owtlet}@postgres:5432/${POSTGRES_DB:-owtlet}?schema=public
+      NEXT_PUBLIC_BACKEND_URL: http://backend:4000
     expose:
       - "3000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   nginx:
     image: nginx:1.27-alpine
@@ -51,7 +102,21 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
     depends_on:
-      - web
+      web:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: owtlet_certbot
+    restart: unless-stopped
+    profiles: ["prod"]
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   pgdata:
+    name: owtlet_pgdata

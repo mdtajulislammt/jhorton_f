@@ -18,11 +18,51 @@ import { ContactForm } from './ContactForm';
 import { NoCoverageAlert } from './NoCoverageAlert';
 import { CheckoutSummary } from './CheckoutSummary';
 import { CheckoutSkeleton } from './CheckoutSkeleton';
+import { useShopperProfile, useShopperAddresses } from '@/hooks/useShopperAccount';
 
 export function CheckoutView() {
   const { cart, isExpired } = useCart();
-  const { fulfillmentType, contact, deliveryAddress, setPreferredDispensaryId, setItemOverride } =
-    useCheckoutStore();
+  const {
+    fulfillmentType,
+    contact,
+    deliveryAddress,
+    setContact,
+    setDeliveryAddress,
+    setZip,
+    setPreferredDispensaryId,
+    setItemOverride,
+  } = useCheckoutStore();
+
+  const { data: shopperProfile } = useShopperProfile();
+  const { data: shopperAddresses = [] } = useShopperAddresses();
+
+  // Pre-fill shopper profile preferences (homeZip, defaultStore)
+  React.useEffect(() => {
+    if (shopperProfile) {
+      if (shopperProfile.homeZip && !deliveryAddress.line1) {
+        setZip(shopperProfile.homeZip);
+      }
+      if (shopperProfile.defaultDispensaryId) {
+        setPreferredDispensaryId(shopperProfile.defaultDispensaryId);
+      }
+    }
+  }, [shopperProfile, setZip, setPreferredDispensaryId]);
+
+  // Pre-fill default saved address
+  React.useEffect(() => {
+    if (shopperAddresses.length > 0 && !deliveryAddress.line1) {
+      const defaultAddr = shopperAddresses.find((a: any) => a.isDefault) || shopperAddresses[0];
+      if (defaultAddr) {
+        setDeliveryAddress({
+          line1: defaultAddr.line1,
+          line2: defaultAddr.line2 || '',
+          city: defaultAddr.city,
+          state: defaultAddr.state,
+          zip: defaultAddr.zip,
+        });
+      }
+    }
+  }, [shopperAddresses, setDeliveryAddress]);
 
   const {
     preview,

@@ -3,6 +3,7 @@ import { prisma } from '@/server/db';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
+import { ShowRail } from '@/components/modules/live/ShowRail';
 import { ProductCard } from '@/components/catalog/product-card';
 import { computeCatalogPricing, formatMoney } from '@/server/pricing';
 import { ProductSummaryDto } from '@/server/products';
@@ -64,6 +65,66 @@ export default async function HomePage() {
         availableAtCount: p.inventory.filter((inv) => inv.stockQty > 0).length,
       };
     }) ?? [];
+
+  const additionalShows = await prisma.liveShow.findMany({
+    where: {
+      id: { not: activeShow?.id || '' },
+    },
+    take: 6,
+    orderBy: [
+      { status: 'asc' },
+      { scheduledAt: 'desc' },
+      { createdAt: 'desc' },
+    ],
+    include: {
+      brand: true,
+      products: {
+        include: {
+          product: { select: { id: true, name: true, owtletPrice: true } },
+        },
+      },
+    },
+  });
+
+  const replayAndUpcomingShows = additionalShows
+    .filter((s) => s.format === 'LIVE_SHOW')
+    .slice(0, 3)
+    .map((s) => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      format: s.format,
+      status: s.status,
+      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
+      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      thumbnailUrl: s.thumbnailUrl,
+      brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
+      products: s.products.map((p) => ({
+        productId: p.product.id,
+        name: p.product.name,
+        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      })),
+    }));
+
+  const shoppableVideos = additionalShows
+    .filter((s) => s.format === 'SHOPPABLE_VIDEO')
+    .slice(0, 3)
+    .map((s) => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      format: s.format,
+      status: s.status,
+      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
+      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      thumbnailUrl: s.thumbnailUrl,
+      brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
+      products: s.products.map((p) => ({
+        productId: p.product.id,
+        name: p.product.name,
+        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      })),
+    }));
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -177,6 +238,40 @@ export default async function HomePage() {
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* Live Replays & Upcoming Shows Rail */}
+        {replayAndUpcomingShows.length > 0 && (
+          <section className="border-b border-border/60">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <ShowRail
+                title="Broadcast Drops & Replays"
+                description="Missed a drop? Rewatch licensed NY cultivator sessions and hold items in your cart."
+                badgeText="Replay Vault"
+                badgeIcon="replay"
+                shows={replayAndUpcomingShows}
+                viewAllHref="/live"
+                viewAllText="View All Broadcasts"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Shoppable Videos Rail */}
+        {shoppableVideos.length > 0 && (
+          <section className="border-b border-border/60">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <ShowRail
+                title="Shoppable Video Reels"
+                description="Bite-sized craft cannabis overviews, terpene breakdowns, and tap-to-cart reels."
+                badgeText="On-Demand Reels"
+                badgeIcon="video"
+                shows={shoppableVideos}
+                viewAllHref="/videos"
+                viewAllText="View All Reels"
+              />
             </div>
           </section>
         )}

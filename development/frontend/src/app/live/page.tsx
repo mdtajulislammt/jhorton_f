@@ -5,26 +5,29 @@ import { prisma } from '@/server/db';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
+import { ShowRail } from '@/components/modules/live/ShowRail';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Radio, Play, Clock } from 'lucide-react';
+import { Radio, Play, Sparkles, Video, Clock } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Live Cannabis Shopping & Replays — Owtlet™',
-  description: 'Experience interactive live shows and drops featuring licensed New York craft cannabis cultivators.',
+  title: 'Live Cannabis Shopping, Replays & Shoppable Videos — Owtlet™',
+  description: 'Experience interactive live shows and drops featuring licensed New York craft cannabis cultivators. Watch live, explore replays, or shop on-demand reels.',
 };
 
 export const revalidate = 60;
 
 export default async function LiveIndexPage() {
-  const shows = await prisma.liveShow.findMany({
+  const allShows = await prisma.liveShow.findMany({
     orderBy: [
       { status: 'asc' }, // LIVE sorts first
       { scheduledAt: 'desc' },
+      { createdAt: 'desc' },
     ],
     include: {
       brand: true,
       products: {
+        orderBy: { sortOrder: 'asc' },
         include: {
           product: {
             select: {
@@ -38,7 +41,64 @@ export default async function LiveIndexPage() {
     },
   });
 
-  const liveShow = shows.find((s) => s.status === 'LIVE') || shows[0];
+  const featuredLive = allShows.find((s) => s.status === 'LIVE' && s.format === 'LIVE_SHOW') || allShows[0];
+
+  const upcomingShows = allShows
+    .filter((s) => s.status === 'SCHEDULED' && s.format === 'LIVE_SHOW')
+    .map((s) => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      format: s.format,
+      status: s.status,
+      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
+      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      thumbnailUrl: s.thumbnailUrl,
+      brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
+      products: s.products.map((p) => ({
+        productId: p.product.id,
+        name: p.product.name,
+        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      })),
+    }));
+
+  const replayShows = allShows
+    .filter((s) => s.status === 'REPLAY' && s.format === 'LIVE_SHOW')
+    .map((s) => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      format: s.format,
+      status: s.status,
+      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
+      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      thumbnailUrl: s.thumbnailUrl,
+      brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
+      products: s.products.map((p) => ({
+        productId: p.product.id,
+        name: p.product.name,
+        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      })),
+    }));
+
+  const shoppableVideos = allShows
+    .filter((s) => s.format === 'SHOPPABLE_VIDEO')
+    .map((s) => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      format: s.format,
+      status: s.status,
+      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
+      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      thumbnailUrl: s.thumbnailUrl,
+      brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
+      products: s.products.map((p) => ({
+        productId: p.product.id,
+        name: p.product.name,
+        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      })),
+    }));
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -61,13 +121,13 @@ export default async function LiveIndexPage() {
               </p>
             </div>
 
-            {liveShow ? (
+            {featuredLive ? (
               <div className="rounded-2xl p-1 bg-gradient-to-tr from-primary/30 via-accent/20 to-border shadow-xl">
                 <TerrificEmbed
-                  embeddingId={liveShow.embeddingId}
-                  liveShowId={liveShow.id}
-                  source={liveShow.status === 'REPLAY' ? 'terrific_replay' : 'terrific_live'}
-                  title={liveShow.title}
+                  embeddingId={featuredLive.embeddingId}
+                  liveShowId={featuredLive.id}
+                  source={featuredLive.status === 'REPLAY' ? 'terrific_replay' : 'terrific_live'}
+                  title={featuredLive.title}
                   showBadge={true}
                   aspectRatio="video"
                   className="w-full"
@@ -77,90 +137,43 @@ export default async function LiveIndexPage() {
           </div>
         </section>
 
-        {/* All Shows & Replays Grid */}
-        <section className="py-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="font-heading text-2xl text-foreground">
-                All Broadcasts & Drops
-              </h2>
-            </div>
+        {/* Rails Container */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12 py-10">
+          {/* Upcoming Live Drops */}
+          {upcomingShows.length > 0 && (
+            <ShowRail
+              title="Upcoming Live Drops"
+              description="Scheduled cultivator broadcasts and fresh harvest product releases."
+              badgeText="Upcoming Schedule"
+              badgeIcon="live"
+              shows={upcomingShows}
+            />
+          )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {shows.map((show) => {
-                const isLive = show.status === 'LIVE';
-                const isReplay = show.status === 'REPLAY';
+          {/* Replays Vault */}
+          <ShowRail
+            title="Replay Vault"
+            description="Missed a live broadcast? Rewatch cultivator sessions and tap products to buy at recorded drop prices."
+            badgeText="Drop Replays"
+            badgeIcon="replay"
+            shows={replayShows}
+            emptyTitle="No Replays Yet"
+            emptyDescription="Recordings of our live broadcasts will appear here after each show concludes."
+          />
 
-                return (
-                  <div
-                    key={show.id}
-                    className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm hover:border-primary/40 transition-all"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      {isLive ? (
-                        <Badge className="bg-accent text-accent-foreground font-bold text-xs uppercase px-2.5 py-0.5 animate-pulse flex items-center gap-1">
-                          <Radio className="h-3 w-3" />
-                          LIVE NOW
-                        </Badge>
-                      ) : isReplay ? (
-                        <Badge variant="outline" className="text-xs font-semibold uppercase">
-                          REPLAY AVAILABLE
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs font-medium uppercase">
-                          UPCOMING
-                        </Badge>
-                      )}
-
-                      {show.brand && (
-                        <span className="text-xs text-muted-foreground font-medium">
-                          {show.brand.name}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="font-heading text-lg text-foreground mb-2 line-clamp-1">
-                      {show.title}
-                    </h3>
-
-                    {show.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
-                        {show.description}
-                      </p>
-                    )}
-
-                    <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>{show.products.length} Pinned Products</span>
-                      </div>
-
-                      <Link href={`/live/${show.id}`}>
-                        <Button
-                          size="sm"
-                          className={
-                            isLive
-                              ? 'bg-primary text-primary-foreground hover:bg-owtlet-volt font-bold'
-                              : 'bg-muted text-foreground hover:bg-muted/80 font-medium'
-                          }
-                        >
-                          {isLive ? (
-                            <>
-                              <Play className="mr-1.5 h-3.5 w-3.5 fill-current" />
-                              Watch Live
-                            </>
-                          ) : (
-                            'Watch Replay'
-                          )}
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+          {/* Shoppable Video Reels */}
+          <ShowRail
+            title="Shoppable Video Reels"
+            description="Bite-sized cultivator overviews, strain highlights, and tap-to-cart reels."
+            badgeText="On-Demand Reels"
+            badgeIcon="video"
+            shows={shoppableVideos}
+            viewAllHref="/videos"
+            viewAllText="Explore All Videos"
+            emptyTitle="No Shoppable Videos Yet"
+            emptyDescription="Explore our live show broadcast schedule or visit the full catalog."
+          />
+        </div>
       </main>
 
       <StoreFooter />

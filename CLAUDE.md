@@ -48,3 +48,5 @@ When operating in Claude Code, strictly adhere to **Capability-Based Profiling**
 - **Verification Gate**: No task is marked DONE without running tests via `bash scripts/verify-task.sh [TASK-ID]` and inspecting actual test outputs.
 - **Safety Gate**: NEVER execute `git commit` or `git push` automatically. Always leave version control commits and pushes strictly under manual human control.
 
+
+- Theme-ready UI rule: no hardcoded colors/fonts in components; use only Tailwind/CSS tokens from tailwind.config.ts and globals.css, reuse src/components/ui, keep logic out of views. Full redesign comes later. See AGENTS.md "Theme-Ready UI Rule".
