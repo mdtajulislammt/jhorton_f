@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyAgeToken, AGE_COOKIE_NAME } from './server/age-session/crypto';
+import { verifyAdminToken, ADMIN_COOKIE_NAME } from './server/admin/crypto';
 
 // Public endpoints that do not require 21+ age cookie
 const PUBLIC_BYPASS_PREFIXES = [
@@ -28,7 +29,41 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. 21+ Age Attestation Guard (owt_age HMAC-signed cookie)
+  // 2. Admin routes guard: requires owt_admin session cookie (independent of consumer age gate)
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+    const adminToken = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+    const isLoginEndpoint = pathname === '/admin/login' || pathname === '/api/admin/login';
+    const adminResult = await verifyAdminToken(adminToken);
+
+    if (!adminResult.valid && !isLoginEndpoint) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Admin authorization required.',
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 401 }
+        );
+      }
+      const loginUrl = new URL('/admin/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      const res = NextResponse.redirect(loginUrl);
+      if (adminToken) res.cookies.delete(ADMIN_COOKIE_NAME);
+      return res;
+    }
+
+    if (adminResult.valid && pathname === '/admin/login') {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  // 3. 21+ Age Attestation Guard (owt_age HMAC-signed cookie)
   // Evaluated before any storefront pages, products, pricing, or video render
   const ageToken = request.cookies.get(AGE_COOKIE_NAME)?.value;
   const ageResult = await verifyAgeToken(ageToken);
@@ -64,37 +99,6 @@ export async function middleware(request: NextRequest) {
       redirectResponse.cookies.delete(AGE_COOKIE_NAME);
     }
     return redirectResponse;
-  }
-
-  // 3. Admin routes guard: requires owt_admin session cookie
-  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    const adminToken = request.cookies.get('owt_admin')?.value;
-    const isAdminLogin = pathname === '/admin/login';
-
-    if (!adminToken && !isAdminLogin) {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: 'UNAUTHORIZED',
-              message: 'Admin authorization required.',
-            },
-            timestamp: new Date().toISOString(),
-          },
-          { status: 401 }
-        );
-      }
-      const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    if (adminToken && isAdminLogin) {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
-
-    return NextResponse.next();
   }
 
   // 4. Shopper Account Guard (/account routes)

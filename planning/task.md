@@ -32,8 +32,8 @@
 | [`TASK-012`](tasks/TASK-012.md) | Checkout UI (pickup/delivery → split → change store → OOS fixes → guest) | `friday` | `TASK-011`, `TASK-003` | `DONE` | `P0` | `STANDARD` | Phase 2 — Verified ✅ |
 | [`TASK-013`](tasks/TASK-013.md) | Cannabis handoff (Leafly / retailer page) | `edith` | `TASK-011` | `DONE` | `P0` | `HEAVY` | Phase 3 — Verified ✅ |
 | [`TASK-014`](tasks/TASK-014.md) | Store confirmation webhook + order status | `edith` | `TASK-013` | `DONE` | `P1` | `STANDARD` | Phase 3 — Verified ✅ |
-| [`TASK-015`](tasks/TASK-015.md) | Admin console (incl. brands, pickup/delivery, delivery hours, Owtlet price) | `friday` | `TASK-006`, `TASK-010` | `READY` | `P1` | `STANDARD` | Phase 4 — Pending |
-| [`TASK-016`](tasks/TASK-016.md) | Live shows + replays + shoppable videos; start/end show | `friday` | `TASK-008` | `BACKLOG` | `P1` | `STANDARD` | Phase 4 — Pending |
+| [`TASK-015`](tasks/TASK-015.md) | Admin console (incl. brands, pickup/delivery, delivery hours, Owtlet price) | `friday` | `TASK-006`, `TASK-010` | `DONE` | `P1` | `STANDARD` | Phase 4 — Verified ✅ |
+| [`TASK-016`](tasks/TASK-016.md) | Live shows + replays + shoppable videos; start/end show | `friday` | `TASK-008` | `READY` | `P1` | `STANDARD` | Phase 4 — Pending |
 | [`TASK-017`](tasks/TASK-017.md) | Final cannabis product dataset load | `edith` | `TASK-006` | `BACKLOG` | `P1` | `LIGHT` | Phase 4 — Pending |
 | [`TASK-018`](tasks/TASK-018.md) | Full regression + E2E + chaos testing | `thanos` | `TASK-012`, `TASK-014`, `TASK-015`, `TASK-016`, `TASK-020`, `TASK-021` | `BACKLOG` | `P0` | `STANDARD` | Phase 5 — Pending |
 | [`TASK-019`](tasks/TASK-019.md) | Security hardening + VPS deploy + owtlet.live redirect | `ultron` | `TASK-018` | `BACKLOG` | `P0` | `STANDARD` | Phase 5 — Pending |
@@ -64,13 +64,12 @@
 ### Phase 3: Checkout Handoff & Channels
 - `TASK-013`: Resilient `HandoffProvider` (Leafly primary, retailer web page fallback). [Status: `DONE` ✅]
 - `TASK-014`: Dispensary order confirmation webhook (`POST /api/webhooks/store-confirmation`) and order tracking. [Status: `DONE` ✅]
-- `TASK-015`: Admin console for products, inventory, dispensaries, brands, and order overrides. [Status: `READY`]
+- `TASK-015`: Admin console for products, inventory, dispensaries, brands, and order overrides. [Status: `DONE` ✅]
 - `TASK-020`: Brand storefronts (`/brands/[slug]`) and brand-restricted dispensary checkout. [Status: `BACKLOG`]
 - `TASK-021`: Optional shopper profile (`owt_shopper`), address book, and default store preference. [Status: `BACKLOG`]
 
 ### Phase 4: Media, Admin & Production Catalog
-- `TASK-015`: Admin console for products, inventory, dispensaries, brands, and order overrides. [Status: `BACKLOG`]
-- `TASK-016`: Live show management, start/end show cart hold synchronization, and shoppable video rail. [Status: `BACKLOG`]
+- `TASK-016`: Live show management, start/end show cart hold synchronization, and shoppable video rail. [Status: `READY`]
 - `TASK-017`: Production cannabis catalog dataset ingestion (gated by Q-004). [Status: `BACKLOG`]
 
 ### Phase 5: Verification, Hardening & VPS Deployment

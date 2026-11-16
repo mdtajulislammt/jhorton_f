@@ -223,3 +223,191 @@ export interface StoreConfirmationResponseData {
   idempotent?: boolean;
 }
 
+// ----------------------------------------------------------------------------
+// Admin Console DTOs (docs/08 §11, AC-ADM-01, AC-BRD-01)
+// ----------------------------------------------------------------------------
+
+export interface AdminUserDto {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+}
+
+export interface AdminProductDto {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  brandId: string | null;
+  brand?: { id: string; name: string; slug: string } | null;
+  categoryId: string;
+  category?: { id: string; name: string; slug: string } | null;
+  strainId: string | null;
+  strain?: { id: string; name: string; type: string } | null;
+  thcPercent: number | null;
+  cbdPercent: number | null;
+  weightGrams: number | null;
+  imageUrls: string[];
+  owtletPrice: number | null;
+  sku: string | null;
+  terrificProductId: string | null;
+  isActive: boolean;
+  totalStock: number;
+  inventoryCount: number;
+  isPinnedInActiveShow: boolean;
+  pinnedShows: Array<{ id: string; title: string; status: string }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminInventoryItemDto {
+  id: string;
+  productId: string;
+  dispensaryId: string;
+  productName: string;
+  productSku: string | null;
+  categoryName?: string;
+  brandName?: string;
+  dispensaryName: string;
+  dispensaryZip: string;
+  stockQty: number;
+  price: number | null;
+  owtletPrice: number | null;
+  effectivePrice: number | null;
+  externalSku: string | null;
+  updatedAt: string;
+}
+
+export interface AdminDispensaryDto {
+  id: string;
+  name: string;
+  slug: string;
+  licenseNumber: string | null;
+  addressLine1: string;
+  city: string;
+  state: string;
+  zip: string;
+  latitude: number | null;
+  longitude: number | null;
+  offersPickup: boolean;
+  offersDelivery: boolean;
+  coverageZips: string[];
+  timezone: string;
+  handoffChannel: string;
+  handoffUrlTemplate: string | null;
+  leaflyStoreId: string | null;
+  webhookSecret: string;
+  isActive: boolean;
+  inventoryCount: number;
+  subOrdersCount: number;
+  hoursCount: number;
+  hours?: Array<{
+    id: string;
+    kind: 'STORE' | 'DELIVERY';
+    dayOfWeek: number;
+    opensAt: string;
+    closesAt: string;
+    isClosed: boolean;
+  }>;
+  brands: Array<{ id: string; name: string; slug: string }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminBrandDto {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  bannerUrl: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  productsCount: number;
+  showsCount: number;
+  dispensariesCount: number;
+  dispensaries: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    zip: string;
+    offersPickup: boolean;
+    offersDelivery: boolean;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminOrderDto {
+  id: string;
+  orderNumber: string;
+  status: string;
+  fulfillmentType: string;
+  contactName: string;
+  contactEmailMasked: string;
+  contactPhoneMasked: string;
+  subtotal: number;
+  itemCount: number;
+  subOrderCount: number;
+  createdAt: string;
+  updatedAt: string;
+  subOrders: Array<{
+    id: string;
+    dispensaryId: string;
+    dispensaryName: string;
+    dispensaryZip: string;
+    status: string;
+    subtotal: number;
+    assignmentSource: string;
+    handoffChannel: string;
+    handoffUrl: string | null;
+    confirmedAt: string | null;
+    confirmationRef: string | null;
+    itemsCount: number;
+    items: Array<{
+      id: string;
+      productId: string;
+      productName: string;
+      productSku: string | null;
+      quantity: number;
+      unitPrice: number;
+      lineTotal: number;
+    }>;
+  }>;
+}
+
+export interface AdminLiveShowDto {
+  id: string;
+  title: string;
+  description: string | null;
+  format: string;
+  status: string;
+  brandId: string | null;
+  brand?: { id: string; name: string; slug: string } | null;
+  terrificShowId: string | null;
+  embeddingId: string;
+  scheduledAt: string | null;
+  scheduledEndAt: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  thumbnailUrl: string | null;
+  heldCartsCount: number;
+  pinnedProductsCount: number;
+  products: Array<{
+    showId: string;
+    productId: string;
+    sortOrder: number;
+    product: {
+      id: string;
+      name: string;
+      slug: string;
+      owtletPrice: number | null;
+      categoryName?: string;
+      imageUrls: string[];
+    };
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+

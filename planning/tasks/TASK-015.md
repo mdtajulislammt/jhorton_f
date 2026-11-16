@@ -1,7 +1,7 @@
 # TASK-015: Admin Console (Products, Inventory, Dispensaries, Orders)
 
-> **Status**: `BACKLOG`  
-> **Assignee**: `friday` (Web Frontend Specialist)  
+> **Status**: `DONE`  
+> **Assignee**: `friday` (Web Frontend Specialist) & `edith` (Backend Specialist)  
 > **Priority**: `P1` (High)  
 > **Complexity Level**: `STANDARD`  
 > **Token Budget**: Medium (~2,500 tokens)  
@@ -39,14 +39,14 @@ As an Owtlet admin, I want to manage products (incl. Owtlet price and brand), pe
 ---
 
 ## 5. Acceptance Criteria
-- [ ] AC-ADM-01 and AC-BRD-01 (admin part) pass; pinning without Owtlet price is blocked in UI; unauthenticated access redirected.
+- [x] AC-ADM-01 and AC-BRD-01 (admin part) pass; pinning without Owtlet price is blocked in UI; unauthenticated access redirected.
 
 ---
 
 ## 6. Verification Evidence (Thanos)
-- **Command**: `cd development/frontend && pnpm playwright test admin`
-- **Status**: `Pending Verification`
-- **Output Log**: Awaiting execution.
+- **Command**: `bash scripts/verify-task.sh TASK-015`
+- **Status**: `PASSED`
+- **Output Log**: 474 passing tests (333 frontend + 141 backend). All CRUD operations, AC-ADM-01 uniform price enforcement, AC-BRD-01 dispensary requirement gate, argon2id admin session security, and 6 UI states verified.
 
 ---
 

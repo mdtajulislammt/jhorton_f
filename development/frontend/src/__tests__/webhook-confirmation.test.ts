@@ -265,7 +265,7 @@ describe('Dispensary Confirmation Webhook (AC-CNF-01, T-WH-01, docs/08 §10)', (
       order: {
         id: orderId,
         orderNumber: 'OWT-100245',
-        status: OrderStatus.HANDED_OFF,
+        status: OrderStatus.HANDED_OFF as OrderStatus,
         subOrders: [
           { id: subOrderId, status },
         ],

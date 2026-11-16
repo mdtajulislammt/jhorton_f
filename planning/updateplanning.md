@@ -5,10 +5,10 @@
 - **Project**: Owtlet™ — cannabis marketplace + live shopping (`owtlet.com`) · Client: Jesce Horton (Grand National Agency) · Deadline: **Dec 1, 2026**
 - **Project Phase**: Phase 0 complete (planning & scaffolding filled) → Phase 1 Foundation 100% COMPLETE → Phase 2 Complete → **Phase 3 In Progress**
 - **Last Updated**: 2026-11-16
-- **Current Task**: Completed [`TASK-014`](tasks/TASK-014.md) (Dispensary confirmation webhook & order status tracking)
-- **Next Dependency-Ready Task**: [`TASK-015`](tasks/TASK-015.md) (Admin console for products, inventory, hours, brands, and order overrides)
-- **Overall Status**: `IN_PROGRESS` (Phase 3 In Progress)
-- **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 432 total tests passing (296 frontend + 136 backend).
+- **Current Task**: Completed [`TASK-015`](tasks/TASK-015.md) (Admin console for products, inventory, hours, brands, and order overrides)
+- **Next Dependency-Ready Task**: [`TASK-016`](tasks/TASK-016.md) (Live shows + replays + shoppable videos; start/end show)
+- **Overall Status**: `IN_PROGRESS` (Phase 4 In Progress)
+- **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 474 total tests passing (333 frontend + 141 backend).
 - **Client-answer gap closure (2026-11-15)**: Audited against Jesce's written answers (saved verbatim in `input/client-docs/`). Added REQ-F-011…019 (brand storefronts, pickup/delivery, store change + default store, guest checkout + optional profile, one price for show products, cart hold until 30 min after the show ends, out-of-stock suggestions, delivery hours, owtlet.live redirect; shoppable video in REQ-F-003), AC-BRD/FUL/SEL/PRF/PRC/HOLD/OOS/DLH/RDR + AC-LIVE-04, ADR-009…015, TASK-020/021 (BACKLOG). Schema in docs/07 now 21 models (`prisma validate` ✅).
 - **Scope change (2026-11-15)**: Platform is **cannabis-only**; accessories / `owtlet.shop` Shopify are out of scope (separate team member). REQ-F-005 removed, TASK-009 CANCELLED, Q-005 resolved, `AccessoryRef`/`ProductKind`/Shopify endpoints removed from docs (ADR-008).
 
@@ -109,15 +109,42 @@
     - 45 new unit, route, and domain tests added (296 frontend Vitest tests + 136 backend Vitest tests = 432 total passing tests with 100% pass rate).
     - Tri-Platform verification `bash scripts/verify-task.sh TASK-014` passed.
 
+- [x] [`TASK-015`](tasks/TASK-015.md): Admin Console for products, inventory, dispensaries, brands, orders, and live show pricing (docs/08 §11, AC-ADM-01, AC-BRD-01).
+  - Edith (Backend Domain Services & NestJS Module):
+    - `src/server/admin/crypto.ts`: Edge-safe HMAC-SHA256 signed admin session token (`owt_admin`) with 8-hour TTL, SameSite=Strict cookie policy, and cryptographic verification.
+    - `src/server/admin/auth-service.ts`: Argon2id password verification, admin role validation (`ADMIN` / `SUPERADMIN`), and secure session handling.
+    - `src/server/admin/products-service.ts`: Cannabis catalog CRUD, automatic slug generation, and enforcement of AC-ADM-01 invariant (blocks removal of `owtletPrice` when product is pinned in live show).
+    - `src/server/admin/inventory-service.ts`: Bulk inventory updates for stock quantities and per-store retail prices with transaction safety.
+    - `src/server/admin/dispensaries-service.ts`: Dispensary configuration, pickup/delivery toggles, multi-tag NY coverage ZIP picker, and dual-window STORE and DELIVERY hours editor.
+    - `src/server/admin/brands-service.ts`: Brand channel management, partner dispensary mapping (`BrandDispensary`), and AC-BRD-01 enforcement (blocks activating brand without at least 1 partner dispensary).
+    - `src/server/admin/orders-service.ts`: Multi-store order review with masked contact telemetry (`j***r@gmail.com`, `***-***-1234`), sub-order status updates, and parent order status roll-up.
+    - `src/server/admin/shows-service.ts`: Terrific live shopping controls (`startShow`, `endShow` with cart hold extension), and product pinning requiring uniform Owtlet price.
+    - `development/backend/src/modules/admin/`: Registered `AdminController` and `AdminModule` in NestJS `AppModule`.
+  - Friday (Next.js Route Handlers & Admin UI):
+    - Next.js Route Handlers in `src/app/api/admin/**` for login, logout, me, products, inventory, dispensaries, brands, orders, and live-shows.
+    - Synchronized contract DTOs in `src/types/api.generated.ts`.
+    - Edge Middleware guard in `src/middleware.ts` safeguarding `/admin` and `/api/admin/*` behind `owt_admin`.
+    - `/admin/login`: Branded admin authentication screen with 44px ergonomics, loading states, and error alerts.
+    - `/admin`: Operations dashboard with real-time metrics and quick management modules.
+    - `/admin/products`: Product data table with category/brand filters, modal creation/edit, and live price indicators.
+    - `/admin/inventory`: Dispensary selector with batch stock quantity and price editor.
+    - `/admin/dispensaries`: Store cards with pickup/delivery badges, `CoverageZipPicker`, and `HoursEditor` with Store and Delivery tabs.
+    - `/admin/brands`: Brand cards with `BrandDispensaryPicker` and AC-BRD-01 activation guard.
+    - `/admin/orders`: Order allocations list with masked contacts and manual store confirmation override buttons.
+    - `/admin/live-shows`: Broadcast streaming controls and product pinning modal enforcing AC-ADM-01 single show pricing.
+  - Thanos Verification:
+    - 42 new unit, route, and domain tests added (333 frontend + 141 backend = 474 total passing tests with 100% pass rate).
+    - Tri-Platform verification `bash scripts/verify-task.sh TASK-015` passed.
+
 ---
 
 ## In Progress
 
-- **Task ID**: None (TASK-014 Complete)
-- **Next Task ID**: [`TASK-015`](tasks/TASK-015.md) (Admin console for inventory, hours, and live show pricing)
-- **Assigned Agent**: `friday` & `edith`
-- **Current Checkpoint**: Ready for TASK-015.
-- **Next Expected Action**: Build `/admin` dashboard and Route Handlers for products, inventory stock/price, store hours, and live show pricing overrides.
+- **Task ID**: None (TASK-015 Complete)
+- **Next Task ID**: [`TASK-016`](tasks/TASK-016.md) (Live shows + replays + shoppable videos; start/end show)
+- **Assigned Agent**: `friday` (Web Frontend Specialist)
+- **Current Checkpoint**: Ready for TASK-016.
+- **Next Expected Action**: Implement live show stream viewers, replay catalog, shoppable video rails, and cart hold timers.
 
 ---
 
@@ -133,19 +160,19 @@
 
 ## Next Actions
 
-- [ ] Execute TASK-015 (Admin console for inventory, hours, and live show pricing).
-- [ ] Proceed to TASK-016 (Live shows + replays + shoppable videos; start/end show).
+- [ ] Execute TASK-016 (Live shows + replays + shoppable videos; start/end show).
+- [ ] Proceed to TASK-017 (Final cannabis product dataset load).
 - [ ] Follow up with the client on Q-001…Q-004 (needed by ~Nov 22 to keep Phase 3–5 on schedule).
 
 ---
 
 ## Verification Summary
 
-- **Tests Executed**: 432 Vitest unit & integration tests (296 frontend + 136 backend) + Playwright E2E specs
-- **Tests Passed**: 432 (100%)
+- **Tests Executed**: 474 Vitest unit & integration tests (333 frontend + 141 backend) + Playwright E2E specs
+- **Tests Passed**: 474 (100%)
 - **Tests Failed**: 0
 - **TypeScript**: `tsc --noEmit` passed across both `development/frontend` and `development/backend` (0 errors)
-- **Structure Validation**: `bash scripts/verify-task.sh TASK-014` passed (Edith NestJS backend & Friday frontend verified).
+- **Structure Validation**: `bash scripts/verify-task.sh TASK-015` passed (Edith NestJS backend & Friday frontend verified).
 
 ---
 
@@ -155,5 +182,5 @@
 > **টোকেন সাশ্রয়ের নিয়ম**: প্রতি ১-২টি টাস্ক শেষ হলে বর্তমান চ্যাট বন্ধ করে **নতুন চ্যাট উইন্ডো** খুলুন এবং নিচের এক লাইন পেস্ট করুন:
 >
 > ```text
-> planning/updateplanning.md পড়ে TASK-015 শুরু করো। [Tier: LEVEL: STANDARD]
+> planning/updateplanning.md পড়ে TASK-016 শুরু করো। [Tier: LEVEL: STANDARD]
 > ```
