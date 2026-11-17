@@ -36,10 +36,11 @@ function hexToBytes(hex: string): Uint8Array | null {
 }
 
 function getShopperSecret(): string {
-  return (
-    process.env.SHOPPER_SESSION_SECRET ||
-    'change_me_shopper_session_secret_min_32_chars'
-  );
+  const envSecret = process.env.SHOPPER_SESSION_SECRET;
+  if (!envSecret && process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL SECURITY ERROR: SHOPPER_SESSION_SECRET environment variable is missing in production.');
+  }
+  return envSecret || 'change_me_shopper_session_secret_min_32_chars';
 }
 
 async function getHmacKey(secret: string): Promise<CryptoKey> {

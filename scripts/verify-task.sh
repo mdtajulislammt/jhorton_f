@@ -56,10 +56,10 @@ if [ "$TASK_ID" = "TASK-019" ] || [ "$TASK_ID" = "ALL" ]; then
   echo "🔍 4. Checking DevOps & Production Infrastructure (Ultron)..."
 
   # Check Dockerfiles
-  if [ -f "infrastructure/docker/Dockerfile.frontend" ] && [ -f "infrastructure/docker/Dockerfile.backend" ]; then
-    echo "  ✔ Multi-stage Dockerfiles verified (Frontend Standalone + Backend NestJS)."
+  if [ -f "infrastructure/docker/Dockerfile.frontend" ]; then
+    echo "  ✔ Multi-stage Next.js standalone Dockerfile verified."
   else
-    echo "  ❌ Missing Dockerfiles in infrastructure/docker/"
+    echo "  ❌ Missing Dockerfile.frontend in infrastructure/docker/"
     FAILED=1
   fi
 

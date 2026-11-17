@@ -39,8 +39,13 @@ export async function POST(request: NextRequest) {
       request.headers.get('x-real-ip') ||
       'unknown';
 
+    const envAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!envAppUrl && process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL SECURITY ERROR: NEXT_PUBLIC_APP_URL environment variable is missing in production.');
+    }
+
     const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
+      envAppUrl ||
       `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 
     const result = await requestPasswordReset(parseResult.data, baseUrl, clientIp);

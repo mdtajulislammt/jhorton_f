@@ -51,6 +51,15 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
+function getAdminSecret(customSecret?: string): string {
+  if (customSecret) return customSecret;
+  const envSecret = process.env.ADMIN_SESSION_SECRET;
+  if (!envSecret && process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL SECURITY ERROR: ADMIN_SESSION_SECRET environment variable is missing in production.');
+  }
+  return envSecret || 'owtlet_admin_session_secret_min_32_chars';
+}
+
 /**
  * Creates an HMAC-SHA256 signed token for the admin session.
  * Format: `<userId>.<role>.<expiresAtTimestampMs>.<hmacSha256Hex>`
@@ -60,7 +69,7 @@ export async function signAdminToken(
   customSecret?: string,
   ttlMs = ADMIN_COOKIE_TTL_MS
 ): Promise<{ token: string; expiresAt: Date }> {
-  const secret = customSecret || process.env.ADMIN_SESSION_SECRET || 'owtlet_admin_session_secret_min_32_chars';
+  const secret = getAdminSecret(customSecret);
   const key = await getHmacKey(secret);
 
   const expiresAt = new Date(Date.now() + ttlMs);
@@ -112,7 +121,7 @@ export async function verifyAdminToken(
     return { valid: false, reason: 'MALFORMED' };
   }
 
-  const secret = customSecret || process.env.ADMIN_SESSION_SECRET || 'owtlet_admin_session_secret_min_32_chars';
+  const secret = getAdminSecret(customSecret);
   const key = await getHmacKey(secret);
   const dataToVerify = `${userId}.${role}.${expiresAtMs}`;
   const encoder = new TextEncoder();
