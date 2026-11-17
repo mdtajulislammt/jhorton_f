@@ -1,61 +1,89 @@
 import * as React from 'react';
 import Link from 'next/link';
 
-export function StoreFooter() {
+const FOOTER_COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
+  {
+    title: 'Shop',
+    links: [
+      { href: '/shop', label: 'All products' },
+      { href: '/shop/flower', label: 'Flower' },
+      { href: '/shop/pre-rolls', label: 'Pre-Rolls' },
+      { href: '/shop/vapes', label: 'Vapes' },
+      { href: '/shop/edibles', label: 'Edibles' },
+    ],
+  },
+  {
+    title: 'Watch',
+    links: [
+      { href: '/live', label: 'Live Shows' },
+      { href: '/live#replays', label: 'Replays' },
+      { href: '/videos', label: 'Shoppable Videos' },
+      { href: '/brands', label: 'Brand Storefronts' },
+    ],
+  },
+  {
+    title: 'Your account',
+    links: [
+      { href: '/account', label: 'Profile' },
+      { href: '/account#orders', label: 'Orders' },
+      { href: '/cart', label: 'Cart' },
+    ],
+  },
+  {
+    title: 'Compliance',
+    links: [
+      { href: '/age-gate', label: 'Age verification' },
+      { href: '/#check-zip', label: 'Delivery coverage' },
+    ],
+  },
+];
+
+/** `flush` removes the top margin (home page: the coverage band sits directly on the footer, as in design v3). */
+export function StoreFooter({ flush = false }: { flush?: boolean } = {}) {
   return (
-    <footer className="border-t border-border bg-card text-card-foreground mt-20">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand & Purpose */}
-          <div className="md:col-span-2 space-y-3">
-            <span className="font-heading text-2xl tracking-tight text-foreground">
-              Owtlet<span className="text-primary text-xl">™</span>
-            </span>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
-              Live shopping and marketplace for legal adult-use cannabis in New York State.
-              Connecting verified 21+ consumers with premier licensed local dispensaries in
-              Manhattan, Brooklyn, Queens, Westchester, and Long Island.
-            </p>
-            <p className="text-[11px] font-semibold text-primary">
-              Strict 21+ Adult-Use Compliance · Zero Online Cannabis Payments
-            </p>
-          </div>
-
-          {/* Quick Categories */}
-          <div className="space-y-2">
-            <h4 className="font-heading text-sm text-foreground">Shop Categories</h4>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li><Link href="/shop/flower" className="hover:text-primary">Craft Flower</Link></li>
-              <li><Link href="/shop/pre-rolls" className="hover:text-primary">Pre-Rolls & Infused</Link></li>
-              <li><Link href="/shop/vapes" className="hover:text-primary">All-in-One & 510 Vapes</Link></li>
-              <li><Link href="/shop/edibles" className="hover:text-primary">Rosin Gummies & Chocolates</Link></li>
-              <li><Link href="/shop/concentrates" className="hover:text-primary">Live Rosin & Concentrates</Link></li>
-            </ul>
-          </div>
-
-          {/* Compliance & Legal */}
-          <div className="space-y-2">
-            <h4 className="font-heading text-sm text-foreground">Legal & Compliance</h4>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Owtlet is a technology platform, not a licensed cannabis retailer. All cannabis orders
-              are fulfilled and physically verified by NYS Office of Cannabis Management (OCM) licensed
-              dispensaries.
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              Keep out of reach of children. For use only by adults 21 years of age and older.
-            </p>
-          </div>
+    <footer className={`dark bg-owtlet-night text-[14px] text-muted-foreground ${flush ? '' : 'mt-20'}`}>
+      <div className="mx-auto flex max-w-content flex-col gap-[26px] px-4 pb-7 pt-11 sm:px-7">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Link
+            href="/"
+            className="rounded font-heading text-[23px] tracking-[-0.01em] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Owtlet<sup className="ml-0.5 text-[11px] text-primary">™</sup>
+          </Link>
+          <span className="text-sm">Live Shopping for Cannabis.</span>
+          <span className="rounded-full bg-strain-sativa px-3 py-1 text-xs font-bold text-owtlet-ink">21+ only</span>
         </div>
 
-        <div className="mt-8 border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-muted-foreground gap-2">
-          <span>© {new Date().getFullYear()} Owtlet™. All rights reserved.</span>
-          <div className="flex gap-4">
-            <Link href="/age-gate" className="hover:text-primary">Age Verification</Link>
-            <Link href="/api/health" className="hover:text-primary">System Status</Link>
-          </div>
+        <div className="grid grid-cols-2 gap-5 border-y border-border py-6 md:grid-cols-4">
+          {FOOTER_COLUMNS.map((col) => (
+            <div key={col.title}>
+              <h4 className="mb-2.5 text-[13px] font-bold text-primary">{col.title}</h4>
+              <ul className="flex flex-col gap-2">
+                {col.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-3 text-xs leading-relaxed text-muted">
+          <p className="max-w-[110ch]">
+            Owtlet is a live shopping platform for adults 21 and older. Every cannabis product is sold, ID-checked and
+            fulfilled by a New York State licensed dispensary. Owtlet never takes payment for cannabis. We currently serve
+            Manhattan, Queens, Brooklyn, Westchester and Long Island.
+          </p>
+          {/* NY OCM advertising warning — kept for compliance (not in the mockup) */}
+          <p>Keep out of reach of children. For use only by adults 21 years of age and older.</p>
         </div>
       </div>
     </footer>
   );
 }
-

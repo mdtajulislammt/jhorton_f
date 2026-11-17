@@ -58,7 +58,7 @@ export function ContactForm({ className }: ContactFormProps) {
         {!isSignedIn && (
           <Link
             href="/account/login?redirect=/checkout"
-            className="text-xs text-primary hover:text-owtlet-volt font-medium transition-colors"
+            className="text-xs text-foreground underline-offset-4 hover:underline font-medium transition-colors"
           >
             Sign in for faster checkout
           </Link>

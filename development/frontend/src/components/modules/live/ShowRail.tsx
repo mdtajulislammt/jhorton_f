@@ -60,7 +60,7 @@ export function ShowRail({
               <span>{badgeText}</span>
             </div>
           )}
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">
+          <h2 className="font-heading text-2xl leading-tight tracking-tight text-foreground sm:text-3xl lg:text-[2.1rem]">
             {title}
           </h2>
           {description && (
@@ -73,7 +73,7 @@ export function ShowRail({
         {viewAllHref && shows.length > 0 && (
           <Link
             href={viewAllHref}
-            className="inline-flex items-center text-sm font-semibold text-primary hover:underline group"
+            className="group inline-flex items-center gap-1 border-b-2 border-primary pb-0.5 text-sm font-bold text-foreground transition-colors hover:border-foreground"
           >
             <span>{viewAllText}</span>
             <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -83,13 +83,13 @@ export function ShowRail({
 
       {/* Shows Grid or Empty State */}
       {shows.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
           {shows.map((show) => (
             <ShowCard key={show.id} {...show} />
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-border p-10 text-center bg-card/50">
+        <div className="rounded-[18px] border-[1.5px] border-dashed border-secondary bg-card p-10 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground mb-3">
             <Video className="h-6 w-6" />
           </div>

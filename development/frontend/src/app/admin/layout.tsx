@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/navigation';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -12,14 +12,12 @@ import {
   ShoppingBag,
   Tv,
   LogOut,
-  ShieldCheck,
   User,
   Menu,
   X,
   ExternalLink,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { AdminUserDto } from '@/types/api.generated';
 
 const NAV_ITEMS = [
@@ -66,116 +64,124 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
+  const navLinks = (
+    <nav aria-label="Admin" className="flex-1 space-y-1 p-3">
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => setMobileMenuOpen(false)}
+            aria-current={isActive ? 'page' : undefined}
+            className={cn(
+              'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              isActive
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
+            )}
+          >
+            <Icon className={cn('h-4 w-4', isActive ? 'text-primary-foreground' : 'text-primary')} />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  const logo = (
+    <Link
+      href="/admin"
+      className="rounded font-heading text-[21px] leading-none tracking-[-0.01em] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      Owtlet<sup className="ml-0.5 text-[10px] text-primary">™</sup>
+      <span className="ml-2 align-middle font-mono text-[11px] font-bold tracking-[0.14em] text-strain-sativa">ADMIN</span>
+    </Link>
+  );
+
   return (
-    <div className="min-h-screen bg-[#071311] text-white flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <header className="md:hidden bg-[#0D221E] border-b border-[#1A3832] px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-[#70F1C7]" />
-          <span className="font-bold tracking-tight text-white font-['Dela_Gothic_One'] text-sm">
-            OWTLET<span className="text-[#70F1C7]">.ADMIN</span>
-          </span>
-        </div>
+    <div className="flex min-h-screen flex-col bg-background text-foreground md:flex-row">
+      {/* Mobile header */}
+      <header className="dark sticky top-0 z-40 flex items-center justify-between border-b border-border bg-owtlet-ink px-4 py-3 md:hidden">
+        {logo}
         <button
+          type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 text-[#BBD7D1] hover:text-white"
-          aria-label="Toggle Navigation"
+          className="grid h-10 w-10 place-items-center rounded-xl border border-border text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={mobileMenuOpen ? 'Close navigation' : 'Open navigation'}
+          aria-expanded={mobileMenuOpen}
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </header>
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar */}
       <aside
-        className={`${
-          mobileMenuOpen ? 'block' : 'hidden'
-        } md:flex flex-col w-full md:w-64 bg-[#0D221E] border-r border-[#1A3832] shrink-0 sticky top-0 h-screen overflow-y-auto z-30`}
+        className={cn(
+          'dark z-30 w-full shrink-0 flex-col overflow-y-auto border-r border-border bg-owtlet-ink text-foreground md:sticky md:top-0 md:flex md:h-screen md:w-64',
+          mobileMenuOpen ? 'flex' : 'hidden'
+        )}
       >
-        <div className="p-5 border-b border-[#1A3832] hidden md:flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#70F1C7]/10 border border-[#70F1C7]/30 flex items-center justify-center text-[#70F1C7]">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-black text-white font-['Dela_Gothic_One'] tracking-tight text-base leading-none">
-                OWTLET<span className="text-[#70F1C7]">.ADMIN</span>
-              </div>
-              <div className="text-[11px] text-[#BBD7D1] font-medium mt-1">
-                Ops & Catalog Console
-              </div>
-            </div>
-          </div>
+        <div className="hidden border-b border-border px-5 py-6 md:block">
+          {logo}
+          <p className="mt-2.5 inline-flex items-center gap-2 font-mono text-[11px] font-bold tracking-[0.12em] text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent motion-safe:animate-live-ring" aria-hidden="true" />
+            OPS &amp; CATALOG CONSOLE
+          </p>
         </div>
 
-        <nav className="p-3 space-y-1 flex-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.href === '/admin'
-                ? pathname === '/admin'
-                : pathname.startsWith(item.href);
+        {navLinks}
 
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-[#70F1C7] text-[#0D221E] font-bold shadow-md'
-                    : 'text-[#BBD7D1] hover:bg-[#122A25] hover:text-white'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[#0D221E]' : 'text-[#70F1C7]'}`} />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
-
-        <div className="p-3 border-t border-[#1A3832] space-y-2">
+        <div className="space-y-2 border-t border-border p-3">
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium text-[#BBD7D1] hover:bg-[#122A25] hover:text-white"
+            className="flex items-center justify-between rounded-xl px-3.5 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span>View Storefront</span>
-            <ExternalLink className="w-3.5 h-3.5 text-[#70F1C7]" />
+            <ExternalLink className="h-3.5 w-3.5 text-primary" />
           </a>
 
-          <div className="px-3 py-2 bg-[#071311] rounded-lg border border-[#1A3832] flex items-center justify-between">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <div className="w-6 h-6 rounded-full bg-[#1A3832] flex items-center justify-center text-[#70F1C7]">
-                <User className="w-3.5 h-3.5" />
-              </div>
-              <div className="truncate">
-                <div className="text-xs font-semibold text-white truncate">
-                  {currentUser?.email || 'ops@owtlet.com'}
-                </div>
-                <div className="text-[10px] text-[#70F1C7] uppercase font-bold tracking-wider">
-                  {currentUser?.role || 'ADMIN'}
-                </div>
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-border bg-card px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                <User className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                {currentUser ? (
+                  <>
+                    <div className="truncate text-xs font-semibold text-foreground">{currentUser.email}</div>
+                    <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-strain-sativa">
+                      {currentUser.role}
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-1.5" role="status" aria-label="Loading account">
+                    <span className="block h-2.5 w-28 animate-pulse rounded bg-foreground/10" />
+                    <span className="block h-2 w-12 animate-pulse rounded bg-foreground/10" />
+                  </div>
+                )}
               </div>
             </div>
             <button
+              type="button"
               onClick={handleLogout}
-              title="Sign Out"
-              className="p-1.5 text-gray-400 hover:text-red-400 rounded-md transition-colors"
+              aria-label="Sign out"
+              title="Sign out"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-danger/15 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto min-h-screen">
-        <div className="max-w-7xl mx-auto p-4 md:p-8">
-          {children}
-        </div>
+      {/* Main */}
+      <main className="min-h-screen flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-7 md:py-10">{children}</div>
       </main>
     </div>
   );
 }
-

@@ -1,5 +1,11 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * Wraps a CSS variable so Tailwind opacity modifiers (e.g. `bg-primary/20`) work.
+ * Plain `var(--x)` colors silently drop the modifier in Tailwind 3; color-mix keeps theming via CSS vars.
+ */
+const token = (name: string) => `color-mix(in srgb, var(${name}) calc(<alpha-value> * 100%), transparent)`;
+
 const config: Config = {
   darkMode: ['class'],
   content: [
@@ -20,44 +26,98 @@ const config: Config = {
           ember: '#ED742E',
         },
         primary: {
-          DEFAULT: 'var(--primary)',
-          hover: 'var(--primary-hover)',
-          foreground: 'var(--primary-foreground)',
+          DEFAULT: token('--primary'),
+          hover: token('--primary-hover'),
+          foreground: token('--primary-foreground'),
         },
         secondary: {
-          DEFAULT: 'var(--secondary)',
-          foreground: 'var(--secondary-foreground)',
+          DEFAULT: token('--secondary'),
+          foreground: token('--secondary-foreground'),
         },
         accent: {
-          DEFAULT: 'var(--accent)',
-          foreground: 'var(--accent-foreground)',
+          DEFAULT: token('--accent'),
+          foreground: token('--accent-foreground'),
         },
         ink: {
-          DEFAULT: 'var(--ink)',
-          foreground: 'var(--primary-foreground)',
+          DEFAULT: token('--ink'),
+          foreground: token('--primary-foreground'),
         },
-        ring: 'var(--ring)',
-        background: 'var(--bg-primary)',
-        foreground: 'var(--text-primary)',
+        ring: token('--ring'),
+        background: token('--bg-primary'),
+        foreground: token('--text-primary'),
         card: {
-          DEFAULT: 'var(--bg-card)',
-          foreground: 'var(--text-primary)',
+          DEFAULT: token('--bg-card'),
+          foreground: token('--text-primary'),
         },
-        border: 'var(--border-subtle)',
+        border: token('--border-subtle'),
         muted: {
-          DEFAULT: 'var(--text-muted)',
-          foreground: 'var(--text-secondary)',
+          DEFAULT: token('--text-muted'),
+          foreground: token('--text-secondary'),
         },
-        success: 'var(--success)',
-        warning: 'var(--warning)',
-        danger: 'var(--danger)',
-        info: 'var(--info)',
+        success: token('--success'),
+        warning: {
+          DEFAULT: token('--warning'),
+          foreground: token('--warning-foreground'),
+        },
+        danger: token('--danger'),
+        // shadcn-style alias used across checkout/account components
+        destructive: token('--danger'),
+        info: token('--info'),
+        kraft: token('--kraft'),
+        surface: {
+          muted: token('--bg-muted'),
+        },
+        // Strain-type color system (Sativa = Volt, Hybrid = Mint, Indica = Ink)
+        strain: {
+          sativa: {
+            DEFAULT: token('--strain-sativa'),
+            foreground: token('--strain-sativa-foreground'),
+            tint: token('--strain-sativa-tint'),
+          },
+          hybrid: {
+            DEFAULT: token('--strain-hybrid'),
+            foreground: token('--strain-hybrid-foreground'),
+            tint: token('--strain-hybrid-tint'),
+          },
+          indica: {
+            DEFAULT: token('--strain-indica'),
+            foreground: token('--strain-indica-foreground'),
+            tint: token('--strain-indica-tint'),
+          },
+          cbd: {
+            DEFAULT: token('--strain-cbd'),
+            foreground: token('--strain-cbd-foreground'),
+            tint: token('--strain-cbd-tint'),
+          },
+        },
       },
       fontFamily: {
-        heading: ['var(--font-heading)', 'var(--font-dela)', 'sans-serif'],
-        body: ['var(--font-body)', 'var(--font-rose)', 'sans-serif'],
-        dela: ['var(--font-heading)', 'var(--font-dela)', 'sans-serif'],
-        rose: ['var(--font-body)', 'var(--font-rose)', 'sans-serif'],
+        heading: ['var(--font-heading)', 'system-ui', 'sans-serif'],
+        body: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        dela: ['var(--font-heading)', 'system-ui', 'sans-serif'],
+        rose: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
+      keyframes: {
+        marquee: {
+          to: { transform: 'translateX(-50%)' },
+        },
+        float: {
+          '50%': { transform: 'translateY(-7px)' },
+        },
+        'live-ring': {
+          '0%': { boxShadow: '0 0 0 0 var(--live-ring)' },
+          '80%, 100%': { boxShadow: '0 0 0 9px transparent' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 46s linear infinite',
+        float: 'float 4s ease-in-out infinite',
+        'live-ring': 'live-ring 1.8s ease-out infinite',
+      },
+      // Storefront content column (design v3: 1120px incl. 28px gutters)
+      maxWidth: {
+        content: '1120px',
       },
       borderRadius: {
         DEFAULT: 'var(--radius, 0.75rem)',

@@ -24,10 +24,28 @@
   --accent-foreground: #ffffff;
   --ink: #0d221e;
   --ring: #0d221e;
+  --bg-muted: #f1f6f4;
+  --kraft: #d9b98a;             /* Paper-bag tan for the How-it-works illustration */          /* Mist → Sage blend for chips, search, specs */
+  --live-ring: rgba(237, 116, 46, 0.55);
+
+  /* Strain-type system (TASK-022) */
+  --strain-sativa: #dffe52;     /* Owtlet Volt */
+  --strain-sativa-foreground: #3f4a00;
+  --strain-sativa-tint: #f6fcd6;
+  --strain-hybrid: #70f1c7;     /* Owtlet Mint */
+  --strain-hybrid-foreground: #0d3d30;
+  --strain-hybrid-tint: #e2fbf2;
+  --strain-indica: #0d221e;     /* Owtlet Ink */
+  --strain-indica-foreground: #70f1c7;
+  --strain-indica-tint: #dce8e5;
+  --strain-cbd: #bbd7d1;        /* Owtlet Sage */
+  --strain-cbd-foreground: #0d221e;
+  --strain-cbd-tint: #eef5f3;
 
   /* Semantic Feedback */
   --success: #1f9d72;
   --warning: #f59e0b;
+  --warning-foreground: #8a5a00; /* readable amber text on light surfaces */
   --danger: #d93f3f;
   --info: #2f7fd1;
 
@@ -53,11 +71,15 @@
   --accent: #ed742e;
   --accent-foreground: #ffffff;
   --ink: #0d221e;
-  --ring: #70f1c7;
+  --ring: #dffe52;
+  --bg-muted: #12302a;
+  --strain-indica: #f8fafc;
+  --strain-indica-foreground: #0d221e;
 
   /* Semantic Feedback */
   --success: #1f9d72;
   --warning: #f59e0b;
+  --warning-foreground: #f6b84a;
   --danger: #d93f3f;
   --info: #2f7fd1;
 }
@@ -65,7 +87,7 @@
 body {
   color: var(--text-primary);
   background: var(--bg-primary);
-  font-family: var(--font-body), var(--font-rose), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
   min-height: 100vh;
 }
 
@@ -73,3 +95,40 @@ body {
   background-color: #70f1c7;
   color: #0d221e;
 }
+
+/* Dual-handle range (shop THC filter, design v3 .range): two overlaid inputs, only the thumbs take pointer events */
+.range-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 6px;
+  margin: 0;
+  background: transparent;
+}
+.range-thumb:focus { outline: none; }
+.range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 2px solid var(--ink);
+  background: var(--bg-card);
+  cursor: pointer;
+}
+.range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 2px solid var(--ink);
+  background: var(--bg-card);
+  cursor: pointer;
+}
+.range-thumb::-moz-range-track { background: transparent; }
+.range-thumb:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--ring); }
+.range-thumb:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--ring); }

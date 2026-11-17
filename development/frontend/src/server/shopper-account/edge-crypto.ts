@@ -107,7 +107,8 @@ export async function verifyShopperToken(
     const valid = await crypto.subtle.verify(
       'HMAC',
       key,
-      sigBytes,
+      // Type-only cast (same as age-session/crypto.ts): TS 5.7+ lib types reject Uint8Array<ArrayBufferLike> here.
+      sigBytes as unknown as BufferSource,
       enc.encode(data)
     );
 

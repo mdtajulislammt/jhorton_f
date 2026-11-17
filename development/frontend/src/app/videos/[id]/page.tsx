@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/server/db';
+import { isAgeVerified } from '@/server/age-session/verified';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
@@ -38,6 +39,8 @@ export async function generateMetadata({ params }: ShoppableVideoPageProps): Pro
 }
 
 export default async function ShoppableVideoPage({ params }: ShoppableVideoPageProps) {
+  // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
+  const ageVerified = await isAgeVerified();
   const video = await prisma.liveShow.findFirst({
     where: {
       OR: [{ id: params.id }, { terrificShowId: params.id }],
@@ -85,7 +88,7 @@ export default async function ShoppableVideoPage({ params }: ShoppableVideoPageP
       <main className="flex-1 pb-16">
         {/* Breadcrumb Navigation */}
         <div className="border-b border-border bg-card/40 py-3">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-content px-4 sm:px-7">
             <Link
               href="/videos"
               className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors group"
@@ -98,12 +101,13 @@ export default async function ShoppableVideoPage({ params }: ShoppableVideoPageP
 
         {/* Video Player & Info Header */}
         <section className="py-8 sm:py-10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-content px-4 sm:px-7">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Left Column: Terrific Video Embed */}
               <div className="lg:col-span-8">
                 <div className="overflow-hidden rounded-2xl p-1 bg-gradient-to-tr from-primary/30 via-accent/20 to-border shadow-xl">
                   <TerrificEmbed
+                    ageVerified={ageVerified}
                     embeddingId={video.embeddingId || 'Cki70GhqvLgWGhJbSxg2'}
                     liveShowId={video.id}
                     source="terrific_video"

@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { useTerrificBridge } from '@/hooks/useTerrificBridge';
 import { TerrificSource } from '@/lib/terrific';
@@ -12,6 +11,17 @@ import { Radio, AlertCircle, RefreshCw, ShoppingBag, ShieldAlert } from 'lucide-
 import Link from 'next/link';
 
 export interface TerrificEmbedProps {
+  /**
+   * Server-verified 21+ attestation (see `isAgeVerified()` in `@/server/age-session/verified`).
+   * Required: `owt_age` is HttpOnly, so the client cannot check it itself. The SDK is never
+   * injected unless this is true.
+   */
+  ageVerified: boolean;
+  /**
+   * Render only the SDK anchor (no frame, badge or skeleton). For embeddings configured as a floating
+   * widget in the Terrific dashboard, the SDK draws its own mini-player and ignores the in-page box.
+   */
+  bare?: boolean;
   embeddingId?: string;
   storeId?: string;
   sdkUrl?: string;
@@ -29,6 +39,8 @@ const DEFAULT_EMBEDDING_ID = process.env.NEXT_PUBLIC_TERRIFIC_EMBEDDING_ID || 'C
 const DEFAULT_SDK_URL = process.env.NEXT_PUBLIC_TERRIFIC_SDK_URL || 'https://terrific.live/terrific-sdk.js';
 
 export function TerrificEmbed({
+  ageVerified,
+  bare = false,
   embeddingId = DEFAULT_EMBEDDING_ID,
   storeId = DEFAULT_STORE_ID,
   sdkUrl = DEFAULT_SDK_URL,
@@ -41,7 +53,7 @@ export function TerrificEmbed({
   title,
 }: TerrificEmbedProps) {
   const router = useRouter();
-  const [hasAgeVerification, setHasAgeVerification] = React.useState<boolean | null>(null);
+  const hasAgeVerification = ageVerified === true;
   const [scriptLoaded, setScriptLoaded] = React.useState(false);
   const [scriptError, setScriptError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
@@ -54,15 +66,9 @@ export function TerrificEmbed({
     autoInitialize: true,
   });
 
-  // Check 21+ Age Verification Cookie (Client-Side Gate)
-  React.useEffect(() => {
-    const ageCookie = Cookies.get('owt_age');
-    setHasAgeVerification(Boolean(ageCookie));
-  }, []);
-
   // Inject Terrific SDK Script (ONLY AFTER Age Verification confirmed)
   React.useEffect(() => {
-    if (hasAgeVerification !== true || !embeddingId) return;
+    if (!hasAgeVerification || !embeddingId) return;
 
     // 1. Order matters: ensure window.terrificLiveSettings is set BEFORE script injection
     bridge.initializeSettings(router);
@@ -78,6 +84,9 @@ export function TerrificEmbed({
 
     const script = document.createElement('script');
     script.src = scriptSrc;
+    // The SDK reads `document.currentScript.getAttribute('storeId')`, not the ?storeId= query.
+    // Without this attribute it runs with storeId null and the embed config request fails (400).
+    script.setAttribute('storeId', storeId);
     script.async = true;
     script.id = 'terrific-live-sdk';
 
@@ -115,8 +124,21 @@ export function TerrificEmbed({
       ? 'aspect-[9/16]'
       : 'aspect-square';
 
+  // 0. Bare anchor: nothing visible of our own (never rendered before age verification)
+  if (bare) {
+    return hasAgeVerification && embeddingId ? (
+      <div
+        data-source="terrific"
+        embedding-id={embeddingId}
+        aria-hidden="true"
+        className="pointer-events-none absolute h-0 w-0 overflow-hidden"
+        data-testid="terrific-player-root"
+      />
+    ) : null;
+  }
+
   // 1. Age Gate Required UI State
-  if (hasAgeVerification === false) {
+  if (!hasAgeVerification) {
     return (
       <div
         className={`w-full ${aspectClass} rounded-2xl border border-destructive/20 bg-card p-6 flex flex-col items-center justify-center text-center shadow-sm ${className}`}
@@ -213,7 +235,7 @@ export function TerrificEmbed({
       )}
 
       {/* Loading Skeleton while SDK script initializes */}
-      {(!scriptLoaded || hasAgeVerification === null) && (
+      {!scriptLoaded && (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-card p-6"
           data-testid="terrific-loading-skeleton"

@@ -66,8 +66,6 @@ describe('Brand Components (Friday & Jarvis UI - 6 UI States)', () => {
 
       expect(html).toContain('Hudson Cannabis');
       expect(html).toContain('Premier Hudson Valley sungrown craft cannabis.');
-      expect(html).toContain('Official Channel');
-      expect(html).toContain('Enter Storefront');
       expect(html).toContain('href="/brands/hudson-cannabis"');
     });
 

@@ -26,6 +26,8 @@ export interface ItemOverride {
 interface CheckoutState {
   fulfillmentType: FulfillmentType;
   zip: string;
+  /** Coverage area for the ZIP (e.g. "Brooklyn"), from GET /api/dispensaries. Shown in the header. */
+  zipArea: string | null;
   deliveryAddress: DeliveryAddress;
   contact: ContactInfo;
   preferredDispensaryId: string | null;
@@ -34,7 +36,7 @@ interface CheckoutState {
 
   // Actions
   setFulfillmentType: (type: FulfillmentType) => void;
-  setZip: (zip: string) => void;
+  setZip: (zip: string, area?: string | null) => void;
   setDeliveryAddress: (address: Partial<DeliveryAddress>) => void;
   setContact: (contact: Partial<ContactInfo>) => void;
   setPreferredDispensaryId: (dispensaryId: string | null) => void;
@@ -65,6 +67,7 @@ export const useCheckoutStore = create<CheckoutState>()(
     (set) => ({
       fulfillmentType: 'DELIVERY',
       zip: '10001',
+      zipArea: 'Manhattan',
       deliveryAddress: initialAddress,
       contact: initialContact,
       preferredDispensaryId: null,
@@ -73,9 +76,10 @@ export const useCheckoutStore = create<CheckoutState>()(
 
       setFulfillmentType: (fulfillmentType) => set({ fulfillmentType }),
 
-      setZip: (zip) =>
+      setZip: (zip, area = null) =>
         set((state) => ({
           zip,
+          zipArea: area,
           deliveryAddress: { ...state.deliveryAddress, zip },
         })),
 
@@ -117,6 +121,7 @@ export const useCheckoutStore = create<CheckoutState>()(
         set({
           fulfillmentType: 'DELIVERY',
           zip: '10001',
+          zipArea: 'Manhattan',
           deliveryAddress: initialAddress,
           contact: initialContact,
           preferredDispensaryId: null,
@@ -134,6 +139,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       partialize: (state) => ({
         fulfillmentType: state.fulfillmentType,
         zip: state.zip,
+        zipArea: state.zipArea,
         deliveryAddress: state.deliveryAddress,
         contact: state.contact,
         saveToProfile: state.saveToProfile,

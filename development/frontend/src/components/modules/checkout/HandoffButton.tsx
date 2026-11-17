@@ -198,7 +198,7 @@ export function HandoffButton({
           className={`w-full min-h-[44px] rounded-xl font-semibold text-xs tracking-wide transition-all active:scale-[0.98] ${
             isHandedOff
               ? 'bg-secondary text-foreground hover:bg-secondary/80 border border-border'
-              : 'bg-primary text-primary-foreground hover:bg-owtlet-volt hover:text-owtlet-ink shadow'
+              : 'bg-primary text-primary-foreground hover:bg-primary-hover shadow'
           }`}
         >
           {loading ? (

@@ -27,6 +27,12 @@ export interface ShopPageProps {
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const category = searchParams?.category;
   const strainType = searchParams?.strainType;
+  const toPct = (v?: string) => {
+    const n = v === undefined ? NaN : Number(v);
+    return Number.isFinite(n) && n >= 0 && n <= 100 ? n : undefined;
+  };
+  const minThc = toPct(searchParams?.minThc);
+  const maxThc = toPct(searchParams?.maxThc);
   const brand = searchParams?.brand;
   const q = searchParams?.q;
   const cursor = searchParams?.cursor;
@@ -36,6 +42,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     listProducts({
       category,
       strainType,
+      minThc,
+      maxThc,
       brand,
       q,
       cursor,

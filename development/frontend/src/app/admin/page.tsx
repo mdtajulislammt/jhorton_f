@@ -67,15 +67,15 @@ export default function AdminDashboardPage() {
       {/* Page Title & Status */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white font-['Dela_Gothic_One'] tracking-tight">
+          <h1 className="font-heading text-[clamp(24px,3vw,34px)] leading-[1.08] tracking-[-0.01em] text-foreground">
             OPERATIONS DASHBOARD
           </h1>
-          <p className="text-[#BBD7D1] text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Real-time management for Owtlet cannabis marketplace & live shopping.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className="bg-[#70F1C7]/10 text-[#70F1C7] border border-[#70F1C7]/30 px-3 py-1 text-xs">
+          <Badge className="bg-primary/15 text-success border border-primary/50 px-3 py-1 text-xs">
             <ShieldCheck className="w-3.5 h-3.5 mr-1" />
             21+ NY Adult-Use Licensed
           </Badge>
@@ -84,81 +84,81 @@ export default function AdminDashboardPage() {
 
       {/* Metrics Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="bg-[#0D221E] border-[#1A3832]">
+            <Card key={i} className="bg-card border-border">
               <CardContent className="p-6 space-y-3">
-                <Skeleton className="h-4 w-24 bg-[#122A25]" />
-                <Skeleton className="h-8 w-16 bg-[#122A25]" />
+                <Skeleton className="h-4 w-24 bg-surface-muted" />
+                <Skeleton className="h-8 w-16 bg-surface-muted" />
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[#0D221E] border-[#1A3832] hover:border-[#70F1C7]/30 transition-colors">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <Card className="bg-card border-border hover:border-primary/50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-[#BBD7D1]">
+              <CardTitle className="font-body text-[13px] font-semibold text-muted-foreground">
                 Products
               </CardTitle>
-              <Package className="w-4 h-4 text-[#70F1C7]" />
+              <Package className="w-4 h-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-white">
+              <div className="font-mono text-[28px] font-bold tabular-nums text-foreground">
                 {metrics?.productsCount || 0}
               </div>
-              <p className="text-xs text-[#BBD7D1]/70 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {metrics?.activeProductsCount || 0} active in catalog
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#0D221E] border-[#1A3832] hover:border-[#70F1C7]/30 transition-colors">
+          <Card className="bg-card border-border hover:border-primary/50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-[#BBD7D1]">
+              <CardTitle className="font-body text-[13px] font-semibold text-muted-foreground">
                 Dispensaries
               </CardTitle>
-              <Store className="w-4 h-4 text-[#70F1C7]" />
+              <Store className="w-4 h-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-white">
+              <div className="font-mono text-[28px] font-bold tabular-nums text-foreground">
                 {metrics?.dispensariesCount || 0}
               </div>
-              <p className="text-xs text-[#BBD7D1]/70 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {metrics?.activeDispensariesCount || 0} active partner stores
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#0D221E] border-[#1A3832] hover:border-[#70F1C7]/30 transition-colors">
+          <Card className="bg-card border-border hover:border-primary/50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-[#BBD7D1]">
+              <CardTitle className="font-body text-[13px] font-semibold text-muted-foreground">
                 Brands
               </CardTitle>
-              <Tag className="w-4 h-4 text-[#70F1C7]" />
+              <Tag className="w-4 h-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-white">
+              <div className="font-mono text-[28px] font-bold tabular-nums text-foreground">
                 {metrics?.brandsCount || 0}
               </div>
-              <p className="text-xs text-[#BBD7D1]/70 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {metrics?.activeBrandsCount || 0} active storefront channels
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#0D221E] border-[#1A3832] hover:border-[#70F1C7]/30 transition-colors">
+          <Card className="bg-card border-border hover:border-primary/50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-[#BBD7D1]">
+              <CardTitle className="font-body text-[13px] font-semibold text-muted-foreground">
                 Marketplace Orders
               </CardTitle>
-              <ShoppingBag className="w-4 h-4 text-[#70F1C7]" />
+              <ShoppingBag className="w-4 h-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-white">
+              <div className="font-mono text-[28px] font-bold tabular-nums text-foreground">
                 {metrics?.ordersCount || 0}
               </div>
-              <p className="text-xs text-[#70F1C7] mt-1 font-medium">
+              <p className="text-xs text-success mt-1 font-medium">
                 {metrics?.confirmedOrdersCount || 0} confirmed · {metrics?.pendingOrdersCount || 0} pending
               </p>
             </CardContent>
@@ -168,116 +168,116 @@ export default function AdminDashboardPage() {
 
       {/* Quick Navigation Cards */}
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-[#70F1C7]" />
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-success" />
           Management Modules
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <a
             href="/admin/products"
-            className="group block p-5 rounded-xl bg-[#0D221E] border border-[#1A3832] hover:border-[#70F1C7] transition-all duration-200 active:scale-[0.98]"
+            className="group block p-5 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-[0.98]"
           >
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-lg bg-[#70F1C7]/10 flex items-center justify-center text-[#70F1C7]">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center text-success">
                 <Package className="w-5 h-5" />
               </div>
-              <ArrowRight className="w-4 h-4 text-[#BBD7D1] group-hover:text-[#70F1C7] group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-success group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4 group-hover:text-[#70F1C7] transition-colors">
+            <h3 className="text-base font-bold text-foreground mt-4 group-hover:text-success transition-colors">
               Products & Live Pricing
             </h3>
-            <p className="text-sm text-[#BBD7D1] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Manage cannabis strains, THC%, categories, and Owtlet uniform show prices.
             </p>
           </a>
 
           <a
             href="/admin/inventory"
-            className="group block p-5 rounded-xl bg-[#0D221E] border border-[#1A3832] hover:border-[#70F1C7] transition-all duration-200 active:scale-[0.98]"
+            className="group block p-5 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-[0.98]"
           >
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-lg bg-[#70F1C7]/10 flex items-center justify-center text-[#70F1C7]">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center text-success">
                 <Layers className="w-5 h-5" />
               </div>
-              <ArrowRight className="w-4 h-4 text-[#BBD7D1] group-hover:text-[#70F1C7] group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-success group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4 group-hover:text-[#70F1C7] transition-colors">
+            <h3 className="text-base font-bold text-foreground mt-4 group-hover:text-success transition-colors">
               Per-Store Inventory
             </h3>
-            <p className="text-sm text-[#BBD7D1] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Batch update stock quantities and per-store retail prices across partner dispensaries.
             </p>
           </a>
 
           <a
             href="/admin/dispensaries"
-            className="group block p-5 rounded-xl bg-[#0D221E] border border-[#1A3832] hover:border-[#70F1C7] transition-all duration-200 active:scale-[0.98]"
+            className="group block p-5 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-[0.98]"
           >
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-lg bg-[#70F1C7]/10 flex items-center justify-center text-[#70F1C7]">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center text-success">
                 <Store className="w-5 h-5" />
               </div>
-              <ArrowRight className="w-4 h-4 text-[#BBD7D1] group-hover:text-[#70F1C7] group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-success group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4 group-hover:text-[#70F1C7] transition-colors">
+            <h3 className="text-base font-bold text-foreground mt-4 group-hover:text-success transition-colors">
               Dispensaries & Hours
             </h3>
-            <p className="text-sm text-[#BBD7D1] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Configure pickup/delivery flags, NY delivery coverage ZIPs, and store operating hours.
             </p>
           </a>
 
           <a
             href="/admin/brands"
-            className="group block p-5 rounded-xl bg-[#0D221E] border border-[#1A3832] hover:border-[#70F1C7] transition-all duration-200 active:scale-[0.98]"
+            className="group block p-5 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-[0.98]"
           >
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-lg bg-[#70F1C7]/10 flex items-center justify-center text-[#70F1C7]">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center text-success">
                 <Tag className="w-5 h-5" />
               </div>
-              <ArrowRight className="w-4 h-4 text-[#BBD7D1] group-hover:text-[#70F1C7] group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-success group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4 group-hover:text-[#70F1C7] transition-colors">
+            <h3 className="text-base font-bold text-foreground mt-4 group-hover:text-success transition-colors">
               Brands & Store Mappings
             </h3>
-            <p className="text-sm text-[#BBD7D1] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Assign partner dispensaries to brands (AC-BRD-01) and manage channel storefronts.
             </p>
           </a>
 
           <a
             href="/admin/orders"
-            className="group block p-5 rounded-xl bg-[#0D221E] border border-[#1A3832] hover:border-[#70F1C7] transition-all duration-200 active:scale-[0.98]"
+            className="group block p-5 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-[0.98]"
           >
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-lg bg-[#70F1C7]/10 flex items-center justify-center text-[#70F1C7]">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center text-success">
                 <ShoppingBag className="w-5 h-5" />
               </div>
-              <ArrowRight className="w-4 h-4 text-[#BBD7D1] group-hover:text-[#70F1C7] group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-success group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4 group-hover:text-[#70F1C7] transition-colors">
+            <h3 className="text-base font-bold text-foreground mt-4 group-hover:text-success transition-colors">
               Orders & Status Override
             </h3>
-            <p className="text-sm text-[#BBD7D1] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Review multi-dispensary sub-orders and manually override store confirmation status.
             </p>
           </a>
 
           <a
             href="/admin/live-shows"
-            className="group block p-5 rounded-xl bg-[#0D221E] border border-[#1A3832] hover:border-[#70F1C7] transition-all duration-200 active:scale-[0.98]"
+            className="group block p-5 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-[0.98]"
           >
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-lg bg-[#70F1C7]/10 flex items-center justify-center text-[#70F1C7]">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center text-success">
                 <Tv className="w-5 h-5" />
               </div>
-              <ArrowRight className="w-4 h-4 text-[#BBD7D1] group-hover:text-[#70F1C7] group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-success group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4 group-hover:text-[#70F1C7] transition-colors">
+            <h3 className="text-base font-bold text-foreground mt-4 group-hover:text-success transition-colors">
               Live Shows & Video Pinning
             </h3>
-            <p className="text-sm text-[#BBD7D1] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Start/end live shows and pin products with enforced Owtlet single pricing (AC-ADM-01).
             </p>
           </a>

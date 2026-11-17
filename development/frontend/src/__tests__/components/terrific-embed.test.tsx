@@ -3,20 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
 import { QueryProvider } from '@/components/providers/query-provider';
-import Cookies from 'js-cookie';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
   }),
-}));
-
-vi.mock('js-cookie', () => ({
-  default: {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn(),
-  },
 }));
 
 vi.mock('@/hooks/useCart', () => ({
@@ -36,6 +27,7 @@ describe('TerrificEmbed Component (AC-LIVE-01..03, 6 UI States)', () => {
     const html = renderToString(
       <QueryProvider>
         <TerrificEmbed
+          ageVerified
           embeddingId="Cki70GhqvLgWGhJbSxg2"
           storeId="BX2hWAVam9JjsFhXP5ZF"
           title="Owtlet Launch Drop"
@@ -57,7 +49,7 @@ describe('TerrificEmbed Component (AC-LIVE-01..03, 6 UI States)', () => {
   it('renders empty state when embeddingId is empty or falsy', () => {
     const html = renderToString(
       <QueryProvider>
-        <TerrificEmbed embeddingId="" />
+        <TerrificEmbed ageVerified embeddingId="" />
       </QueryProvider>
     );
 
@@ -70,6 +62,7 @@ describe('TerrificEmbed Component (AC-LIVE-01..03, 6 UI States)', () => {
     const html = renderToString(
       <QueryProvider>
         <TerrificEmbed
+          ageVerified
           embeddingId="Cki70GhqvLgWGhJbSxg2"
           aspectRatio="vertical"
         />
@@ -82,11 +75,54 @@ describe('TerrificEmbed Component (AC-LIVE-01..03, 6 UI States)', () => {
   it('renders loading skeleton by default during initial mount', () => {
     const html = renderToString(
       <QueryProvider>
-        <TerrificEmbed embeddingId="Cki70GhqvLgWGhJbSxg2" />
+        <TerrificEmbed ageVerified embeddingId="Cki70GhqvLgWGhJbSxg2" />
       </QueryProvider>
     );
 
     expect(html).toContain('data-testid="terrific-loading-skeleton"');
     expect(html).toContain('Connecting to Owtlet Live Stream...');
   });
+
+  it('shows the 21+ fallback and never renders the player when not age verified', () => {
+    const html = renderToString(
+      <QueryProvider>
+        <TerrificEmbed ageVerified={false} embeddingId="Cki70GhqvLgWGhJbSxg2" />
+      </QueryProvider>
+    );
+
+    expect(html).toContain('data-testid="terrific-age-gate-fallback"');
+    expect(html).toContain('Age Verification Required');
+    expect(html).not.toContain('data-source="terrific"');
+    expect(html).not.toContain('terrific-sdk');
+  });
+
+  it('does not read the HttpOnly owt_age cookie on the client', async () => {
+    const fs = await import('node:fs');
+    const src = fs.readFileSync('src/components/modules/live/TerrificEmbed.tsx', 'utf8');
+    expect(src).not.toContain('js-cookie');
+    expect(src).not.toContain('document.cookie');
+  });
+
+  it('bare mode renders only the SDK anchor for verified visitors (floating embedding)', () => {
+    const html = renderToString(
+      <QueryProvider>
+        <TerrificEmbed bare ageVerified embeddingId="Cki70GhqvLgWGhJbSxg2" />
+      </QueryProvider>
+    );
+    expect(html).toContain('data-source="terrific"');
+    expect(html).toContain('embedding-id="Cki70GhqvLgWGhJbSxg2"');
+    expect(html).not.toContain('terrific-embed-container');
+    expect(html).not.toContain('terrific-loading-skeleton');
+  });
+
+  it('bare mode renders nothing before age verification', () => {
+    const html = renderToString(
+      <QueryProvider>
+        <TerrificEmbed bare ageVerified={false} embeddingId="Cki70GhqvLgWGhJbSxg2" />
+      </QueryProvider>
+    );
+    expect(html).not.toContain('data-source="terrific"');
+    expect(html).not.toContain('Age Verification Required');
+  });
 });
+

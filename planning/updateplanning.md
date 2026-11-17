@@ -5,7 +5,7 @@
 - **Project**: Owtlet™ — cannabis marketplace + live shopping (`owtlet.com`) · Client: Jesce Horton (Grand National Agency) · Deadline: **Dec 1, 2026**
 - **Project Phase**: Phase 0 complete (planning & scaffolding filled) → Phase 1 Foundation 100% COMPLETE → Phase 2 Complete → **Phase 3 In Progress**
 - **Last Updated**: 2026-11-16
-- **Current Task**: Completed [`TASK-019`](tasks/TASK-019.md) (Docker production build, Nginx reverse proxy, Let's Encrypt SSL, owtlet.live 301 redirect, backup, and CI/CD)
+- **Current Task**: Completed [`TASK-023`](tasks/TASK-023.md) (live player age check, cart price, build unblocked) after [`TASK-022`](tasks/TASK-022.md) storefront redesign. Next: client VPS cutover & handover (gated by Q-003). Earlier: [`TASK-019`](tasks/TASK-019.md) (Docker production build, Nginx reverse proxy, Let's Encrypt SSL, owtlet.live 301 redirect, backup, and CI/CD)
 - **Next Dependency-Ready Task**: All Core MVP Tasks (Phase 0 through Phase 5) are 100% Complete! Ready for Client VPS Cutover & Handover (Gated by Q-003).
 - **Overall Status**: `PHASE_5_COMPLETE` (All Foundation, Checkout, Channels, Media, Admin, Testing, and Deployment Infrastructure Complete)
 - **Architecture change (2026-11-16, ADR-016)**: Per explicit developer instruction, decoupled architecture into two dedicated folders: `development/frontend/` (Next.js 14+ Storefront Web app, port 3000) and `development/backend/` (NestJS 10+ REST API + Prisma ORM + Swagger docs, port 4000). Next.js proxies `/api/*` to the NestJS backend via rewrites. 592 unit & integration tests passing with 100% pass rate (451 frontend + 141 backend).
@@ -13,6 +13,10 @@
 - **Scope change (2026-11-15)**: Platform is **cannabis-only**; accessories / `owtlet.shop` Shopify are out of scope (separate team member). REQ-F-005 removed, TASK-009 CANCELLED, Q-005 resolved, `AccessoryRef`/`ProductKind`/Shopify endpoints removed from docs (ADR-008).
 
 ---
+
+- **Storefront redesign (2026-11-16, TASK-022, DONE)**: Synthesized Weedable/Leafly/Dutchie direction in Owtlet branding (reference: https://claude.ai/artifact/QbZH2VukL1aEvHzqcU5AqB). Phases 1–5 and visual QA done. QA fixed brand fonts (undefined `var(--font-dela/rose)` made Dela Gothic One and Red Rose never render), filter rail heading, link contrast, PER_STORE quick-add. Frontend-only. 451/451 tests, `verify-task.sh TASK-022` passed. Follow-up pixel pass vs the design v3 artifact (1120px column, LiveStage band, 4-up pinned grid, brand cards, reference shop rail with THC range, header sizes) and a Terrific fix (script needs a `storeId` attribute; stream now loads, as a floating widget per the embedding's dashboard config).
+- **Live player + cart price fix (2026-11-16, TASK-023, DONE)**: Terrific embed gets a server-verified `ageVerified` prop (`isAgeVerified()`; `owt_age` stays HttpOnly), so the live player loads again. Cart prices PER_STORE lines without a store from active-store inventory (frontend + backend). Also unblocked `next build` (edge-crypto type cast, Suspense around `useSearchParams` on account/admin login pages); the build now passes. Frontend 461/461, backend 145/145. Remaining: confirm stream playback in a real browser before VPS cutover.
+- **Auth & admin redesign (2026-11-17, TASK-024, DONE)**: Login/register/reset and admin login share a new `AuthShell` matching the storefront hero; admin panel restyled (dark Ink sidebar, light content) with every hardcoded color moved to theme tokens. 463/463 tests.
 
 ## Completed
 

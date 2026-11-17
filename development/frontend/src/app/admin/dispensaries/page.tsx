@@ -265,16 +265,16 @@ export default function AdminDispensariesPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white font-['Dela_Gothic_One'] tracking-tight">
+          <h1 className="font-heading text-[clamp(24px,3vw,34px)] leading-[1.08] tracking-[-0.01em] text-foreground">
             LICENSED DISPENSARIES
           </h1>
-          <p className="text-[#BBD7D1] text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Configure partner dispensaries, delivery coverage ZIPs, and operating/delivery hours.
           </p>
         </div>
         <Button
           onClick={openCreateModal}
-          className="bg-[#70F1C7] hover:bg-[#85ffda] text-[#0D221E] font-bold h-11 px-5 active:scale-[0.98] transition-all"
+          className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold h-11 px-5 active:scale-[0.98] transition-all"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Licensed Dispensary
@@ -285,11 +285,11 @@ export default function AdminDispensariesPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="bg-[#0D221E] border-[#1A3832]">
+            <Card key={i} className="bg-card border-border">
               <CardContent className="p-6 space-y-4">
-                <Skeleton className="h-6 w-40 bg-[#122A25]" />
-                <Skeleton className="h-4 w-32 bg-[#122A25]" />
-                <Skeleton className="h-8 w-24 bg-[#122A25]" />
+                <Skeleton className="h-6 w-40 bg-surface-muted" />
+                <Skeleton className="h-4 w-32 bg-surface-muted" />
+                <Skeleton className="h-8 w-24 bg-surface-muted" />
               </CardContent>
             </Card>
           ))}
@@ -310,43 +310,43 @@ export default function AdminDispensariesPage() {
           {dispensaries.map((d) => (
             <Card
               key={d.id}
-              className="bg-[#0D221E] border-[#1A3832] hover:border-[#70F1C7]/30 transition-all flex flex-col justify-between"
+              className="bg-card border-border hover:border-primary/50 transition-all flex flex-col justify-between"
             >
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-lg font-bold text-white font-['Dela_Gothic_One']">
+                    <h3 className="text-lg font-bold leading-tight text-foreground">
                       {d.name}
                     </h3>
-                    <div className="text-xs text-[#BBD7D1]/70 font-mono mt-0.5">
+                    <div className="text-xs text-muted font-mono mt-0.5">
                       {d.licenseNumber || 'Licensed Partner'}
                     </div>
                   </div>
                   {d.isActive ? (
-                    <Badge className="bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-xs">
+                    <Badge className="bg-success/10 text-success border border-success/30 text-xs">
                       Active
                     </Badge>
                   ) : (
-                    <Badge className="bg-gray-800 text-gray-400 text-xs">Inactive</Badge>
+                    <Badge className="bg-surface-muted text-muted text-xs">Inactive</Badge>
                   )}
                 </div>
 
-                <div className="space-y-1.5 text-xs text-[#BBD7D1]">
+                <div className="space-y-1.5 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#70F1C7]" />
+                    <MapPin className="w-3.5 h-3.5 text-success" />
                     <span>
                       {d.addressLine1}, {d.city}, {d.state} {d.zip}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 pt-1">
                     {d.offersPickup && (
-                      <Badge className="bg-[#70F1C7]/10 text-[#70F1C7] border border-[#70F1C7]/30 text-[11px]">
+                      <Badge className="bg-primary/15 text-success border border-primary/50 text-[11px]">
                         <ShoppingBag className="w-3 h-3 mr-1" />
                         Dispensary Pickup
                       </Badge>
                     )}
                     {d.offersDelivery && (
-                      <Badge className="bg-purple-950/60 text-purple-300 border border-purple-800 text-[11px]">
+                      <Badge className="bg-info/10 text-info border border-info/30 text-[11px]">
                         <Truck className="w-3 h-3 mr-1" />
                         Delivery ({d.coverageZips?.length || 0} ZIPs)
                       </Badge>
@@ -354,7 +354,7 @@ export default function AdminDispensariesPage() {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#1A3832] flex items-center justify-between text-xs text-[#BBD7D1]/60">
+                <div className="pt-2 border-t border-border flex items-center justify-between text-xs text-muted">
                   <span>Handoff: {d.handoffChannel}</span>
                   <span>{d.hoursCount} Hours Windows</span>
                 </div>
@@ -363,7 +363,7 @@ export default function AdminDispensariesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => openEditModal(d)}
-                  className="w-full bg-[#122A25] border-[#1A3832] text-white hover:text-[#70F1C7] hover:border-[#70F1C7] h-9 mt-2"
+                  className="w-full bg-surface-muted border-border text-foreground hover:text-success hover:border-primary h-9 mt-2"
                 >
                   <Edit2 className="w-3.5 h-3.5 mr-1.5" />
                   Edit Configuration & Hours
@@ -376,15 +376,15 @@ export default function AdminDispensariesPage() {
 
       {/* Create / Edit Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#0D221E] border border-[#1A3832] rounded-2xl max-w-3xl w-full p-6 text-white space-y-6 my-8 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#1A3832] pb-4">
-              <h2 className="text-xl font-bold font-['Dela_Gothic_One']">
+        <div className="fixed inset-0 bg-ink/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card border border-border rounded-2xl max-w-3xl w-full p-6 text-foreground space-y-6 my-8 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h2 className="text-xl font-heading">
                 {editingDispensary ? `Edit ${editingDispensary.name}` : 'Add Licensed Dispensary'}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted hover:text-foreground"
               >
                 ✕
               </button>
@@ -393,9 +393,9 @@ export default function AdminDispensariesPage() {
             {formError && (
               <div
                 role="alert"
-                className="p-3.5 rounded-lg bg-red-950/60 border border-red-800 text-red-200 text-sm flex items-start gap-2.5"
+                className="p-3.5 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm flex items-start gap-2.5"
               >
-                <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
+                <AlertCircle className="w-5 h-5 shrink-0 text-danger" />
                 <span>{formError}</span>
               </div>
             )}
@@ -404,7 +404,7 @@ export default function AdminDispensariesPage() {
               {/* Basic Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Dispensary Name *
                   </label>
                   <Input
@@ -412,24 +412,24 @@ export default function AdminDispensariesPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Gotham Greenery"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     NY OCM License Number
                   </label>
                   <Input
                     value={formData.licenseNumber}
                     onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
                     placeholder="OCM-CAURD-2024-xxx"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Address Line 1 *
                   </label>
                   <Input
@@ -437,38 +437,38 @@ export default function AdminDispensariesPage() {
                     value={formData.addressLine1}
                     onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
                     placeholder="123 Bowery"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     City
                   </label>
                   <Input
                     required
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     ZIP Code *
                   </label>
                   <Input
                     required
                     value={formData.zip}
                     onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                    className="bg-[#071311] border-[#1A3832] text-white h-10 font-mono"
+                    className="bg-background border-border text-foreground h-10 font-mono"
                   />
                 </div>
               </div>
 
               {/* Fulfillment Capabilities */}
-              <div className="p-4 rounded-xl bg-[#071311] border border-[#1A3832] space-y-4">
-                <div className="text-xs font-bold uppercase tracking-wider text-[#70F1C7]">
+              <div className="p-4 rounded-xl bg-background border border-border space-y-4">
+                <div className="text-xs font-bold uppercase tracking-wider text-success">
                   Fulfillment Capabilities
                 </div>
                 <div className="flex flex-wrap gap-6">
@@ -477,7 +477,7 @@ export default function AdminDispensariesPage() {
                       type="checkbox"
                       checked={formData.offersPickup}
                       onChange={(e) => setFormData({ ...formData, offersPickup: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#70F1C7]"
+                      className="w-4 h-4 rounded text-success"
                     />
                     <span>Offers Dispensary Pickup</span>
                   </label>
@@ -487,7 +487,7 @@ export default function AdminDispensariesPage() {
                       type="checkbox"
                       checked={formData.offersDelivery}
                       onChange={(e) => setFormData({ ...formData, offersDelivery: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#70F1C7]"
+                      className="w-4 h-4 rounded text-success"
                     />
                     <span>Offers Direct Delivery</span>
                   </label>
@@ -495,8 +495,8 @@ export default function AdminDispensariesPage() {
 
                 {/* CoverageZipPicker */}
                 {formData.offersDelivery && (
-                  <div className="space-y-2 pt-2 border-t border-[#1A3832]">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Delivery Coverage ZIP Codes ({formData.coverageZips.length} ZIPs configured)
                     </label>
                     <div className="flex gap-2">
@@ -504,7 +504,7 @@ export default function AdminDispensariesPage() {
                         value={newZipInput}
                         onChange={(e) => setNewZipInput(e.target.value)}
                         placeholder="Add 5-digit ZIP (e.g. 10001)"
-                        className="w-44 bg-[#0D221E] border-[#1A3832] text-white h-9 font-mono"
+                        className="w-44 bg-card border-border text-foreground h-9 font-mono"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -515,7 +515,7 @@ export default function AdminDispensariesPage() {
                       <Button
                         type="button"
                         onClick={handleAddZip}
-                        className="bg-[#122A25] border border-[#1A3832] text-[#70F1C7] hover:bg-[#70F1C7] hover:text-[#0D221E] h-9 px-3 text-xs"
+                        className="bg-surface-muted border border-border text-success hover:bg-primary hover:text-primary-foreground h-9 px-3 text-xs"
                       >
                         Add ZIP
                       </Button>
@@ -525,13 +525,13 @@ export default function AdminDispensariesPage() {
                       {formData.coverageZips.map((zip) => (
                         <span
                           key={zip}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#122A25] border border-[#1A3832] text-white font-mono text-xs"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-muted border border-border text-foreground font-mono text-xs"
                         >
                           {zip}
                           <button
                             type="button"
                             onClick={() => handleRemoveZip(zip)}
-                            className="text-gray-400 hover:text-red-400 ml-1"
+                            className="text-muted hover:text-danger ml-1"
                           >
                             ×
                           </button>
@@ -543,20 +543,20 @@ export default function AdminDispensariesPage() {
               </div>
 
               {/* HoursEditor (Store and Delivery Tabs) */}
-              <div className="p-4 rounded-xl bg-[#071311] border border-[#1A3832] space-y-4">
+              <div className="p-4 rounded-xl bg-background border border-border space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#70F1C7] flex items-center gap-1.5">
+                  <div className="text-xs font-bold uppercase tracking-wider text-success flex items-center gap-1.5">
                     <Clock className="w-4 h-4" />
                     Operating & Delivery Windows (America/New_York)
                   </div>
-                  <div className="flex gap-1 bg-[#0D221E] p-1 rounded-lg border border-[#1A3832]">
+                  <div className="flex gap-1 bg-card p-1 rounded-lg border border-border">
                     <button
                       type="button"
                       onClick={() => setActiveHoursTab('STORE')}
                       className={`px-3 py-1 text-xs rounded font-medium transition-colors ${
                         activeHoursTab === 'STORE'
-                          ? 'bg-[#70F1C7] text-[#0D221E] font-bold'
-                          : 'text-[#BBD7D1] hover:text-white'
+                          ? 'bg-primary text-primary-foreground font-bold'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       Store Hours
@@ -566,8 +566,8 @@ export default function AdminDispensariesPage() {
                       onClick={() => setActiveHoursTab('DELIVERY')}
                       className={`px-3 py-1 text-xs rounded font-medium transition-colors ${
                         activeHoursTab === 'DELIVERY'
-                          ? 'bg-[#70F1C7] text-[#0D221E] font-bold'
-                          : 'text-[#BBD7D1] hover:text-white'
+                          ? 'bg-primary text-primary-foreground font-bold'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       Delivery Hours
@@ -589,11 +589,11 @@ export default function AdminDispensariesPage() {
                     return (
                       <div
                         key={dayIndex}
-                        className="flex items-center justify-between gap-3 py-1.5 border-b border-[#1A3832]/50 text-xs"
+                        className="flex items-center justify-between gap-3 py-1.5 border-b border-border text-xs"
                       >
-                        <span className="w-24 font-medium text-[#BBD7D1]">{dayName}</span>
+                        <span className="w-24 font-medium text-muted-foreground">{dayName}</span>
                         <div className="flex items-center gap-2">
-                          <label className="flex items-center gap-1 cursor-pointer text-gray-400 text-xs mr-2">
+                          <label className="flex items-center gap-1 cursor-pointer text-muted text-xs mr-2">
                             <input
                               type="checkbox"
                               checked={hourRow.isClosed}
@@ -623,9 +623,9 @@ export default function AdminDispensariesPage() {
                                     e.target.value
                                   )
                                 }
-                                className="w-24 bg-[#0D221E] border-[#1A3832] text-white h-8 text-xs font-mono"
+                                className="w-24 bg-card border-border text-foreground h-8 text-xs font-mono"
                               />
-                              <span className="text-gray-400">to</span>
+                              <span className="text-muted">to</span>
                               <Input
                                 type="time"
                                 value={hourRow.closesAt}
@@ -637,11 +637,11 @@ export default function AdminDispensariesPage() {
                                     e.target.value
                                   )
                                 }
-                                className="w-24 bg-[#0D221E] border-[#1A3832] text-white h-8 text-xs font-mono"
+                                className="w-24 bg-card border-border text-foreground h-8 text-xs font-mono"
                               />
                             </>
                           ) : (
-                            <span className="w-52 text-center text-red-400/80 italic text-xs">
+                            <span className="w-52 text-center text-danger italic text-xs">
                               Store Closed
                             </span>
                           )}
@@ -655,13 +655,13 @@ export default function AdminDispensariesPage() {
               {/* Handoff Configuration */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Checkout Handoff Channel
                   </label>
                   <select
                     value={formData.handoffChannel}
                     onChange={(e) => setFormData({ ...formData, handoffChannel: e.target.value })}
-                    className="w-full bg-[#071311] border border-[#1A3832] text-white rounded-md px-3 h-10 text-sm"
+                    className="w-full bg-background border border-border text-foreground rounded-md px-3 h-10 text-sm"
                   >
                     <option value="RETAILER_PAGE">Retailer Website (Direct Menu URL)</option>
                     <option value="LEAFLY">Leafly Integration (Pickup/Delivery Link)</option>
@@ -669,7 +669,7 @@ export default function AdminDispensariesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {formData.handoffChannel === 'LEAFLY' ? 'Leafly Store ID' : 'Handoff URL Template'}
                   </label>
                   {formData.handoffChannel === 'LEAFLY' ? (
@@ -677,33 +677,33 @@ export default function AdminDispensariesPage() {
                       value={formData.leaflyStoreId}
                       onChange={(e) => setFormData({ ...formData, leaflyStoreId: e.target.value })}
                       placeholder="leafly-store-id-xxx"
-                      className="bg-[#071311] border-[#1A3832] text-white h-10"
+                      className="bg-background border-border text-foreground h-10"
                     />
                   ) : (
                     <Input
                       value={formData.handoffUrlTemplate}
                       onChange={(e) => setFormData({ ...formData, handoffUrlTemplate: e.target.value })}
                       placeholder="https://retailer.com/order?ref={subOrderId}"
-                      className="bg-[#071311] border-[#1A3832] text-white h-10"
+                      className="bg-background border-border text-foreground h-10"
                     />
                   )}
                 </div>
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#1A3832]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
-                  className="border-[#1A3832] text-[#BBD7D1] hover:text-white"
+                  className="border-border text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-[#70F1C7] hover:bg-[#85ffda] text-[#0D221E] font-bold px-6 active:scale-[0.98]"
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold px-6 active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <>

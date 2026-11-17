@@ -67,7 +67,7 @@ export function DefaultStorePicker() {
             Default Partner Store
           </CardTitle>
           {profile?.defaultDispensary && (
-            <Badge variant="outline" className="border-primary/40 text-primary bg-primary/10">
+            <Badge variant="outline" className="border-transparent text-foreground bg-primary/25">
               <Check className="mr-1 h-3 w-3" />
               Active Preference
             </Badge>
@@ -107,7 +107,7 @@ export function DefaultStorePicker() {
                       <h4 className="font-heading font-semibold text-foreground text-sm flex items-center gap-1.5">
                         {store.name}
                         {isSelected && (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-owtlet-ink">
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <Check className="h-3 w-3" />
                           </span>
                         )}

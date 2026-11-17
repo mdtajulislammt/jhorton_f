@@ -82,7 +82,7 @@ export default async function BrandStorefrontPage({
 
         {/* Brand Live Shows & Shoppable Videos Section (if any) */}
         {formattedShows.length > 0 && (
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-10">
+          <div className="mx-auto max-w-content px-4 sm:px-7 mt-10">
             <ShowRail
               title={`${brand.name} Live & Video Drops`}
               description={`Watch live cultivator sessions, master drops, and shoppable reels from ${brand.name}.`}
@@ -94,7 +94,7 @@ export default async function BrandStorefrontPage({
         )}
 
         {/* Curated Products Catalog */}
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-10 sm:mt-12">
+        <section className="mx-auto max-w-content px-4 sm:px-7 mt-10 sm:mt-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">

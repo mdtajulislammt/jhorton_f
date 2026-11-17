@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Dela_Gothic_One, Red_Rose } from 'next/font/google';
+import { Dela_Gothic_One, Red_Rose, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { Toaster } from '@/components/ui/toaster';
@@ -17,6 +17,14 @@ const redRose = Red_Rose({
   display: 'swap',
 });
 
+// Utility face for prices, potency, times and countdowns (tabular figures)
+const jetBrainsMono = JetBrains_Mono({
+  weight: ['500', '700'],
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Owtlet™ — 21+ Live Shopping for Cannabis',
   description: 'Shop curated legal cannabis live from premier licensed New York dispensaries.',
@@ -28,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${delaGothic.variable} ${redRose.variable}`}>
+    <html lang="en" className={`${delaGothic.variable} ${redRose.variable} ${jetBrainsMono.variable}`}>
       <body className="antialiased min-h-screen bg-background text-foreground font-body">
         <QueryProvider>
           {children}

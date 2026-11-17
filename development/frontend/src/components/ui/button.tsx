@@ -3,7 +3,16 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' | 'accent';
+  variant?:
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link'
+    | 'accent'
+    | 'ink'
+    | 'outline-inverse';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   isLoading?: boolean;
 }
@@ -27,10 +36,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const variantStyles = {
       // Mint bg, Ink text, Volt hover (Owtlet signature button)
       default:
-        'bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover active:bg-[#c9e846]',
+        'bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover active:bg-primary-hover/90',
       // Sage bg, Ink text
       secondary:
-        'bg-secondary text-secondary-foreground shadow-sm hover:bg-[#a9c9c2] active:bg-[#97b8b1]',
+        'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 active:bg-secondary/70',
+      // Ink pill on light surfaces
+      ink:
+        'bg-ink text-owtlet-mist hover:bg-ink/85 active:bg-ink/80',
+      // Light outline pill for dark bands (hero, coverage)
+      'outline-inverse':
+        'border border-foreground/35 bg-transparent text-foreground hover:border-foreground hover:bg-foreground/5',
       // Danger / Destructive
       destructive:
         'bg-danger text-white shadow-sm hover:bg-danger/90 active:bg-danger/80',

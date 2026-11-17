@@ -9,7 +9,9 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     | 'destructive'
     | 'outline'
     | 'success'
-    | 'warning';
+    | 'warning'
+    | 'replay'
+    | 'upcoming';
 }
 
 export function Badge({ className, variant = 'default', children, ...props }: BadgeProps) {
@@ -31,6 +33,12 @@ export function Badge({ className, variant = 'default', children, ...props }: Ba
       'border-transparent bg-success text-white',
     warning:
       'border-transparent bg-warning text-owtlet-ink',
+    // Recorded show — Ink chip
+    replay:
+      'border-transparent bg-ink text-owtlet-mist font-bold tracking-wide uppercase',
+    // Scheduled show — Volt chip
+    upcoming:
+      'border-transparent bg-strain-sativa text-owtlet-ink font-bold tracking-wide uppercase',
   };
 
   return (

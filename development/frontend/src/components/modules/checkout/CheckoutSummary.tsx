@@ -91,7 +91,7 @@ export function CheckoutSummary({
 
       {/* Validation or status hint */}
       {validationMessage && !hasUnfulfillableItems && !isNoCoverage && (
-        <p className="text-[11px] text-amber-400 font-medium">
+        <p role="status" className="rounded-lg bg-warning/15 px-2.5 py-1.5 text-[11px] font-semibold text-foreground">
           {validationMessage}
         </p>
       )}
@@ -102,7 +102,7 @@ export function CheckoutSummary({
         disabled={isButtonDisabled}
         onClick={onPlaceOrder}
         data-testid="place-order-btn"
-        className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-owtlet-volt font-semibold text-sm shadow-md active:scale-[0.98] transition-all"
+        className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-semibold text-sm shadow-md active:scale-[0.98] transition-all"
       >
         {isPlacingOrder ? (
           <span className="flex items-center gap-2">

@@ -205,16 +205,16 @@ export default function AdminProductsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white font-['Dela_Gothic_One'] tracking-tight">
+          <h1 className="font-heading text-[clamp(24px,3vw,34px)] leading-[1.08] tracking-[-0.01em] text-foreground">
             PRODUCTS & PRICING
           </h1>
-          <p className="text-[#BBD7D1] text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Manage cannabis strains, inventory details, and uniform Owtlet live show pricing.
           </p>
         </div>
         <Button
           onClick={openCreateModal}
-          className="bg-[#70F1C7] hover:bg-[#85ffda] text-[#0D221E] font-bold h-11 px-5 active:scale-[0.98] transition-all"
+          className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold h-11 px-5 active:scale-[0.98] transition-all"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Cannabis Product
@@ -224,19 +224,19 @@ export default function AdminProductsPage() {
       {/* Filters Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BBD7D1]/60" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by product name, SKU, or slug..."
-            className="pl-9 bg-[#0D221E] border-[#1A3832] text-white placeholder:text-gray-500 h-11"
+            className="pl-9 bg-card border-border text-foreground placeholder:text-muted h-11"
           />
         </div>
 
         <select
           value={selectedBrand}
           onChange={(e) => setSelectedBrand(e.target.value)}
-          className="bg-[#0D221E] border border-[#1A3832] text-white rounded-md px-3 h-11 text-sm focus:border-[#70F1C7] focus:outline-none"
+          className="bg-card border border-border text-foreground rounded-md px-3 h-11 text-sm focus:border-primary focus:outline-none"
         >
           <option value="">All Partner Brands</option>
           {brands.map((b) => (
@@ -249,7 +249,7 @@ export default function AdminProductsPage() {
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="bg-[#0D221E] border border-[#1A3832] text-white rounded-md px-3 h-11 text-sm focus:border-[#70F1C7] focus:outline-none"
+          className="bg-card border border-border text-foreground rounded-md px-3 h-11 text-sm focus:border-primary focus:outline-none"
         >
           <option value="">All Categories</option>
           {categories.map((c) => (
@@ -261,16 +261,16 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Products Table */}
-      <Card className="bg-[#0D221E] border-[#1A3832] overflow-hidden">
+      <Card className="bg-card border-border overflow-hidden">
         {isLoading ? (
           <div className="p-6 space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-[#1A3832]">
+              <div key={i} className="flex items-center justify-between py-2 border-b border-border">
                 <div className="space-y-2">
-                  <Skeleton className="h-5 w-48 bg-[#122A25]" />
-                  <Skeleton className="h-4 w-32 bg-[#122A25]" />
+                  <Skeleton className="h-5 w-48 bg-surface-muted" />
+                  <Skeleton className="h-4 w-32 bg-surface-muted" />
                 </div>
-                <Skeleton className="h-8 w-20 bg-[#122A25]" />
+                <Skeleton className="h-8 w-20 bg-surface-muted" />
               </div>
             ))}
           </div>
@@ -288,7 +288,7 @@ export default function AdminProductsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#071311] border-b border-[#1A3832] text-[#BBD7D1] uppercase text-xs">
+              <thead className="bg-background border-b border-border text-muted-foreground uppercase text-xs">
                 <tr>
                   <th className="py-3 px-4">Product Name</th>
                   <th className="py-3 px-4">Brand & Category</th>
@@ -299,52 +299,52 @@ export default function AdminProductsPage() {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1A3832]">
+              <tbody className="divide-y divide-border">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-[#122A25]/50 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-white">
+                  <tr key={p.id} className="hover:bg-surface-muted transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-foreground">
                       <div>{p.name}</div>
-                      <div className="text-xs text-[#BBD7D1]/60 font-mono">
+                      <div className="text-xs text-muted font-mono">
                         {p.sku || p.slug}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-[#BBD7D1]">
+                    <td className="py-3.5 px-4 text-muted-foreground">
                       <div className="font-medium">{p.brand?.name || 'Independent'}</div>
-                      <div className="text-xs text-[#BBD7D1]/70">{p.category?.name || 'Cannabis'}</div>
+                      <div className="text-xs text-muted">{p.category?.name || 'Cannabis'}</div>
                     </td>
-                    <td className="py-3.5 px-4 text-white font-mono">
+                    <td className="py-3.5 px-4 text-foreground font-mono">
                       {p.thcPercent ? `${p.thcPercent}% THC` : '—'}
                     </td>
                     <td className="py-3.5 px-4">
                       {p.owtletPrice !== null ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-[#70F1C7] text-base">
+                          <span className="font-bold text-success text-base">
                             ${p.owtletPrice.toFixed(2)}
                           </span>
-                          <Badge className="bg-[#70F1C7]/10 text-[#70F1C7] border border-[#70F1C7]/30 text-[10px] px-1.5 py-0">
+                          <Badge className="bg-primary/15 text-success border border-primary/50 text-[10px] px-1.5 py-0">
                             Uniform
                           </Badge>
                         </div>
                       ) : (
-                        <span className="text-xs text-[#BBD7D1]/60 italic">Per-store</span>
+                        <span className="text-xs text-muted italic">Per-store</span>
                       )}
                     </td>
                     <td className="py-3.5 px-4 font-mono">
-                      <span className={p.totalStock > 0 ? 'text-white' : 'text-red-400 font-bold'}>
+                      <span className={p.totalStock > 0 ? 'text-foreground' : 'text-danger font-bold'}>
                         {p.totalStock} units
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
                         {p.isActive ? (
-                          <Badge className="bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-xs">
+                          <Badge className="bg-success/10 text-success border border-success/30 text-xs">
                             Active
                           </Badge>
                         ) : (
-                          <Badge className="bg-gray-800 text-gray-400 text-xs">Inactive</Badge>
+                          <Badge className="bg-surface-muted text-muted text-xs">Inactive</Badge>
                         )}
                         {p.isPinnedInActiveShow && (
-                          <Badge className="bg-amber-950/60 text-amber-400 border border-amber-800 text-xs flex items-center gap-1">
+                          <Badge className="flex items-center gap-1 whitespace-nowrap border border-warning/40 bg-warning/15 text-xs text-warning-foreground">
                             <Tv className="w-3 h-3" />
                             Live Pinned
                           </Badge>
@@ -356,7 +356,7 @@ export default function AdminProductsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => openEditModal(p)}
-                        className="bg-transparent border-[#1A3832] text-[#BBD7D1] hover:text-[#70F1C7] hover:border-[#70F1C7] h-8 px-3"
+                        className="bg-transparent border-border text-muted-foreground hover:text-success hover:border-primary h-8 px-3"
                       >
                         <Edit2 className="w-3.5 h-3.5 mr-1" />
                         Edit
@@ -372,15 +372,15 @@ export default function AdminProductsPage() {
 
       {/* Create / Edit Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#0D221E] border border-[#1A3832] rounded-2xl max-w-2xl w-full p-6 text-white space-y-5 my-8 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#1A3832] pb-4">
-              <h2 className="text-xl font-bold font-['Dela_Gothic_One']">
+        <div className="fixed inset-0 bg-ink/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card border border-border rounded-2xl max-w-2xl w-full p-6 text-foreground space-y-5 my-8 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h2 className="text-xl font-heading">
                 {editingProduct ? 'Edit Cannabis Product' : 'Add New Cannabis Product'}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted hover:text-foreground"
               >
                 ✕
               </button>
@@ -389,9 +389,9 @@ export default function AdminProductsPage() {
             {formError && (
               <div
                 role="alert"
-                className="p-3.5 rounded-lg bg-red-950/60 border border-red-800 text-red-200 text-sm flex items-start gap-2.5"
+                className="p-3.5 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm flex items-start gap-2.5"
               >
-                <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
+                <AlertCircle className="w-5 h-5 shrink-0 text-danger" />
                 <span>{formError}</span>
               </div>
             )}
@@ -399,7 +399,7 @@ export default function AdminProductsPage() {
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Product Name *
                   </label>
                   <Input
@@ -407,30 +407,30 @@ export default function AdminProductsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g. Sour Diesel Live Resin"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Slug (URL identifier)
                   </label>
                   <Input
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     placeholder="sour-diesel-live-resin"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Brand
                   </label>
                   <select
                     value={formData.brandId}
                     onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
-                    className="w-full bg-[#071311] border border-[#1A3832] text-white rounded-md px-3 h-10 text-sm"
+                    className="w-full bg-background border border-border text-foreground rounded-md px-3 h-10 text-sm"
                   >
                     <option value="">Independent / None</option>
                     {brands.map((b) => (
@@ -442,14 +442,14 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Category *
                   </label>
                   <select
                     required
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                    className="w-full bg-[#071311] border border-[#1A3832] text-white rounded-md px-3 h-10 text-sm"
+                    className="w-full bg-background border border-border text-foreground rounded-md px-3 h-10 text-sm"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -460,7 +460,7 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     THC Percentage (%)
                   </label>
                   <Input
@@ -469,12 +469,12 @@ export default function AdminProductsPage() {
                     value={formData.thcPercent}
                     onChange={(e) => setFormData({ ...formData, thcPercent: e.target.value })}
                     placeholder="28.5"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Owtlet Price ($) — Uniform Show Pricing
                   </label>
                   <Input
@@ -483,42 +483,42 @@ export default function AdminProductsPage() {
                     value={formData.owtletPrice}
                     onChange={(e) => setFormData({ ...formData, owtletPrice: e.target.value })}
                     placeholder="e.g. 45.00"
-                    className="bg-[#071311] border-[#1A3832] text-[#70F1C7] font-bold h-10"
+                    className="bg-background border-border text-success font-bold h-10"
                   />
                   {editingProduct?.isPinnedInActiveShow && (
-                    <p className="text-[11px] text-amber-400">
+                    <p className="text-[11px] text-warning-foreground">
                       ⚠ Product is pinned in a live show. Owtlet price cannot be blank (AC-ADM-01).
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     SKU Code
                   </label>
                   <Input
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     placeholder="SKU-THC-001"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Terrific Live Product ID
                   </label>
                   <Input
                     value={formData.terrificProductId}
                     onChange={(e) => setFormData({ ...formData, terrificProductId: e.target.value })}
                     placeholder="trf-prod-xxx"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Description
                 </label>
                 <textarea
@@ -526,7 +526,7 @@ export default function AdminProductsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Terpene notes, aroma, and licensed compliance details..."
-                  className="w-full bg-[#071311] border border-[#1A3832] rounded-md p-3 text-white text-sm focus:border-[#70F1C7] focus:outline-none"
+                  className="w-full bg-background border border-border rounded-md p-3 text-foreground text-sm focus:border-primary focus:outline-none"
                 />
               </div>
 
@@ -536,26 +536,26 @@ export default function AdminProductsPage() {
                   id="isActiveToggle"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4 rounded text-[#70F1C7] focus:ring-[#70F1C7]"
+                  className="w-4 h-4 rounded text-success focus:ring-ring"
                 />
-                <label htmlFor="isActiveToggle" className="text-sm font-medium text-white cursor-pointer">
+                <label htmlFor="isActiveToggle" className="text-sm font-medium text-foreground cursor-pointer">
                   Product Active in Storefront Catalog
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#1A3832]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
-                  className="border-[#1A3832] text-[#BBD7D1] hover:text-white"
+                  className="border-border text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-[#70F1C7] hover:bg-[#85ffda] text-[#0D221E] font-bold px-6 active:scale-[0.98]"
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold px-6 active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <>

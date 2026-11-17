@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/server/db';
+import { isAgeVerified } from '@/server/age-session/verified';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 export default async function LiveIndexPage() {
+  // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
+  const ageVerified = await isAgeVerified();
   const allShows = await prisma.liveShow.findMany({
     orderBy: [
       { status: 'asc' }, // LIVE sorts first
@@ -107,7 +110,7 @@ export default async function LiveIndexPage() {
       <main className="flex-1 pb-16">
         {/* Hero Section with Featured Live Player */}
         <section className="border-b border-border bg-gradient-to-b from-card/80 to-background py-10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-content px-4 sm:px-7">
             <div className="flex flex-col items-start mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 border border-accent/30 text-accent font-semibold text-xs uppercase mb-3">
                 <Radio className="h-3.5 w-3.5 animate-pulse" />
@@ -124,6 +127,7 @@ export default async function LiveIndexPage() {
             {featuredLive ? (
               <div className="rounded-2xl p-1 bg-gradient-to-tr from-primary/30 via-accent/20 to-border shadow-xl">
                 <TerrificEmbed
+                  ageVerified={ageVerified}
                   embeddingId={featuredLive.embeddingId}
                   liveShowId={featuredLive.id}
                   source={featuredLive.status === 'REPLAY' ? 'terrific_replay' : 'terrific_live'}
@@ -138,7 +142,7 @@ export default async function LiveIndexPage() {
         </section>
 
         {/* Rails Container */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12 py-10">
+        <div className="mx-auto max-w-content px-4 sm:px-7 space-y-12 py-10">
           {/* Upcoming Live Drops */}
           {upcomingShows.length > 0 && (
             <ShowRail
@@ -151,6 +155,7 @@ export default async function LiveIndexPage() {
           )}
 
           {/* Replays Vault */}
+          <div id="replays" className="scroll-mt-36" />
           <ShowRail
             title="Replay Vault"
             description="Missed a live broadcast? Rewatch cultivator sessions and tap products to buy at recorded drop prices."

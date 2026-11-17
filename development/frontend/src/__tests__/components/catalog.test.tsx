@@ -17,6 +17,11 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/shop',
 }));
 
+// ProductCard quick-add uses the cart hook; isolate it from React Query in SSR snapshot tests
+vi.mock('@/hooks/useCart', () => ({
+  useCart: () => ({ addToCart: vi.fn() }),
+}));
+
 const renderClean = (component: React.ReactElement) => {
   return renderToString(component).replace(/<!--.*?-->/g, '');
 };
@@ -61,24 +66,26 @@ describe('Catalog Components (Friday & Jarvis UI Verification)', () => {
   describe('ProductCard', () => {
     it('displays single Owtlet price pill for show products (T-PRC-01)', () => {
       const html = renderClean(<ProductCard product={mockShowProduct} />);
-      expect(html).toContain('One Show Price');
       expect(html).toContain('$50.00');
       expect(html).toContain('Owtlet Price');
-      expect(html).toContain('THC 24.50%');
-      expect(html).toContain('In stock at 3 partner stores');
+      expect(html).toContain('THC 24.5%');
+      expect(html).toContain('Available at 3 stores near you');
     });
 
     it('displays "From $X" for regular retail products with store pricing', () => {
       const html = renderClean(<ProductCard product={mockRetailProduct} />);
       expect(html).toContain('From');
       expect(html).toContain('$18.00');
-      expect(html).toContain('Sour Diesel · SATIVA');
-      expect(html).toContain('In stock at 2 partner stores');
+      expect(html).toContain('Sativa');
+      expect(html).toContain('Sour Diesel');
+      expect(html).not.toContain('Owtlet Price');
+      expect(html).toContain('Available at 2 stores near you');
     });
 
-    it('renders 44px ergonomic touch action button with Zero Dead Buttons', () => {
+    it('renders 44px ergonomic quick-add button with Zero Dead Buttons', () => {
       const html = renderClean(<ProductCard product={mockShowProduct} />);
-      expect(html).toContain('View Options');
+      expect(html).toContain('Add Blue Dream Craft Eighth 3.5g to Cart');
+      expect(html).toContain('href="/product/blue-dream-craft-eighth-3-5g"');
       expect(html).toContain('min-h-[44px]');
       expect(html).toContain('active:scale-[0.98]');
     });

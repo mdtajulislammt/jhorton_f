@@ -2,194 +2,169 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { ProductSummaryDto } from '@/server/products';
-import { Sparkles, MapPin, Zap } from 'lucide-react';
+import { Check, Loader2, Plus } from 'lucide-react';
+import { useCart } from '@/hooks/useCart';
+import { StrainBadge, strainTint } from '@/components/ui/strain-badge';
+import { FallbackImage } from '@/components/ui/fallback-image';
+import { categoryPhoto } from '@/lib/brand-photos';
+import { cn, formatPct } from '@/lib/utils';
+import type { ProductSummaryDto } from '@/server/products';
 
 export interface ProductCardProps {
   product: ProductSummaryDto;
   onAddToCart?: (productId: string) => void;
 }
 
-export function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  const isOwtletPrice = product.priceMode === 'OWTLET' && product.owtletPrice;
+type AddState = 'idle' | 'adding' | 'added';
 
-  // Strain type badge variant
-  const getStrainVariant = (type?: string) => {
-    switch (type) {
-      case 'SATIVA':
-        return 'warning';
-      case 'INDICA':
-        return 'secondary';
-      case 'HYBRID':
-        return 'default';
-      case 'CBD':
-        return 'outline';
-      default:
-        return 'outline';
+const quickBtn =
+  'grid h-11 min-h-[44px] w-11 min-w-[44px] shrink-0 place-items-center rounded-full transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-70';
+
+function trimNumber(value: string) {
+  return String(parseFloat(value));
+}
+
+export function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const { addToCart } = useCart();
+  const [addState, setAddState] = React.useState<AddState>('idle');
+  const fallback = categoryPhoto(product.category.slug);
+
+  const isOwtletPrice = product.priceMode === 'OWTLET' && product.owtletPrice;
+  const price = isOwtletPrice ? product.owtletPrice : product.fromPrice;
+  const href = `/product/${product.slug}`;
+
+  React.useEffect(() => {
+    if (addState !== 'added') return;
+    const t = setTimeout(() => setAddState('idle'), 2000);
+    return () => clearTimeout(t);
+  }, [addState]);
+
+  const handleAdd = async () => {
+    if (addState === 'adding') return;
+    if (onAddToCart) {
+      onAddToCart(product.id);
+      setAddState('added');
+      return;
+    }
+    setAddState('adding');
+    try {
+      await addToCart({ productId: product.id, source: 'catalog' });
+      setAddState('added');
+    } catch {
+      setAddState('idle');
     }
   };
 
   return (
-    <Card
-      interactive
-      className="group flex flex-col justify-between overflow-hidden border-border bg-card transition-all duration-200 hover:border-primary/60 hover:shadow-lg"
+    <article
+      className="group flex flex-col overflow-hidden rounded-[18px] border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-secondary hover:shadow-xl motion-reduce:hover:translate-y-0"
       data-testid={`product-card-${product.slug}`}
     >
-      <div>
-        {/* Product Media Container */}
-        <div className="relative aspect-square w-full overflow-hidden bg-owtlet-sage/20">
-          {product.imageUrls && product.imageUrls.length > 0 ? (
-            <img
-              src={product.imageUrls[0]}
-              alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={(e) => {
-                // Fallback icon container on image error
-                e.currentTarget.style.display = 'none';
-                const parent = e.currentTarget.parentElement;
-                if (parent) {
-                  const fallback = parent.querySelector('[data-testid="fallback-icon"]');
-                  if (fallback) fallback.classList.remove('hidden');
-                }
-              }}
-            />
+      {/* Photo */}
+      <Link
+        href={href}
+        tabIndex={-1}
+        aria-hidden="true"
+        className={cn('relative block aspect-square overflow-hidden', strainTint(product.strain?.type))}
+      >
+        <FallbackImage
+          src={product.imageUrls?.[0]}
+          fallback={fallback}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.07] motion-reduce:group-hover:scale-100"
+        />
+        {product.strain ? (
+          <StrainBadge type={product.strain.type} className="absolute left-2.5 top-2.5" />
+        ) : null}
+      </Link>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-2 px-3 pb-3 pt-2.5 sm:px-4 sm:pb-4 sm:pt-3.5">
+        <span className="truncate text-[12.5px] font-semibold text-muted">{product.brand?.name ?? product.category.name}</span>
+
+        <Link
+          href={href}
+          className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <h3 className="line-clamp-2 text-[14px] font-bold leading-[1.3] text-foreground sm:text-[15.5px]">
+            {product.name}
+          </h3>
+        </Link>
+
+        <div className="flex flex-wrap gap-1.5 font-mono text-[11px] text-muted-foreground sm:text-[11.5px]">
+          {/* Strain chip only when the name doesn't already say it (design v3 keeps the card lean) */}
+          {product.strain && !product.name.toLowerCase().includes(product.strain.name.toLowerCase()) ? (
+            <span className="rounded-md bg-surface-muted px-[7px] py-0.5">{product.strain.name}</span>
           ) : null}
-
-          {/* Fallback art if image not loaded */}
-          <div
-            data-testid="fallback-icon"
-            className={`absolute inset-0 flex flex-col items-center justify-center p-4 text-muted-foreground ${
-              product.imageUrls && product.imageUrls.length > 0 ? 'hidden' : ''
-            }`}
-          >
-            <Sparkles className="h-12 w-12 text-primary/40 mb-2" />
-            <span className="text-xs font-medium uppercase tracking-wider text-owtlet-ink/60">
-              {product.category.name}
-            </span>
-          </div>
-
-          {/* Live Show / Owtlet Single Price Ribbon */}
-          {isOwtletPrice ? (
-            <div className="absolute top-2.5 left-2.5">
-              <Badge variant="live" className="shadow-md text-[11px] py-0.5 px-2">
-                <Zap className="mr-1 h-3 w-3 fill-white" />
-                Owtlet Price
-              </Badge>
-            </div>
+          {product.thcPercent ? (
+            <span className="rounded-md bg-surface-muted px-[7px] py-0.5">THC {formatPct(product.thcPercent)}%</span>
           ) : null}
-
-          {/* Strain Tag */}
-          {product.strain ? (
-            <div className="absolute top-2.5 right-2.5">
-              <Badge variant={getStrainVariant(product.strain.type)} className="text-[10px] uppercase font-bold tracking-wider">
-                {product.strain.name} · {product.strain.type}
-              </Badge>
-            </div>
+          {product.cbdPercent && parseFloat(product.cbdPercent) > 0 ? (
+            <span className="rounded-md bg-surface-muted px-[7px] py-0.5">CBD {formatPct(product.cbdPercent)}%</span>
+          ) : null}
+          {product.weightGrams ? (
+            <span className="rounded-md bg-surface-muted px-[7px] py-0.5">{trimNumber(product.weightGrams)}g</span>
           ) : null}
         </div>
 
-        {/* Card Content */}
-        <CardContent className="p-4 sm:p-5">
-          {/* Brand & Category Breadcrumb */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-            <span className="font-medium text-owtlet-ink/70">
-              {product.brand?.name || 'Craft Partner'}
-            </span>
-            <span className="text-owtlet-ink/50 uppercase tracking-wider text-[10px]">
-              {product.category.name}
-            </span>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+          <div className="flex flex-col">
+            {price ? (
+              <>
+                <span
+                  className={cn(
+                    'text-[10px] font-bold uppercase tracking-[0.08em]',
+                    isOwtletPrice ? 'text-success' : 'text-muted'
+                  )}
+                >
+                  {isOwtletPrice ? 'Owtlet Price' : 'From'}
+                </span>
+                <span className="font-mono text-base font-bold tabular-nums text-foreground sm:text-[19px]">${price}</span>
+              </>
+            ) : (
+              <Link href={href} className="text-sm font-semibold text-muted-foreground underline-offset-4 hover:underline">
+                See store prices
+              </Link>
+            )}
           </div>
 
-          {/* Product Name */}
-          <Link
-            href={`/product/${product.slug}`}
-            className="group-hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-          >
-            <h3 className="font-heading text-base sm:text-lg font-normal leading-snug tracking-tight text-foreground line-clamp-2 min-h-[2.5rem]">
-              {product.name}
-            </h3>
-          </Link>
-
-          {/* Potency & Weight Specs */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-            {product.thcPercent ? (
-              <span className="inline-flex items-center rounded bg-owtlet-sage/30 px-2 py-0.5 text-xs font-semibold text-owtlet-ink">
-                THC {product.thcPercent}%
-              </span>
-            ) : null}
-            {product.cbdPercent && parseFloat(product.cbdPercent) > 0 ? (
-              <span className="inline-flex items-center rounded bg-owtlet-sage/30 px-2 py-0.5 text-xs font-semibold text-owtlet-ink">
-                CBD {product.cbdPercent}%
-              </span>
-            ) : null}
-            {product.weightGrams ? (
-              <span className="inline-flex items-center rounded border border-border px-2 py-0.5 text-xs text-muted-foreground">
-                {product.weightGrams}g
-              </span>
-            ) : null}
-          </div>
-
-          {/* Store Availability Counter */}
-          <div className="mt-3 flex items-center text-xs text-muted-foreground">
-            <MapPin className="mr-1 h-3.5 w-3.5 text-primary" />
-            <span>
-              {product.availableAtCount > 0
-                ? `In stock at ${product.availableAtCount} partner store${product.availableAtCount > 1 ? 's' : ''}`
-                : 'Check availability near you'}
-            </span>
-          </div>
-        </CardContent>
-      </div>
-
-      {/* Card Footer with Pricing & Active CTA */}
-      <CardFooter className="p-4 sm:p-5 pt-0 flex items-center justify-between border-t border-border/50 mt-3">
-        {/* Pricing Display */}
-        <div className="flex flex-col">
           {isOwtletPrice ? (
-            <>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                One Show Price
-              </span>
-              <span className="font-heading text-xl font-normal text-foreground">
-                {`$${product.owtletPrice}`}
-              </span>
-            </>
-          ) : product.fromPrice ? (
-            <>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                From
-              </span>
-              <span className="font-heading text-xl font-normal text-foreground">
-                {`$${product.fromPrice}`}
-              </span>
-            </>
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={addState === 'adding'}
+              aria-label={addState === 'added' ? `${product.name} added to Cart` : `Add ${product.name} to Cart`}
+              className={cn(
+                quickBtn,
+                addState === 'added' ? 'bg-primary text-primary-foreground' : 'bg-ink text-owtlet-mist hover:bg-ink/85'
+              )}
+            >
+              {addState === 'adding' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : addState === 'added' ? (
+                <Check className="h-4 w-4" strokeWidth={3} />
+              ) : (
+                <Plus className="h-4 w-4" strokeWidth={3} />
+              )}
+            </button>
           ) : (
-            <span className="text-sm font-medium text-muted-foreground">
-              See store prices
-            </span>
+            // Per-store products have no price until a store is chosen, so send the shopper to pick one.
+            <Link href={href} aria-label={`Choose a store for ${product.name}`} className={cn(quickBtn, 'bg-ink text-owtlet-mist hover:bg-ink/85')}>
+              <Plus className="h-4 w-4" strokeWidth={3} />
+            </Link>
           )}
         </div>
 
-        {/* View / Add Action */}
-        <Link href={`/product/${product.slug}`} className="min-h-[44px] flex items-center">
-          <Button
-            size="sm"
-            variant="default"
-            className="min-h-[44px] px-4 font-bold active:scale-[0.98]"
-            onClick={(e) => {
-              if (onAddToCart) {
-                e.preventDefault();
-                onAddToCart(product.id);
-              }
-            }}
-          >
-            View Options
-          </Button>
-        </Link>
-      </CardFooter>
-    </Card>
+        <div className="mt-1 flex items-center gap-1.5 border-t border-dashed border-border pt-2.5 text-xs text-muted-foreground">
+          <span
+            className={cn('h-1.5 w-1.5 rounded-full', product.availableAtCount > 0 ? 'bg-success' : 'bg-muted')}
+            aria-hidden="true"
+          />
+          {product.availableAtCount > 0
+            ? `Available at ${product.availableAtCount} store${product.availableAtCount > 1 ? 's' : ''} near you`
+            : 'Check availability near you'}
+        </div>
+      </div>
+    </article>
   );
 }

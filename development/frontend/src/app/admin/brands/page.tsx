@@ -190,16 +190,16 @@ export default function AdminBrandsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white font-['Dela_Gothic_One'] tracking-tight">
+          <h1 className="font-heading text-[clamp(24px,3vw,34px)] leading-[1.08] tracking-[-0.01em] text-foreground">
             BRAND CHANNELS
           </h1>
-          <p className="text-[#BBD7D1] text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Manage brand storefront channels and assigned partner dispensary fulfillment mappings.
           </p>
         </div>
         <Button
           onClick={openCreateModal}
-          className="bg-[#70F1C7] hover:bg-[#85ffda] text-[#0D221E] font-bold h-11 px-5 active:scale-[0.98] transition-all"
+          className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold h-11 px-5 active:scale-[0.98] transition-all"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Brand Channel
@@ -210,11 +210,11 @@ export default function AdminBrandsPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="bg-[#0D221E] border-[#1A3832]">
+            <Card key={i} className="bg-card border-border">
               <CardContent className="p-6 space-y-4">
-                <Skeleton className="h-6 w-32 bg-[#122A25]" />
-                <Skeleton className="h-4 w-48 bg-[#122A25]" />
-                <Skeleton className="h-8 w-24 bg-[#122A25]" />
+                <Skeleton className="h-6 w-32 bg-surface-muted" />
+                <Skeleton className="h-4 w-48 bg-surface-muted" />
+                <Skeleton className="h-8 w-24 bg-surface-muted" />
               </CardContent>
             </Card>
           ))}
@@ -235,58 +235,58 @@ export default function AdminBrandsPage() {
           {brands.map((b) => (
             <Card
               key={b.id}
-              className="bg-[#0D221E] border-[#1A3832] hover:border-[#70F1C7]/30 transition-all flex flex-col justify-between"
+              className="bg-card border-border hover:border-primary/50 transition-all flex flex-col justify-between"
             >
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-lg font-bold text-white font-['Dela_Gothic_One']">
+                    <h3 className="text-lg font-bold leading-tight text-foreground">
                       {b.name}
                     </h3>
-                    <div className="text-xs text-[#BBD7D1]/70 font-mono mt-0.5">
+                    <div className="text-xs text-muted font-mono mt-0.5">
                       /brands/{b.slug}
                     </div>
                   </div>
                   {b.isActive ? (
-                    <Badge className="bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-xs">
+                    <Badge className="bg-success/10 text-success border border-success/30 text-xs">
                       Active Channel
                     </Badge>
                   ) : (
-                    <Badge className="bg-gray-800 text-gray-400 text-xs">Inactive</Badge>
+                    <Badge className="bg-surface-muted text-muted text-xs">Inactive</Badge>
                   )}
                 </div>
 
-                <p className="text-xs text-[#BBD7D1] line-clamp-2">
+                <p className="text-xs text-muted-foreground line-clamp-2">
                   {b.description || 'Verified licensed cannabis brand partner on Owtlet.'}
                 </p>
 
                 {/* Partner Dispensaries Mapped */}
-                <div className="space-y-1.5 pt-2 border-t border-[#1A3832]">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[#70F1C7] flex items-center justify-between">
+                <div className="space-y-1.5 pt-2 border-t border-border">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-success flex items-center justify-between">
                     <span>Assigned Dispensaries</span>
-                    <span className="font-mono text-white">{b.dispensariesCount}</span>
+                    <span className="font-mono text-foreground">{b.dispensariesCount}</span>
                   </div>
                   {b.dispensaries.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
                       {b.dispensaries.map((d) => (
                         <span
                           key={d.id}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#122A25] text-xs text-[#BBD7D1]"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-muted text-xs text-muted-foreground"
                         >
-                          <Store className="w-3 h-3 text-[#70F1C7]" />
+                          <Store className="w-3 h-3 text-success" />
                           {d.name}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-xs text-amber-400/90 italic flex items-center gap-1">
+                    <div className="text-xs text-warning-foreground italic flex items-center gap-1">
                       <ShieldAlert className="w-3.5 h-3.5" />
                       No stores assigned (Channel disabled)
                     </div>
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-[#1A3832] flex items-center justify-between text-xs text-[#BBD7D1]/60">
+                <div className="pt-2 border-t border-border flex items-center justify-between text-xs text-muted">
                   <span>{b.productsCount} Products</span>
                   <span>{b.showsCount} Shows</span>
                 </div>
@@ -295,7 +295,7 @@ export default function AdminBrandsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => openEditModal(b)}
-                  className="w-full bg-[#122A25] border-[#1A3832] text-white hover:text-[#70F1C7] hover:border-[#70F1C7] h-9 mt-2"
+                  className="w-full bg-surface-muted border-border text-foreground hover:text-success hover:border-primary h-9 mt-2"
                 >
                   <Edit2 className="w-3.5 h-3.5 mr-1.5" />
                   Edit Brand & Store Mappings
@@ -308,15 +308,15 @@ export default function AdminBrandsPage() {
 
       {/* Create / Edit Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#0D221E] border border-[#1A3832] rounded-2xl max-w-2xl w-full p-6 text-white space-y-6 my-8 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#1A3832] pb-4">
-              <h2 className="text-xl font-bold font-['Dela_Gothic_One']">
+        <div className="fixed inset-0 bg-ink/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card border border-border rounded-2xl max-w-2xl w-full p-6 text-foreground space-y-6 my-8 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h2 className="text-xl font-heading">
                 {editingBrand ? `Edit Brand: ${editingBrand.name}` : 'Add Brand Channel'}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted hover:text-foreground"
               >
                 ✕
               </button>
@@ -325,9 +325,9 @@ export default function AdminBrandsPage() {
             {formError && (
               <div
                 role="alert"
-                className="p-3.5 rounded-lg bg-red-950/60 border border-red-800 text-red-200 text-sm flex items-start gap-2.5"
+                className="p-3.5 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm flex items-start gap-2.5"
               >
-                <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
+                <AlertCircle className="w-5 h-5 shrink-0 text-danger" />
                 <span>{formError}</span>
               </div>
             )}
@@ -335,7 +335,7 @@ export default function AdminBrandsPage() {
             <form onSubmit={handleFormSubmit} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Brand Name *
                   </label>
                   <Input
@@ -343,24 +343,24 @@ export default function AdminBrandsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g. Lowell Farms"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10"
+                    className="bg-background border-border text-foreground h-10"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Channel Slug
                   </label>
                   <Input
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     placeholder="lowell-farms"
-                    className="bg-[#071311] border-[#1A3832] text-white h-10 font-mono"
+                    className="bg-background border-border text-foreground h-10 font-mono"
                   />
                 </div>
 
                 <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#BBD7D1]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Brand Description
                   </label>
                   <textarea
@@ -368,24 +368,24 @@ export default function AdminBrandsPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Brand ethos, craft cultivation methods, and heritage..."
-                    className="w-full bg-[#071311] border border-[#1A3832] rounded-md p-3 text-white text-sm focus:border-[#70F1C7] focus:outline-none"
+                    className="w-full bg-background border border-border rounded-md p-3 text-foreground text-sm focus:border-primary focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* BrandDispensaryPicker (AC-BRD-01) */}
-              <div className="p-4 rounded-xl bg-[#071311] border border-[#1A3832] space-y-3">
+              <div className="p-4 rounded-xl bg-background border border-border space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#70F1C7] flex items-center gap-1.5">
+                  <div className="text-xs font-bold uppercase tracking-wider text-success flex items-center gap-1.5">
                     <Store className="w-4 h-4" />
                     Assign Partner Dispensaries (AC-BRD-01)
                   </div>
-                  <span className="text-xs text-[#BBD7D1] font-mono">
+                  <span className="text-xs text-muted-foreground font-mono">
                     {formData.dispensaryIds.length} stores selected
                   </span>
                 </div>
 
-                <p className="text-xs text-[#BBD7D1]">
+                <p className="text-xs text-muted-foreground">
                   Shoppers ordering from this brand storefront channel will be fulfilled exclusively by the selected partner stores.
                 </p>
 
@@ -397,8 +397,8 @@ export default function AdminBrandsPage() {
                         key={dispensary.id}
                         className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-colors ${
                           isChecked
-                            ? 'bg-[#122A25] border-[#70F1C7]'
-                            : 'bg-[#0D221E] border-[#1A3832] hover:border-gray-600'
+                            ? 'bg-surface-muted border-primary'
+                            : 'bg-card border-border hover:border-border'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -406,13 +406,13 @@ export default function AdminBrandsPage() {
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => toggleDispensarySelection(dispensary.id)}
-                            className="w-4 h-4 rounded text-[#70F1C7]"
+                            className="w-4 h-4 rounded text-success"
                           />
                           <div>
-                            <div className="text-sm font-semibold text-white">
+                            <div className="text-sm font-semibold text-foreground">
                               {dispensary.name}
                             </div>
-                            <div className="text-xs text-[#BBD7D1]/70">
+                            <div className="text-xs text-muted">
                               {dispensary.city}, {dispensary.state} ({dispensary.zip})
                             </div>
                           </div>
@@ -420,12 +420,12 @@ export default function AdminBrandsPage() {
 
                         <div className="flex gap-1.5">
                           {dispensary.offersPickup && (
-                            <Badge className="bg-[#70F1C7]/10 text-[#70F1C7] border border-[#70F1C7]/30 text-[10px]">
+                            <Badge className="bg-primary/15 text-success border border-primary/50 text-[10px]">
                               Pickup
                             </Badge>
                           )}
                           {dispensary.offersDelivery && (
-                            <Badge className="bg-purple-950/60 text-purple-300 border border-purple-800 text-[10px]">
+                            <Badge className="bg-info/10 text-info border border-info/30 text-[10px]">
                               Delivery
                             </Badge>
                           )}
@@ -437,12 +437,12 @@ export default function AdminBrandsPage() {
               </div>
 
               {/* Active Toggle & AC-BRD-01 Invariant Rule */}
-              <div className="p-3 rounded-lg bg-[#071311] border border-[#1A3832] flex items-center justify-between">
+              <div className="p-3 rounded-lg bg-background border border-border flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-bold text-white">Activate Storefront Channel</div>
-                  <div className="text-xs text-[#BBD7D1]">
+                  <div className="text-sm font-bold text-foreground">Activate Storefront Channel</div>
+                  <div className="text-xs text-muted-foreground">
                     {formData.dispensaryIds.length === 0 ? (
-                      <span className="text-amber-400 font-medium">
+                      <span className="text-warning-foreground font-medium">
                         ⚠ Disabled: At least one partner dispensary required before activation (AC-BRD-01).
                       </span>
                     ) : (
@@ -456,24 +456,24 @@ export default function AdminBrandsPage() {
                   disabled={formData.dispensaryIds.length === 0}
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-5 h-5 rounded text-[#70F1C7] disabled:opacity-30 cursor-pointer"
+                  className="w-5 h-5 rounded text-success disabled:opacity-30 cursor-pointer"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#1A3832]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
-                  className="border-[#1A3832] text-[#BBD7D1] hover:text-white"
+                  className="border-border text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-[#70F1C7] hover:bg-[#85ffda] text-[#0D221E] font-bold px-6 active:scale-[0.98]"
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold px-6 active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <>

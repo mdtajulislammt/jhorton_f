@@ -1,87 +1,95 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { BrandSummaryDto } from '@/server/brands';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Sparkles, Store } from 'lucide-react';
+import { Store } from 'lucide-react';
+import { FallbackImage } from '@/components/ui/fallback-image';
+import { LogoImage } from './LogoImage';
+import { BRAND_PHOTOS } from '@/lib/brand-photos';
+import { cn } from '@/lib/utils';
 
 export interface BrandCardProps {
   brand: BrandSummaryDto & {
     productsCount?: number;
     showsCount?: number;
+    /** Partner dispensaries that fulfill this brand (design v3 "Fulfilled by"). */
+    partnerNames?: string[];
+    /** e.g. "Live tonight" or "Next show 7:30 PM" */
+    nextShowLabel?: string | null;
   };
+  /** Position in a grid; picks the initials-tile colorway. */
+  index?: number;
 }
 
-export function BrandCard({ brand }: BrandCardProps) {
+// Initials tile colorways from the strain/brand palette (design v3 .blogo)
+const LOGO_TONES = [
+  'bg-strain-hybrid text-strain-hybrid-foreground',
+  'bg-ink text-strain-sativa',
+  'bg-card text-foreground',
+];
+const BANNERS = [BRAND_PHOTOS.plantsLeaves, BRAND_PHOTOS.preRoll, BRAND_PHOTOS.edibles];
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
+
+export function BrandCard({ brand, index = 0 }: BrandCardProps) {
+  const partners = brand.partnerNames?.filter(Boolean) ?? [];
+
   return (
-    <Card
-      interactive
-      className="group flex flex-col justify-between overflow-hidden border-border bg-card transition-all duration-200 hover:border-primary/60 hover:shadow-lg"
+    <Link
+      href={`/brands/${brand.slug}`}
       data-testid={`brand-card-${brand.slug}`}
+      className="group flex flex-col overflow-hidden rounded-[18px] border border-border bg-card transition-all duration-200 hover:-translate-y-[3px] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:hover:translate-y-0"
     >
-      <Link href={`/brands/${brand.slug}`} className="flex flex-col h-full">
-        {/* Banner container */}
-        <div className="relative h-32 sm:h-36 w-full overflow-hidden bg-owtlet-sage/20">
-          {brand.bannerUrl ? (
-            <img
-              src={brand.bannerUrl}
-              alt={`${brand.name} banner`}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 via-card to-owtlet-sage/20">
-              <Sparkles className="h-10 w-10 text-primary/30" />
-            </div>
+      <div className="relative h-[120px] bg-ink">
+        <FallbackImage
+          src={brand.bannerUrl}
+          fallback={BANNERS[index % BANNERS.length]}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+        <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-transparent to-owtlet-ink/35" />
+        <span
+          className={cn(
+            'absolute -bottom-6 left-4 z-[1] grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border-[3px] border-card font-heading text-lg',
+            LOGO_TONES[index % LOGO_TONES.length]
           )}
+        >
+          <LogoImage src={brand.logoUrl} label={initials(brand.name)} />
+        </span>
+      </div>
 
-          {/* Logo badge overlay */}
-          <div className="absolute -bottom-4 left-4 h-14 w-14 rounded-xl border-2 border-background bg-card shadow-md flex items-center justify-center overflow-hidden">
-            {brand.logoUrl ? (
-              <img
-                src={brand.logoUrl}
-                alt={brand.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="font-heading text-lg font-bold text-primary">
-                {brand.name.slice(0, 2).toUpperCase()}
-              </span>
-            )}
-          </div>
-        </div>
+      <div className="flex flex-1 flex-col gap-1.5 px-4 pb-4 pt-[34px]">
+        <h3 className="text-base font-bold text-foreground">{brand.name}</h3>
+        {partners.length > 0 ? (
+          <p className="text-[13px] text-muted-foreground">Fulfilled by {partners.join(', ')}</p>
+        ) : brand.description ? (
+          <p className="line-clamp-2 text-[13px] text-muted-foreground">{brand.description}</p>
+        ) : null}
 
-        {/* Content */}
-        <CardContent className="pt-6 pb-5 px-5 flex-1 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="font-heading text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                {brand.name}
-              </h3>
-              <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary border-primary/30">
-                Official Channel
-              </Badge>
-            </div>
-
-            {brand.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                {brand.description}
-              </p>
-            )}
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-            <span className="inline-flex items-center text-primary font-semibold group-hover:underline">
-              Enter Storefront
-              <ArrowRight className="ml-1 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 empty:hidden">
+          {typeof brand.productsCount === 'number' ? (
+            <span className="rounded-full bg-surface-muted px-2.5 py-[3px] text-xs font-semibold text-foreground">
+              {brand.productsCount} product{brand.productsCount === 1 ? '' : 's'}
             </span>
-          </div>
-        </CardContent>
-      </Link>
-    </Card>
+          ) : null}
+          {brand.nextShowLabel ? (
+            <span className="rounded-full bg-surface-muted px-2.5 py-[3px] text-xs font-semibold text-foreground">{brand.nextShowLabel}</span>
+          ) : null}
+        </div>
+      </div>
+    </Link>
   );
 }
 
-export function BrandGrid({ brands }: { brands: (BrandSummaryDto & { productsCount?: number; showsCount?: number })[] }) {
+export function BrandGrid({ brands }: { brands: BrandCardProps['brand'][] }) {
   if (brands.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border p-12 text-center bg-card/40">
@@ -99,9 +107,9 @@ export function BrandGrid({ brands }: { brands: (BrandSummaryDto & { productsCou
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {brands.map((brand) => (
-        <BrandCard key={brand.id} brand={brand} />
+    <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+      {brands.map((brand, i) => (
+        <BrandCard key={brand.id} brand={brand} index={i} />
       ))}
     </div>
   );

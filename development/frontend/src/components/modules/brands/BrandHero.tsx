@@ -31,7 +31,7 @@ export function BrandHero({ brand, dispensaries, productCount }: BrandHeroProps)
       </div>
 
       {/* Brand Identity & Details Container */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 pb-8 relative z-10">
+      <div className="mx-auto max-w-content px-4 sm:px-7 -mt-16 sm:-mt-20 pb-8 relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5">
             {/* Logo */}

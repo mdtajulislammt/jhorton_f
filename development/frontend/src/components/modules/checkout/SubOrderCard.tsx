@@ -42,7 +42,7 @@ export function SubOrderCard({ subOrder, onChangeStore }: SubOrderCardProps) {
         );
       case 'PROFILE_DEFAULT':
         return (
-          <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[11px] font-semibold">
+          <Badge className="bg-info/15 text-info border-transparent text-[11px] font-semibold">
             Your default store
           </Badge>
         );
@@ -125,7 +125,7 @@ export function SubOrderCard({ subOrder, onChangeStore }: SubOrderCardProps) {
 
         <div>
           {isActiveNow ? (
-            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[11px] font-semibold">
+            <Badge className="bg-success/15 text-success border-transparent text-[11px] font-semibold">
               {isDelivery ? 'Delivering Now' : 'Open for Pickup'}
             </Badge>
           ) : (

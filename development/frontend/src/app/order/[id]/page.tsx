@@ -97,7 +97,7 @@ export default async function OrderConfirmationPage({
                   isAllConfirmed
                     ? 'bg-primary/20 text-primary border-primary/30'
                     : isPartiallyConfirmed
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                    ? 'bg-warning/20 text-foreground border-transparent'
                     : isCancelled
                     ? 'bg-destructive/15 text-destructive border-destructive/30'
                     : 'bg-primary/15 text-primary border-primary/30'
@@ -294,7 +294,7 @@ export default async function OrderConfirmationPage({
                                 href={subOrder.confirmationUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center text-[11px] font-semibold text-primary hover:underline"
+                                className="inline-flex items-center text-[11px] font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground"
                               >
                                 View Order on {subOrder.dispensaryName} Website
                                 <ExternalLink className="ml-1 h-3 w-3" />

@@ -27,7 +27,7 @@ export default async function BrandsIndexPage() {
       <main className="flex-1 pb-16">
         {/* Hero Section */}
         <section className="border-b border-border bg-gradient-to-b from-card/80 to-background py-10 sm:py-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-content px-4 sm:px-7">
             <div className="flex flex-col items-start">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary font-semibold text-xs uppercase mb-3">
                 <Sparkles className="h-3.5 w-3.5" />
@@ -45,7 +45,7 @@ export default async function BrandsIndexPage() {
 
         {/* Brands Grid Section */}
         <section className="py-10 sm:py-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-content px-4 sm:px-7">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
                 <h2 className="font-heading text-xl font-bold text-foreground">

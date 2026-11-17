@@ -1,19 +1,28 @@
-import Link from 'next/link';
 import { prisma } from '@/server/db';
+import { isAgeVerified } from '@/server/age-session/verified';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
-import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
-import { ShowRail } from '@/components/modules/live/ShowRail';
+import { VideoReel } from '@/components/modules/home/VideoReel';
 import { ProductCard } from '@/components/catalog/product-card';
+import { HomeHero } from '@/components/modules/home/HomeHero';
+import { StrainTicker } from '@/components/modules/home/StrainTicker';
+import { ShowLineup } from '@/components/modules/home/ShowLineup';
+import { CategoryShowcase } from '@/components/modules/home/CategoryShowcase';
+import { HowItWorks } from '@/components/modules/home/HowItWorks';
+import { CoverageBand } from '@/components/modules/home/CoverageBand';
+import { SectionHeader } from '@/components/ui/section-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { computeCatalogPricing, formatMoney } from '@/server/pricing';
 import { ProductSummaryDto } from '@/server/products';
-import { Sparkles, ShoppingBag, ShieldCheck, MapPin, Radio, Clock, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { formatPct } from '@/lib/utils';
+import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
+import { BrandGrid } from '@/components/modules/brands';
 
 export const revalidate = 60; // Revalidate every minute
 
 export default async function HomePage() {
+  // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
+  const ageVerified = await isAgeVerified();
   // Query active or next scheduled live show with pinned products
   const activeShow = await prisma.liveShow.findFirst({
     where: {
@@ -126,195 +135,160 @@ export default async function HomePage() {
       })),
     }));
 
+
+  // Brand Storefronts row (design v3): partner stores, product count, next show
+  const brandRows = await prisma.brand.findMany({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    take: 3,
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      logoUrl: true,
+      bannerUrl: true,
+      sortOrder: true,
+      dispensaries: { select: { dispensary: { select: { name: true, isActive: true } } } },
+      _count: { select: { products: { where: { isActive: true } } } },
+      liveShows: {
+        where: { status: { in: ['LIVE', 'SCHEDULED'] } },
+        select: { status: true, scheduledAt: true },
+        orderBy: [{ status: 'asc' }, { scheduledAt: 'asc' }],
+        take: 1,
+      },
+    },
+  });
+
+  const showTime = (d: Date) =>
+    new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }).format(d);
+
+  const brandCards = brandRows.map(({ dispensaries, _count, liveShows, ...b }) => {
+    const next = liveShows[0];
+    return {
+      ...b,
+      partnerNames: dispensaries.filter((d) => d.dispensary.isActive).map((d) => d.dispensary.name),
+      productsCount: _count.products,
+      nextShowLabel: next
+        ? next.status === 'LIVE'
+          ? 'Live tonight'
+          : next.scheduledAt
+            ? `Next show ${showTime(next.scheduledAt)}`
+            : 'Show coming up'
+        : null,
+    };
+  });
+
+  // ---- View models for presentational sections (no new data queries) ----
+  const heroShow = activeShow
+    ? {
+        id: activeShow.id,
+        title: activeShow.title,
+        status: activeShow.status,
+        brandName: activeShow.brand?.name ?? null,
+        startedAt: activeShow.startedAt ? activeShow.startedAt.toISOString() : null,
+        scheduledAt: activeShow.scheduledAt ? activeShow.scheduledAt.toISOString() : null,
+      }
+    : null;
+
+  const tickerItems = pinnedProducts.map((p) => ({
+    key: p.id,
+    name: p.strain?.name ?? p.name,
+    type: p.strain?.type ?? null,
+    detail: p.thcPercent ? `THC ${formatPct(p.thcPercent)}%` : p.category.name,
+  }));
+
+  const lineup = [
+    ...(activeShow && (activeShow.status === 'LIVE' || activeShow.status === 'SCHEDULED')
+      ? [
+          {
+            id: activeShow.id,
+            title: activeShow.title,
+            status: activeShow.status,
+            brandName: activeShow.brand?.name ?? null,
+            scheduledAt: activeShow.scheduledAt ? activeShow.scheduledAt.toISOString() : null,
+            pinnedCount: activeShow.products.length,
+          },
+        ]
+      : []),
+    ...replayAndUpcomingShows
+      .filter((s) => s.status === 'LIVE' || s.status === 'SCHEDULED')
+      .map((s) => ({
+        id: s.id,
+        title: s.title,
+        status: s.status,
+        brandName: s.brand?.name ?? null,
+        scheduledAt: s.scheduledAt,
+        pinnedCount: s.products.length,
+      })),
+  ].slice(0, 4);
+
+  const watchAgain = [
+    ...replayAndUpcomingShows.filter((s) => s.status === 'REPLAY' || s.status === 'ARCHIVED'),
+    ...shoppableVideos,
+  ];
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <StoreHeader />
 
-      <main className="flex-1 pb-16">
-        {/* Live Shopping Hero Section */}
-        <section className="relative border-b border-border bg-gradient-to-b from-card/80 to-background py-8 sm:py-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* Left Column: Headline & Action */}
-              <div className="lg:col-span-5 flex flex-col items-start space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 border border-accent/30 text-accent font-semibold text-xs tracking-wide uppercase">
-                  <Radio className="h-3.5 w-3.5 animate-pulse" />
-                  <span>Interactive Live Shopping</span>
-                </div>
+      <main className="flex-1">
+        {/* Terrific SDK anchor (AC-LIVE-01). The embedding renders as Terrific's floating player, so no in-page frame. */}
+        <TerrificEmbed
+          bare
+          ageVerified={ageVerified}
+          embeddingId={activeShow?.embeddingId || 'Cki70GhqvLgWGhJbSxg2'}
+          liveShowId={activeShow?.id}
+          source="terrific_live"
+          title={activeShow?.title || 'Owtlet Live'}
+        />
+        <HomeHero show={heroShow} featured={pinnedProducts[0] ?? null} pinnedCount={pinnedProducts.length} />
+        <StrainTicker items={tickerItems} />
 
-                <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl tracking-tight text-foreground leading-tight">
-                  Curated Drops. <br />
-                  <span className="text-primary bg-foreground px-2.5 py-0.5 rounded-lg inline-block mt-1">
-                    Live from NY.
-                  </span>
-                </h1>
+        <ShowLineup shows={lineup} />
 
-                <p className="font-body text-base text-muted-foreground leading-relaxed">
-                  {activeShow?.title
-                    ? `${activeShow.title} — Tap pinned products to instantly add to your cart at exclusive Owtlet show pricing.`
-                    : 'Watch licensed New York cultivators showcase fresh craft cannabis. Tap to cart in real-time with automated multi-dispensary routing.'}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-3 pt-2">
-                  {activeShow?.id ? (
-                    <Link href={`/live/${activeShow.id}`}>
-                      <Button className="bg-primary text-primary-foreground hover:bg-owtlet-volt font-bold shadow-sm">
-                        <Radio className="mr-2 h-4 w-4" />
-                        Join Live Experience
-                      </Button>
-                    </Link>
-                  ) : null}
-                  <Link href="/shop">
-                    <Button variant="outline" className="border-border hover:bg-muted font-medium">
-                      <ShoppingBag className="mr-2 h-4 w-4" />
-                      Browse Full Catalog
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="flex items-center gap-4 pt-4 text-xs text-muted-foreground font-medium">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-primary" />
-                    30-Min Show Hold
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                    21+ Verified Only
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-primary" />
-                    Manhattan, BK & Queens
-                  </span>
-                </div>
-              </div>
-
-              {/* Right Column: Terrific Embed Player */}
-              <div className="lg:col-span-7">
-                <div className="rounded-2xl p-1 bg-gradient-to-tr from-primary/30 via-accent/20 to-border shadow-xl">
-                  <TerrificEmbed
-                    embeddingId={activeShow?.embeddingId || 'Cki70GhqvLgWGhJbSxg2'}
-                    liveShowId={activeShow?.id}
-                    source="terrific_live"
-                    title={activeShow?.title || 'Owtlet Live Drop'}
-                    showBadge={true}
-                    aspectRatio="video"
-                    className="w-full"
-                  />
-                </div>
-              </div>
+        {/* Pinned in today's shows (design v3 4-up grid) */}
+        <section className="mx-auto max-w-content px-4 pb-14 sm:px-7 lg:pb-[60px]">
+          <SectionHeader
+            title={activeShow?.status === 'LIVE' ? "Pinned in today's shows" : 'Pinned in the next show'}
+            description="One Owtlet Price at every partner store. We route your Cart to the closest store with stock."
+            action={{ href: '/shop', label: 'Shop all products' }}
+          />
+          {pinnedProducts.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-[18px] lg:grid-cols-4">
+              {pinnedProducts.slice(0, 8).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
             </div>
-          </div>
+          ) : (
+            <EmptyState
+              title="No products pinned yet"
+              description="Products appear here as soon as the next Live Show pins them. Browse the Shop in the meantime."
+              action={{ label: 'Browse the Shop', href: '/shop' }}
+            />
+          )}
         </section>
 
-        {/* Pinned Show Products Rail */}
-        {pinnedProducts.length > 0 && (
-          <section className="py-12 border-b border-border/60">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="border-accent text-accent font-semibold text-xs">
-                      Live Drop Featured
-                    </Badge>
-                    <span className="text-xs text-muted-foreground font-medium">
-                      One-Price Show Specials
-                    </span>
-                  </div>
-                  <h2 className="font-heading text-2xl text-foreground mt-1">
-                    Pinned in Today&apos;s Show
-                  </h2>
-                </div>
-                <Link
-                  href="/shop"
-                  className="hidden sm:inline-flex items-center text-sm font-semibold text-primary hover:underline"
-                >
-                  View All Products
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </div>
+        <CategoryShowcase />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                {pinnedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        <VideoReel items={watchAgain} />
 
-        {/* Live Replays & Upcoming Shows Rail */}
-        {replayAndUpcomingShows.length > 0 && (
-          <section className="border-b border-border/60">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <ShowRail
-                title="Broadcast Drops & Replays"
-                description="Missed a drop? Rewatch licensed NY cultivator sessions and hold items in your cart."
-                badgeText="Replay Vault"
-                badgeIcon="replay"
-                shows={replayAndUpcomingShows}
-                viewAllHref="/live"
-                viewAllText="View All Broadcasts"
-              />
-            </div>
-          </section>
-        )}
+        <HowItWorks />
 
-        {/* Shoppable Videos Rail */}
-        {shoppableVideos.length > 0 && (
-          <section className="border-b border-border/60">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <ShowRail
-                title="Shoppable Video Reels"
-                description="Bite-sized craft cannabis overviews, terpene breakdowns, and tap-to-cart reels."
-                badgeText="On-Demand Reels"
-                badgeIcon="video"
-                shows={shoppableVideos}
-                viewAllHref="/videos"
-                viewAllText="View All Reels"
-              />
-            </div>
-          </section>
-        )}
-
-        {/* Value Propositions Grid */}
-        <section className="py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-2xl border border-border bg-card shadow-sm flex flex-col transition-all hover:border-primary/40">
-                <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-foreground mb-4">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <h3 className="font-heading text-lg text-foreground mb-2">Live Shopping SDK v2</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Powered by Terrific Live SDK v2. Synchronized cart actions, instant reservations, and seamless in-player checkout jump.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl border border-border bg-card shadow-sm flex flex-col transition-all hover:border-primary/40">
-                <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-foreground mb-4">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <h3 className="font-heading text-lg text-foreground mb-2">Multi-Dispensary Routing</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Automated ZIP allocation algorithm splits orders across licensed local dispensaries for pickup and fast delivery.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl border border-border bg-card shadow-sm flex flex-col transition-all hover:border-primary/40">
-                <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-foreground mb-4">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <h3 className="font-heading text-lg text-foreground mb-2">21+ Zero-ID Compliance</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  HMAC-signed 21+ age verification without saving personal IDs, dates of birth, or payment credentials on Owtlet servers.
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Brand Storefronts (design v3 3-up cards) */}
+        <section className="mx-auto max-w-content px-4 pb-14 sm:px-7 lg:pb-[60px]">
+          <SectionHeader
+            title="Brand Storefronts"
+            description="Every brand's shows, videos and products in one place."
+            action={{ href: '/brands', label: 'All brands' }}
+          />
+          <BrandGrid brands={brandCards} />
         </section>
+
+        <CoverageBand />
       </main>
 
-      <StoreFooter />
+      <StoreFooter flush />
     </div>
   );
 }

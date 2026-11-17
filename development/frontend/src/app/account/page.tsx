@@ -33,7 +33,7 @@ export default function AccountPage() {
                 <h1 className="font-heading text-2xl font-bold text-foreground tracking-tight">
                   {profile?.firstName ? `${profile.firstName} ${profile.lastName || ''}` : 'Shopper Profile'}
                 </h1>
-                <Badge variant="outline" className="text-xs border-primary/40 text-primary bg-primary/10">
+                <Badge variant="outline" className="text-xs border-transparent text-foreground bg-primary/25">
                   <ShieldCheck className="mr-1 h-3.5 w-3.5" />
                   21+ Verified
                 </Badge>

@@ -25,10 +25,10 @@ export function UnfulfillableList({
     <div
       role="alert"
       data-testid="unfulfillable-list"
-      className="p-5 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-foreground space-y-4 animate-in fade-in duration-200"
+      className="p-5 rounded-2xl border border-warning/50 bg-warning/10 text-foreground space-y-4 animate-in fade-in duration-200"
     >
       <div className="flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+        <AlertCircle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h4 className="font-heading font-semibold text-sm text-foreground">
             {unfulfillable.length} Item{unfulfillable.length > 1 ? 's' : ''} Out of Stock
@@ -45,13 +45,13 @@ export function UnfulfillableList({
           return (
             <div
               key={line.productId}
-              className="p-4 rounded-xl border border-amber-500/20 bg-background/80 space-y-3"
+              className="p-4 rounded-xl border border-warning/30 bg-background/80 space-y-3"
               data-testid={`unfulfillable-item-${line.productId}`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <span className="font-semibold text-sm text-foreground">{line.name}</span>
-                  <div className="text-xs text-amber-400/90 font-medium mt-0.5">
+                  <div className="text-xs text-foreground/80 font-medium mt-0.5">
                     {line.reason === 'NOT_IN_STOCK_FOR_ZIP' && 'Out of stock for this delivery area'}
                     {line.reason === 'NOT_AT_SELECTED_STORE' && 'Out of stock at selected dispensary'}
                     {line.reason === 'NO_ELIGIBLE_STORES' && 'Not in stock at any partner dispensary'}
@@ -102,7 +102,7 @@ export function UnfulfillableList({
                           type="button"
                           onClick={() => onSwitchToStore(line.productId, sug.dispensaryId)}
                           data-testid={`switch-oos-${line.productId}-${sug.dispensaryId}`}
-                          className="bg-primary text-primary-foreground hover:bg-owtlet-volt font-semibold text-[11px] h-7 px-3 rounded-lg shrink-0 active:scale-[0.98]"
+                          className="bg-primary text-primary-foreground hover:bg-primary-hover font-semibold text-[11px] h-7 px-3 rounded-lg shrink-0 active:scale-[0.98]"
                         >
                           <ArrowRight className="h-3 w-3 mr-1" />
                           Switch to this store

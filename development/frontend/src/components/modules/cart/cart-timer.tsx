@@ -57,21 +57,21 @@ export function CartTimer({ hold, onExpired, className = '' }: CartTimerProps) {
   if (isShowCurrentlyLive) {
     return (
       <div
-        className={`flex items-center justify-between rounded-lg bg-owtlet-ink/90 border border-owtlet-mint/30 px-3.5 py-2.5 text-white ${className}`}
+        className={`dark flex items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-foreground ${className}`}
         role="status"
         aria-label="Live show cart hold"
       >
         <div className="flex items-center gap-2">
-          <Badge variant="live" className="animate-pulse px-2 py-0.5 text-xs font-bold">
+          <Badge variant="live" className="animate-live-ring px-2 py-0.5 text-xs font-bold">
             <Flame className="mr-1 h-3.5 w-3.5" />
             LIVE SHOW HOLD
           </Badge>
-          <span className="text-xs sm:text-sm font-medium text-owtlet-sage">
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground">
             Held until 30 min after show ends
           </span>
         </div>
         {hold.showTitle && (
-          <span className="hidden sm:inline-block text-xs font-semibold text-owtlet-mint truncate max-w-[150px]">
+          <span className="hidden sm:inline-block text-xs font-semibold text-primary truncate max-w-[150px]">
             {hold.showTitle}
           </span>
         )}
@@ -83,19 +83,17 @@ export function CartTimer({ hold, onExpired, className = '' }: CartTimerProps) {
 
   return (
     <div
-      className={`flex items-center justify-between rounded-lg px-3.5 py-2.5 border transition-colors ${
-        isUrgent
-          ? 'bg-destructive/10 border-destructive/40 text-destructive'
-          : 'bg-owtlet-mint/10 border-owtlet-mint/30 text-foreground'
+      className={`flex items-center justify-between rounded-2xl px-4 py-3 transition-colors ${
+        isUrgent ? 'bg-danger/10 text-danger' : 'bg-strain-hybrid-tint text-foreground'
       } ${className}`}
       role="timer"
       aria-label="Cart expiration countdown"
     >
       <div className="flex items-center gap-2">
         {isUrgent ? (
-          <AlertTriangle className="h-4 w-4 animate-bounce text-destructive" />
+          <AlertTriangle className="h-4 w-4 text-danger motion-safe:animate-bounce" />
         ) : (
-          <Clock className="h-4 w-4 text-owtlet-ink" />
+          <Clock className="h-4 w-4 text-foreground" />
         )}
         <span className="text-xs sm:text-sm font-medium">
           {isLiveShow
@@ -104,7 +102,7 @@ export function CartTimer({ hold, onExpired, className = '' }: CartTimerProps) {
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5 font-mono text-sm sm:text-base font-bold">
+      <div className="flex items-center gap-1.5 font-mono text-sm sm:text-base font-bold tabular-nums">
         <span>{timeLeft !== null ? formatTimer(timeLeft) : '--:--'}</span>
       </div>
     </div>

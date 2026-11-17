@@ -2,11 +2,12 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Minus, Plus, Trash2, Tag, Cannabis } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Minus, Plus, Tag, Trash2 } from 'lucide-react';
 import { CartLineDto } from '@/server/cart/types';
+import { FallbackImage } from '@/components/ui/fallback-image';
+import { strainTint } from '@/components/ui/strain-badge';
+import { categoryPhoto } from '@/lib/brand-photos';
+import { cn } from '@/lib/utils';
 
 interface CartLineProps {
   item: CartLineDto;
@@ -15,144 +16,106 @@ interface CartLineProps {
   isUpdating?: boolean;
 }
 
-export function CartLine({
-  item,
-  onUpdateQuantity,
-  onRemove,
-  isUpdating = false,
-}: CartLineProps) {
+const stepperBtn =
+  'grid h-10 w-10 place-items-center text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 active:scale-[0.98]';
+
+export function CartLine({ item, onUpdateQuantity, onRemove, isUpdating = false }: CartLineProps) {
   const handleDecrement = () => {
-    if (item.quantity <= 1) {
-      onRemove();
-    } else {
-      onUpdateQuantity(item.quantity - 1);
-    }
+    if (item.quantity <= 1) onRemove();
+    else onUpdateQuantity(item.quantity - 1);
   };
 
   const handleIncrement = () => {
-    if (item.quantity < 10) {
-      onUpdateQuantity(item.quantity + 1);
-    }
+    if (item.quantity < 10) onUpdateQuantity(item.quantity + 1);
   };
 
   return (
-    <div className="flex gap-3 sm:gap-4 py-4 border-b border-border/60 last:border-0 items-start">
-      {/* Product Thumbnail */}
-      <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-muted/40">
-        {item.imageUrl ? (
-          <Image
-            src={item.imageUrl}
-            alt={item.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 80px, 96px"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-owtlet-sage/20 text-owtlet-ink">
-            <Cannabis className="h-8 w-8 text-owtlet-ink/60" />
-          </div>
-        )}
-      </div>
+    <div className="flex items-start gap-3 py-4 first:pt-0 last:pb-0 sm:gap-4">
+      <Link
+        href={`/product/${item.slug}`}
+        tabIndex={-1}
+        aria-hidden="true"
+        className={cn('relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl sm:h-24 sm:w-24', strainTint(item.strain?.type))}
+      >
+        <FallbackImage
+          src={item.imageUrl}
+          fallback={categoryPhoto(item.category.slug)}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+      </Link>
 
-      {/* Details */}
-      <div className="flex flex-1 flex-col justify-between min-h-[80px] sm:min-h-[96px]">
+      <div className="flex min-h-[80px] min-w-0 flex-1 flex-col justify-between sm:min-h-[96px]">
         <div>
           <div className="flex items-start justify-between gap-2">
             <Link
               href={`/product/${item.slug}`}
-              className="font-medium text-sm sm:text-base text-foreground hover:text-primary transition-colors line-clamp-1"
+              className="line-clamp-2 rounded-sm text-sm font-bold leading-snug text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-base"
             >
               {item.name}
             </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0 active:scale-[0.98]"
+            <button
+              type="button"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
               onClick={onRemove}
               disabled={isUpdating}
               aria-label={`Remove ${item.name} from cart`}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
 
-          {/* Strain & Category Tags */}
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className="text-[11px] py-0 px-1.5 text-muted-foreground">
-              {item.category.name}
-            </Badge>
-            {item.strain && (
-              <Badge variant="secondary" className="text-[11px] py-0 px-1.5 font-normal">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+            <span className="rounded-md bg-surface-muted px-1.5 py-0.5">{item.category.name}</span>
+            {item.strain ? (
+              <span className="rounded-md bg-surface-muted px-1.5 py-0.5">
                 {item.strain.name} ({item.strain.type})
-              </Badge>
-            )}
-            {item.channelBrand && (
-              <Badge variant="outline" className="text-[11px] py-0 px-1.5 border-accent/40 text-accent font-medium">
-                <Tag className="mr-1 h-3 w-3" />
+              </span>
+            ) : null}
+            {item.channelBrand ? (
+              <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-1.5 py-0.5 font-body font-semibold text-accent">
+                <Tag className="h-3 w-3" aria-hidden="true" />
                 {item.channelBrand.name} Storefront
-              </Badge>
-            )}
+              </span>
+            ) : null}
           </div>
         </div>
 
-        {/* Pricing & Stepper */}
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3 flex items-end justify-between gap-2">
           <div className="flex flex-col">
             <div className="flex items-baseline gap-1.5">
-              <span className="font-heading text-sm sm:text-base text-foreground font-bold">
-                ${item.lineTotal}
-              </span>
-              {item.quantity > 1 && (
-                <span className="text-xs text-muted-foreground">
-                  (${item.unitPrice} each)
-                </span>
-              )}
+              <span className="font-mono text-base font-bold tabular-nums text-foreground">${item.lineTotal}</span>
+              {item.quantity > 1 ? (
+                <span className="font-mono text-xs text-muted-foreground">(${item.unitPrice} each)</span>
+              ) : null}
             </div>
-            {item.priceMode === 'OWTLET' ? (
-              <span className="text-[10px] sm:text-xs text-primary font-semibold">
-                Uniform Live Show Price
-              </span>
-            ) : (
-              <span className="text-[10px] text-muted-foreground">
-                Dispensary retail price
-              </span>
-            )}
+            <span
+              className={cn(
+                'text-[10px] font-bold uppercase tracking-[0.08em]',
+                item.priceMode === 'OWTLET' ? 'text-success' : 'text-muted'
+              )}
+            >
+              {item.priceMode === 'OWTLET' ? 'Uniform Live Show Price' : 'Dispensary retail price'}
+            </span>
           </div>
 
-          {/* Stepper with 44px touch targets */}
-          <div className="flex items-center rounded-lg border border-border bg-background shadow-sm">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 sm:h-9 sm:w-9 rounded-r-none text-foreground hover:bg-muted active:scale-[0.98]"
-              onClick={handleDecrement}
-              disabled={isUpdating}
-              aria-label="Decrease quantity"
-            >
-              {item.quantity <= 1 ? (
-                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-              ) : (
-                <Minus className="h-3.5 w-3.5" />
-              )}
-            </Button>
-            <span
-              className="w-8 text-center text-xs sm:text-sm font-semibold select-none"
-              aria-live="polite"
-            >
+          <div className="flex items-center overflow-hidden rounded-full border border-border bg-card" role="group" aria-label={`Quantity for ${item.name}`}>
+            <button type="button" className={stepperBtn} onClick={handleDecrement} disabled={isUpdating} aria-label="Decrease quantity">
+              {item.quantity <= 1 ? <Trash2 className="h-3.5 w-3.5 text-danger" /> : <Minus className="h-3.5 w-3.5" />}
+            </button>
+            <span className="w-7 select-none text-center font-mono text-sm font-bold tabular-nums" aria-live="polite">
               {item.quantity}
             </span>
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 sm:h-9 sm:w-9 rounded-l-none text-foreground hover:bg-muted active:scale-[0.98]"
+              className={stepperBtn}
               onClick={handleIncrement}
               disabled={isUpdating || item.quantity >= 10}
               aria-label="Increase quantity"
             >
               <Plus className="h-3.5 w-3.5" />
-            </Button>
+            </button>
           </div>
         </div>
       </div>

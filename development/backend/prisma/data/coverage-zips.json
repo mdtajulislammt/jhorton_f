@@ -1,43 +1,1118 @@
 [
-  { "zip": "10001", "region": "MANHATTAN", "latitude": 40.7506, "longitude": -73.9972 },
-  { "zip": "10002", "region": "MANHATTAN", "latitude": 40.7168, "longitude": -73.9861 },
-  { "zip": "10003", "region": "MANHATTAN", "latitude": 40.7315, "longitude": -73.9892 },
-  { "zip": "10011", "region": "MANHATTAN", "latitude": 40.7416, "longitude": -74.0009 },
-  { "zip": "10012", "region": "MANHATTAN", "latitude": 40.7255, "longitude": -73.9983 },
-  { "zip": "10013", "region": "MANHATTAN", "latitude": 40.7200, "longitude": -74.0052 },
-  { "zip": "10014", "region": "MANHATTAN", "latitude": 40.7340, "longitude": -74.0060 },
-  { "zip": "10016", "region": "MANHATTAN", "latitude": 40.7456, "longitude": -73.9780 },
-  { "zip": "10019", "region": "MANHATTAN", "latitude": 40.7656, "longitude": -73.9877 },
-  { "zip": "10021", "region": "MANHATTAN", "latitude": 40.7684, "longitude": -73.9590 },
-  { "zip": "10022", "region": "MANHATTAN", "latitude": 40.7587, "longitude": -73.9678 },
-  { "zip": "10025", "region": "MANHATTAN", "latitude": 40.7981, "longitude": -73.9680 },
-  { "zip": "10028", "region": "MANHATTAN", "latitude": 40.7766, "longitude": -73.9535 },
-  { "zip": "10036", "region": "MANHATTAN", "latitude": 40.7590, "longitude": -73.9914 },
-  { "zip": "11201", "region": "BROOKLYN", "latitude": 40.6953, "longitude": -73.9890 },
-  { "zip": "11211", "region": "BROOKLYN", "latitude": 40.7121, "longitude": -73.9500 },
-  { "zip": "11215", "region": "BROOKLYN", "latitude": 40.6672, "longitude": -73.9823 },
-  { "zip": "11217", "region": "BROOKLYN", "latitude": 40.6834, "longitude": -73.9806 },
-  { "zip": "11222", "region": "BROOKLYN", "latitude": 40.7275, "longitude": -73.9482 },
-  { "zip": "11231", "region": "BROOKLYN", "latitude": 40.6788, "longitude": -74.0042 },
-  { "zip": "11238", "region": "BROOKLYN", "latitude": 40.6794, "longitude": -73.9645 },
-  { "zip": "11249", "region": "BROOKLYN", "latitude": 40.7161, "longitude": -73.9654 },
-  { "zip": "11101", "region": "QUEENS", "latitude": 40.7473, "longitude": -73.9388 },
-  { "zip": "11102", "region": "QUEENS", "latitude": 40.7712, "longitude": -73.9248 },
-  { "zip": "11106", "region": "QUEENS", "latitude": 40.7618, "longitude": -73.9312 },
-  { "zip": "11375", "region": "QUEENS", "latitude": 40.7181, "longitude": -73.8448 },
-  { "zip": "11377", "region": "QUEENS", "latitude": 40.7447, "longitude": -73.9037 },
-  { "zip": "11385", "region": "QUEENS", "latitude": 40.7003, "longitude": -73.8967 },
-  { "zip": "10601", "region": "WESTCHESTER", "latitude": 41.0336, "longitude": -73.7667 },
-  { "zip": "10605", "region": "WESTCHESTER", "latitude": 41.0125, "longitude": -73.7482 },
-  { "zip": "10701", "region": "WESTCHESTER", "latitude": 40.9458, "longitude": -73.8872 },
-  { "zip": "10708", "region": "WESTCHESTER", "latitude": 40.9386, "longitude": -73.8294 },
-  { "zip": "10801", "region": "WESTCHESTER", "latitude": 40.9150, "longitude": -73.7845 },
-  { "zip": "10583", "region": "WESTCHESTER", "latitude": 40.9997, "longitude": -73.7997 },
-  { "zip": "11501", "region": "LONG_ISLAND", "latitude": 40.7487, "longitude": -73.6407 },
-  { "zip": "11530", "region": "LONG_ISLAND", "latitude": 40.7247, "longitude": -73.6508 },
-  { "zip": "11550", "region": "LONG_ISLAND", "latitude": 40.7062, "longitude": -73.6187 },
-  { "zip": "11735", "region": "LONG_ISLAND", "latitude": 40.7326, "longitude": -73.4454 },
-  { "zip": "11753", "region": "LONG_ISLAND", "latitude": 40.7923, "longitude": -73.5385 },
-  { "zip": "11791", "region": "LONG_ISLAND", "latitude": 40.8173, "longitude": -73.5020 }
+  {
+    "zip": "10001",
+    "region": "MANHATTAN",
+    "latitude": 40.7506,
+    "longitude": -73.9972
+  },
+  {
+    "zip": "10002",
+    "region": "MANHATTAN",
+    "latitude": 40.7168,
+    "longitude": -73.9861
+  },
+  {
+    "zip": "10003",
+    "region": "MANHATTAN",
+    "latitude": 40.7315,
+    "longitude": -73.9892
+  },
+  {
+    "zip": "10004",
+    "region": "MANHATTAN",
+    "latitude": 40.6923,
+    "longitude": -74.0158
+  },
+  {
+    "zip": "10005",
+    "region": "MANHATTAN",
+    "latitude": 40.706,
+    "longitude": -74.0088
+  },
+  {
+    "zip": "10006",
+    "region": "MANHATTAN",
+    "latitude": 40.7079,
+    "longitude": -74.0134
+  },
+  {
+    "zip": "10007",
+    "region": "MANHATTAN",
+    "latitude": 40.7135,
+    "longitude": -74.0079
+  },
+  {
+    "zip": "10009",
+    "region": "MANHATTAN",
+    "latitude": 40.7264,
+    "longitude": -73.9796
+  },
+  {
+    "zip": "10010",
+    "region": "MANHATTAN",
+    "latitude": 40.739,
+    "longitude": -73.9826
+  },
+  {
+    "zip": "10011",
+    "region": "MANHATTAN",
+    "latitude": 40.7416,
+    "longitude": -74.0009
+  },
+  {
+    "zip": "10012",
+    "region": "MANHATTAN",
+    "latitude": 40.7255,
+    "longitude": -73.9983
+  },
+  {
+    "zip": "10013",
+    "region": "MANHATTAN",
+    "latitude": 40.72,
+    "longitude": -74.0052
+  },
+  {
+    "zip": "10014",
+    "region": "MANHATTAN",
+    "latitude": 40.734,
+    "longitude": -74.006
+  },
+  {
+    "zip": "10016",
+    "region": "MANHATTAN",
+    "latitude": 40.7456,
+    "longitude": -73.978
+  },
+  {
+    "zip": "10017",
+    "region": "MANHATTAN",
+    "latitude": 40.7524,
+    "longitude": -73.9725
+  },
+  {
+    "zip": "10018",
+    "region": "MANHATTAN",
+    "latitude": 40.7553,
+    "longitude": -73.9932
+  },
+  {
+    "zip": "10019",
+    "region": "MANHATTAN",
+    "latitude": 40.7656,
+    "longitude": -73.9877
+  },
+  {
+    "zip": "10020",
+    "region": "MANHATTAN",
+    "latitude": 40.7588,
+    "longitude": -73.9799
+  },
+  {
+    "zip": "10021",
+    "region": "MANHATTAN",
+    "latitude": 40.7684,
+    "longitude": -73.959
+  },
+  {
+    "zip": "10022",
+    "region": "MANHATTAN",
+    "latitude": 40.7587,
+    "longitude": -73.9678
+  },
+  {
+    "zip": "10023",
+    "region": "MANHATTAN",
+    "latitude": 40.7758,
+    "longitude": -73.9827
+  },
+  {
+    "zip": "10024",
+    "region": "MANHATTAN",
+    "latitude": 40.7891,
+    "longitude": -73.9739
+  },
+  {
+    "zip": "10025",
+    "region": "MANHATTAN",
+    "latitude": 40.7981,
+    "longitude": -73.968
+  },
+  {
+    "zip": "10026",
+    "region": "MANHATTAN",
+    "latitude": 40.8023,
+    "longitude": -73.9527
+  },
+  {
+    "zip": "10027",
+    "region": "MANHATTAN",
+    "latitude": 40.8116,
+    "longitude": -73.9535
+  },
+  {
+    "zip": "10028",
+    "region": "MANHATTAN",
+    "latitude": 40.7766,
+    "longitude": -73.9535
+  },
+  {
+    "zip": "10029",
+    "region": "MANHATTAN",
+    "latitude": 40.7917,
+    "longitude": -73.9442
+  },
+  {
+    "zip": "10030",
+    "region": "MANHATTAN",
+    "latitude": 40.8176,
+    "longitude": -73.9431
+  },
+  {
+    "zip": "10031",
+    "region": "MANHATTAN",
+    "latitude": 40.8253,
+    "longitude": -73.9499
+  },
+  {
+    "zip": "10032",
+    "region": "MANHATTAN",
+    "latitude": 40.8388,
+    "longitude": -73.9427
+  },
+  {
+    "zip": "10033",
+    "region": "MANHATTAN",
+    "latitude": 40.8504,
+    "longitude": -73.9338
+  },
+  {
+    "zip": "10034",
+    "region": "MANHATTAN",
+    "latitude": 40.8677,
+    "longitude": -73.9212
+  },
+  {
+    "zip": "10035",
+    "region": "MANHATTAN",
+    "latitude": 40.7997,
+    "longitude": -73.9348
+  },
+  {
+    "zip": "10036",
+    "region": "MANHATTAN",
+    "latitude": 40.759,
+    "longitude": -73.9914
+  },
+  {
+    "zip": "10037",
+    "region": "MANHATTAN",
+    "latitude": 40.8136,
+    "longitude": -73.9372
+  },
+  {
+    "zip": "10038",
+    "region": "MANHATTAN",
+    "latitude": 40.7107,
+    "longitude": -74.0019
+  },
+  {
+    "zip": "10039",
+    "region": "MANHATTAN",
+    "latitude": 40.8248,
+    "longitude": -73.937
+  },
+  {
+    "zip": "10040",
+    "region": "MANHATTAN",
+    "latitude": 40.8579,
+    "longitude": -73.9304
+  },
+  {
+    "zip": "10502",
+    "region": "WESTCHESTER",
+    "latitude": 41.0183,
+    "longitude": -73.8585
+  },
+  {
+    "zip": "10504",
+    "region": "WESTCHESTER",
+    "latitude": 41.1383,
+    "longitude": -73.7117
+  },
+  {
+    "zip": "10514",
+    "region": "WESTCHESTER",
+    "latitude": 41.1683,
+    "longitude": -73.7617
+  },
+  {
+    "zip": "10520",
+    "region": "WESTCHESTER",
+    "latitude": 41.2083,
+    "longitude": -73.8817
+  },
+  {
+    "zip": "10522",
+    "region": "WESTCHESTER",
+    "latitude": 41.0083,
+    "longitude": -73.8717
+  },
+  {
+    "zip": "10528",
+    "region": "WESTCHESTER",
+    "latitude": 40.97,
+    "longitude": -73.7217
+  },
+  {
+    "zip": "10530",
+    "region": "WESTCHESTER",
+    "latitude": 41.03,
+    "longitude": -73.8117
+  },
+  {
+    "zip": "10533",
+    "region": "WESTCHESTER",
+    "latitude": 41.04,
+    "longitude": -73.8617
+  },
+  {
+    "zip": "10538",
+    "region": "WESTCHESTER",
+    "latitude": 40.94,
+    "longitude": -73.7417
+  },
+  {
+    "zip": "10543",
+    "region": "WESTCHESTER",
+    "latitude": 40.95,
+    "longitude": -73.7317
+  },
+  {
+    "zip": "10549",
+    "region": "WESTCHESTER",
+    "latitude": 41.2,
+    "longitude": -73.7317
+  },
+  {
+    "zip": "10562",
+    "region": "WESTCHESTER",
+    "latitude": 41.17,
+    "longitude": -73.8617
+  },
+  {
+    "zip": "10570",
+    "region": "WESTCHESTER",
+    "latitude": 41.13,
+    "longitude": -73.7817
+  },
+  {
+    "zip": "10573",
+    "region": "WESTCHESTER",
+    "latitude": 41,
+    "longitude": -73.6617
+  },
+  {
+    "zip": "10580",
+    "region": "WESTCHESTER",
+    "latitude": 40.98,
+    "longitude": -73.6817
+  },
+  {
+    "zip": "10583",
+    "region": "WESTCHESTER",
+    "latitude": 40.9997,
+    "longitude": -73.7997
+  },
+  {
+    "zip": "10591",
+    "region": "WESTCHESTER",
+    "latitude": 41.08,
+    "longitude": -73.8617
+  },
+  {
+    "zip": "10598",
+    "region": "WESTCHESTER",
+    "latitude": 41.3,
+    "longitude": -73.7817
+  },
+  {
+    "zip": "10601",
+    "region": "WESTCHESTER",
+    "latitude": 41.0336,
+    "longitude": -73.7667
+  },
+  {
+    "zip": "10603",
+    "region": "WESTCHESTER",
+    "latitude": 41.05,
+    "longitude": -73.7817
+  },
+  {
+    "zip": "10604",
+    "region": "WESTCHESTER",
+    "latitude": 41.03,
+    "longitude": -73.7217
+  },
+  {
+    "zip": "10605",
+    "region": "WESTCHESTER",
+    "latitude": 41.0125,
+    "longitude": -73.7482
+  },
+  {
+    "zip": "10606",
+    "region": "WESTCHESTER",
+    "latitude": 41.02,
+    "longitude": -73.7717
+  },
+  {
+    "zip": "10607",
+    "region": "WESTCHESTER",
+    "latitude": 41.04,
+    "longitude": -73.8217
+  },
+  {
+    "zip": "10701",
+    "region": "WESTCHESTER",
+    "latitude": 40.9458,
+    "longitude": -73.8872
+  },
+  {
+    "zip": "10703",
+    "region": "WESTCHESTER",
+    "latitude": 40.96,
+    "longitude": -73.8717
+  },
+  {
+    "zip": "10704",
+    "region": "WESTCHESTER",
+    "latitude": 40.92,
+    "longitude": -73.8517
+  },
+  {
+    "zip": "10705",
+    "region": "WESTCHESTER",
+    "latitude": 40.91,
+    "longitude": -73.8917
+  },
+  {
+    "zip": "10706",
+    "region": "WESTCHESTER",
+    "latitude": 40.99,
+    "longitude": -73.8717
+  },
+  {
+    "zip": "10707",
+    "region": "WESTCHESTER",
+    "latitude": 40.96,
+    "longitude": -73.8217
+  },
+  {
+    "zip": "10708",
+    "region": "WESTCHESTER",
+    "latitude": 40.9386,
+    "longitude": -73.8294
+  },
+  {
+    "zip": "10709",
+    "region": "WESTCHESTER",
+    "latitude": 40.95,
+    "longitude": -73.8117
+  },
+  {
+    "zip": "10710",
+    "region": "WESTCHESTER",
+    "latitude": 40.97,
+    "longitude": -73.8417
+  },
+  {
+    "zip": "10801",
+    "region": "WESTCHESTER",
+    "latitude": 40.915,
+    "longitude": -73.7845
+  },
+  {
+    "zip": "11001",
+    "region": "LONG_ISLAND",
+    "latitude": 40.72,
+    "longitude": -73.7017
+  },
+  {
+    "zip": "11003",
+    "region": "LONG_ISLAND",
+    "latitude": 40.7,
+    "longitude": -73.7017
+  },
+  {
+    "zip": "11010",
+    "region": "LONG_ISLAND",
+    "latitude": 40.69,
+    "longitude": -73.6617
+  },
+  {
+    "zip": "11020",
+    "region": "LONG_ISLAND",
+    "latitude": 40.77,
+    "longitude": -73.7217
+  },
+  {
+    "zip": "11021",
+    "region": "LONG_ISLAND",
+    "latitude": 40.79,
+    "longitude": -73.7317
+  },
+  {
+    "zip": "11030",
+    "region": "LONG_ISLAND",
+    "latitude": 40.79,
+    "longitude": -73.6917
+  },
+  {
+    "zip": "11040",
+    "region": "LONG_ISLAND",
+    "latitude": 40.74,
+    "longitude": -73.6817
+  },
+  {
+    "zip": "11050",
+    "region": "LONG_ISLAND",
+    "latitude": 40.83,
+    "longitude": -73.7017
+  },
+  {
+    "zip": "11101",
+    "region": "QUEENS",
+    "latitude": 40.7473,
+    "longitude": -73.9388
+  },
+  {
+    "zip": "11102",
+    "region": "QUEENS",
+    "latitude": 40.7712,
+    "longitude": -73.9248
+  },
+  {
+    "zip": "11103",
+    "region": "QUEENS",
+    "latitude": 40.7631,
+    "longitude": -73.9142
+  },
+  {
+    "zip": "11104",
+    "region": "QUEENS",
+    "latitude": 40.7431,
+    "longitude": -73.9194
+  },
+  {
+    "zip": "11105",
+    "region": "QUEENS",
+    "latitude": 40.7766,
+    "longitude": -73.9056
+  },
+  {
+    "zip": "11106",
+    "region": "QUEENS",
+    "latitude": 40.7618,
+    "longitude": -73.9312
+  },
+  {
+    "zip": "11201",
+    "region": "BROOKLYN",
+    "latitude": 40.6953,
+    "longitude": -73.989
+  },
+  {
+    "zip": "11203",
+    "region": "BROOKLYN",
+    "latitude": 40.6494,
+    "longitude": -73.9332
+  },
+  {
+    "zip": "11204",
+    "region": "BROOKLYN",
+    "latitude": 40.619,
+    "longitude": -73.9841
+  },
+  {
+    "zip": "11205",
+    "region": "BROOKLYN",
+    "latitude": 40.6934,
+    "longitude": -73.9654
+  },
+  {
+    "zip": "11206",
+    "region": "BROOKLYN",
+    "latitude": 40.7024,
+    "longitude": -73.9425
+  },
+  {
+    "zip": "11207",
+    "region": "BROOKLYN",
+    "latitude": 40.6698,
+    "longitude": -73.8943
+  },
+  {
+    "zip": "11208",
+    "region": "BROOKLYN",
+    "latitude": 40.6711,
+    "longitude": -73.8718
+  },
+  {
+    "zip": "11209",
+    "region": "BROOKLYN",
+    "latitude": 40.6231,
+    "longitude": -74.0306
+  },
+  {
+    "zip": "11210",
+    "region": "BROOKLYN",
+    "latitude": 40.6277,
+    "longitude": -73.9468
+  },
+  {
+    "zip": "11211",
+    "region": "BROOKLYN",
+    "latitude": 40.7121,
+    "longitude": -73.95
+  },
+  {
+    "zip": "11212",
+    "region": "BROOKLYN",
+    "latitude": 40.6617,
+    "longitude": -73.913
+  },
+  {
+    "zip": "11213",
+    "region": "BROOKLYN",
+    "latitude": 40.671,
+    "longitude": -73.9366
+  },
+  {
+    "zip": "11214",
+    "region": "BROOKLYN",
+    "latitude": 40.5997,
+    "longitude": -73.9967
+  },
+  {
+    "zip": "11215",
+    "region": "BROOKLYN",
+    "latitude": 40.6672,
+    "longitude": -73.9823
+  },
+  {
+    "zip": "11216",
+    "region": "BROOKLYN",
+    "latitude": 40.6788,
+    "longitude": -73.9506
+  },
+  {
+    "zip": "11217",
+    "region": "BROOKLYN",
+    "latitude": 40.6834,
+    "longitude": -73.9806
+  },
+  {
+    "zip": "11218",
+    "region": "BROOKLYN",
+    "latitude": 40.6439,
+    "longitude": -73.9757
+  },
+  {
+    "zip": "11219",
+    "region": "BROOKLYN",
+    "latitude": 40.6322,
+    "longitude": -73.9967
+  },
+  {
+    "zip": "11220",
+    "region": "BROOKLYN",
+    "latitude": 40.641,
+    "longitude": -74.0158
+  },
+  {
+    "zip": "11221",
+    "region": "BROOKLYN",
+    "latitude": 40.6914,
+    "longitude": -73.9279
+  },
+  {
+    "zip": "11222",
+    "region": "BROOKLYN",
+    "latitude": 40.7275,
+    "longitude": -73.9482
+  },
+  {
+    "zip": "11223",
+    "region": "BROOKLYN",
+    "latitude": 40.5977,
+    "longitude": -73.9718
+  },
+  {
+    "zip": "11224",
+    "region": "BROOKLYN",
+    "latitude": 40.5772,
+    "longitude": -73.9877
+  },
+  {
+    "zip": "11225",
+    "region": "BROOKLYN",
+    "latitude": 40.6633,
+    "longitude": -73.9535
+  },
+  {
+    "zip": "11226",
+    "region": "BROOKLYN",
+    "latitude": 40.6462,
+    "longitude": -73.9564
+  },
+  {
+    "zip": "11228",
+    "region": "BROOKLYN",
+    "latitude": 40.6174,
+    "longitude": -74.0125
+  },
+  {
+    "zip": "11229",
+    "region": "BROOKLYN",
+    "latitude": 40.601,
+    "longitude": -73.9442
+  },
+  {
+    "zip": "11230",
+    "region": "BROOKLYN",
+    "latitude": 40.6222,
+    "longitude": -73.9654
+  },
+  {
+    "zip": "11231",
+    "region": "BROOKLYN",
+    "latitude": 40.6788,
+    "longitude": -74.0042
+  },
+  {
+    "zip": "11232",
+    "region": "BROOKLYN",
+    "latitude": 40.6543,
+    "longitude": -74.0042
+  },
+  {
+    "zip": "11233",
+    "region": "BROOKLYN",
+    "latitude": 40.6782,
+    "longitude": -73.9205
+  },
+  {
+    "zip": "11234",
+    "region": "BROOKLYN",
+    "latitude": 40.62,
+    "longitude": -73.9189
+  },
+  {
+    "zip": "11235",
+    "region": "BROOKLYN",
+    "latitude": 40.5842,
+    "longitude": -73.9482
+  },
+  {
+    "zip": "11236",
+    "region": "BROOKLYN",
+    "latitude": 40.6402,
+    "longitude": -73.9023
+  },
+  {
+    "zip": "11237",
+    "region": "BROOKLYN",
+    "latitude": 40.7047,
+    "longitude": -73.9205
+  },
+  {
+    "zip": "11238",
+    "region": "BROOKLYN",
+    "latitude": 40.6794,
+    "longitude": -73.9645
+  },
+  {
+    "zip": "11249",
+    "region": "BROOKLYN",
+    "latitude": 40.7161,
+    "longitude": -73.9654
+  },
+  {
+    "zip": "11354",
+    "region": "QUEENS",
+    "latitude": 40.7684,
+    "longitude": -73.8267
+  },
+  {
+    "zip": "11355",
+    "region": "QUEENS",
+    "latitude": 40.7511,
+    "longitude": -73.8205
+  },
+  {
+    "zip": "11356",
+    "region": "QUEENS",
+    "latitude": 40.7853,
+    "longitude": -73.8448
+  },
+  {
+    "zip": "11357",
+    "region": "QUEENS",
+    "latitude": 40.785,
+    "longitude": -73.8115
+  },
+  {
+    "zip": "11358",
+    "region": "QUEENS",
+    "latitude": 40.76,
+    "longitude": -73.7942
+  },
+  {
+    "zip": "11360",
+    "region": "QUEENS",
+    "latitude": 40.78,
+    "longitude": -73.7788
+  },
+  {
+    "zip": "11361",
+    "region": "QUEENS",
+    "latitude": 40.76,
+    "longitude": -73.7735
+  },
+  {
+    "zip": "11364",
+    "region": "QUEENS",
+    "latitude": 40.7483,
+    "longitude": -73.7638
+  },
+  {
+    "zip": "11365",
+    "region": "QUEENS",
+    "latitude": 40.7383,
+    "longitude": -73.8042
+  },
+  {
+    "zip": "11367",
+    "region": "QUEENS",
+    "latitude": 40.73,
+    "longitude": -73.8242
+  },
+  {
+    "zip": "11368",
+    "region": "QUEENS",
+    "latitude": 40.7483,
+    "longitude": -73.8567
+  },
+  {
+    "zip": "11369",
+    "region": "QUEENS",
+    "latitude": 40.7617,
+    "longitude": -73.8735
+  },
+  {
+    "zip": "11370",
+    "region": "QUEENS",
+    "latitude": 40.765,
+    "longitude": -73.8888
+  },
+  {
+    "zip": "11372",
+    "region": "QUEENS",
+    "latitude": 40.7517,
+    "longitude": -73.8835
+  },
+  {
+    "zip": "11373",
+    "region": "QUEENS",
+    "latitude": 40.7383,
+    "longitude": -73.8785
+  },
+  {
+    "zip": "11374",
+    "region": "QUEENS",
+    "latitude": 40.7267,
+    "longitude": -73.8617
+  },
+  {
+    "zip": "11375",
+    "region": "QUEENS",
+    "latitude": 40.7181,
+    "longitude": -73.8448
+  },
+  {
+    "zip": "11377",
+    "region": "QUEENS",
+    "latitude": 40.7447,
+    "longitude": -73.9037
+  },
+  {
+    "zip": "11378",
+    "region": "QUEENS",
+    "latitude": 40.7233,
+    "longitude": -73.9085
+  },
+  {
+    "zip": "11379",
+    "region": "QUEENS",
+    "latitude": 40.715,
+    "longitude": -73.8817
+  },
+  {
+    "zip": "11385",
+    "region": "QUEENS",
+    "latitude": 40.7003,
+    "longitude": -73.8967
+  },
+  {
+    "zip": "11415",
+    "region": "QUEENS",
+    "latitude": 40.7083,
+    "longitude": -73.8285
+  },
+  {
+    "zip": "11416",
+    "region": "QUEENS",
+    "latitude": 40.69,
+    "longitude": -73.8517
+  },
+  {
+    "zip": "11417",
+    "region": "QUEENS",
+    "latitude": 40.68,
+    "longitude": -73.8417
+  },
+  {
+    "zip": "11418",
+    "region": "QUEENS",
+    "latitude": 40.7,
+    "longitude": -73.8317
+  },
+  {
+    "zip": "11419",
+    "region": "QUEENS",
+    "latitude": 40.69,
+    "longitude": -73.8217
+  },
+  {
+    "zip": "11420",
+    "region": "QUEENS",
+    "latitude": 40.67,
+    "longitude": -73.8217
+  },
+  {
+    "zip": "11421",
+    "region": "QUEENS",
+    "latitude": 40.695,
+    "longitude": -73.8617
+  },
+  {
+    "zip": "11432",
+    "region": "QUEENS",
+    "latitude": 40.715,
+    "longitude": -73.7985
+  },
+  {
+    "zip": "11435",
+    "region": "QUEENS",
+    "latitude": 40.7,
+    "longitude": -73.8117
+  },
+  {
+    "zip": "11501",
+    "region": "LONG_ISLAND",
+    "latitude": 40.7487,
+    "longitude": -73.6407
+  },
+  {
+    "zip": "11510",
+    "region": "LONG_ISLAND",
+    "latitude": 40.66,
+    "longitude": -73.5717
+  },
+  {
+    "zip": "11518",
+    "region": "LONG_ISLAND",
+    "latitude": 40.64,
+    "longitude": -73.6617
+  },
+  {
+    "zip": "11520",
+    "region": "LONG_ISLAND",
+    "latitude": 40.66,
+    "longitude": -73.5917
+  },
+  {
+    "zip": "11530",
+    "region": "LONG_ISLAND",
+    "latitude": 40.7247,
+    "longitude": -73.6508
+  },
+  {
+    "zip": "11542",
+    "region": "LONG_ISLAND",
+    "latitude": 40.86,
+    "longitude": -73.6317
+  },
+  {
+    "zip": "11550",
+    "region": "LONG_ISLAND",
+    "latitude": 40.7062,
+    "longitude": -73.6187
+  },
+  {
+    "zip": "11552",
+    "region": "LONG_ISLAND",
+    "latitude": 40.69,
+    "longitude": -73.6517
+  },
+  {
+    "zip": "11553",
+    "region": "LONG_ISLAND",
+    "latitude": 40.7,
+    "longitude": -73.5917
+  },
+  {
+    "zip": "11554",
+    "region": "LONG_ISLAND",
+    "latitude": 40.72,
+    "longitude": -73.5517
+  },
+  {
+    "zip": "11561",
+    "region": "LONG_ISLAND",
+    "latitude": 40.59,
+    "longitude": -73.6717
+  },
+  {
+    "zip": "11566",
+    "region": "LONG_ISLAND",
+    "latitude": 40.67,
+    "longitude": -73.5417
+  },
+  {
+    "zip": "11570",
+    "region": "LONG_ISLAND",
+    "latitude": 40.66,
+    "longitude": -73.6417
+  },
+  {
+    "zip": "11572",
+    "region": "LONG_ISLAND",
+    "latitude": 40.63,
+    "longitude": -73.6317
+  },
+  {
+    "zip": "11580",
+    "region": "LONG_ISLAND",
+    "latitude": 40.67,
+    "longitude": -73.7117
+  },
+  {
+    "zip": "11590",
+    "region": "LONG_ISLAND",
+    "latitude": 40.76,
+    "longitude": -73.5717
+  },
+  {
+    "zip": "11701",
+    "region": "LONG_ISLAND",
+    "latitude": 40.69,
+    "longitude": -73.4117
+  },
+  {
+    "zip": "11706",
+    "region": "LONG_ISLAND",
+    "latitude": 40.73,
+    "longitude": -73.2517
+  },
+  {
+    "zip": "11710",
+    "region": "LONG_ISLAND",
+    "latitude": 40.68,
+    "longitude": -73.5217
+  },
+  {
+    "zip": "11714",
+    "region": "LONG_ISLAND",
+    "latitude": 40.73,
+    "longitude": -73.4817
+  },
+  {
+    "zip": "11722",
+    "region": "LONG_ISLAND",
+    "latitude": 40.78,
+    "longitude": -73.1817
+  },
+  {
+    "zip": "11735",
+    "region": "LONG_ISLAND",
+    "latitude": 40.7326,
+    "longitude": -73.4454
+  },
+  {
+    "zip": "11743",
+    "region": "LONG_ISLAND",
+    "latitude": 40.87,
+    "longitude": -73.4317
+  },
+  {
+    "zip": "11746",
+    "region": "LONG_ISLAND",
+    "latitude": 40.82,
+    "longitude": -73.3717
+  },
+  {
+    "zip": "11747",
+    "region": "LONG_ISLAND",
+    "latitude": 40.78,
+    "longitude": -73.4117
+  },
+  {
+    "zip": "11753",
+    "region": "LONG_ISLAND",
+    "latitude": 40.7923,
+    "longitude": -73.5385
+  },
+  {
+    "zip": "11756",
+    "region": "LONG_ISLAND",
+    "latitude": 40.73,
+    "longitude": -73.5217
+  },
+  {
+    "zip": "11758",
+    "region": "LONG_ISLAND",
+    "latitude": 40.68,
+    "longitude": -73.4617
+  },
+  {
+    "zip": "11762",
+    "region": "LONG_ISLAND",
+    "latitude": 40.69,
+    "longitude": -73.4517
+  },
+  {
+    "zip": "11783",
+    "region": "LONG_ISLAND",
+    "latitude": 40.67,
+    "longitude": -73.5017
+  },
+  {
+    "zip": "11788",
+    "region": "LONG_ISLAND",
+    "latitude": 40.82,
+    "longitude": -73.2317
+  },
+  {
+    "zip": "11791",
+    "region": "LONG_ISLAND",
+    "latitude": 40.8173,
+    "longitude": -73.502
+  },
+  {
+    "zip": "11797",
+    "region": "LONG_ISLAND",
+    "latitude": 40.82,
+    "longitude": -73.4917
+  }
 ]
-

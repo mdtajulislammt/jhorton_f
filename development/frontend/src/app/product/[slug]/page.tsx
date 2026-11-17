@@ -2,22 +2,19 @@ import * as React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronRight, ShieldCheck, Zap } from 'lucide-react';
 import { getProductBySlug } from '@/server/products';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
-import { StoreAvailabilityList } from '@/components/catalog/store-availability-list';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
-  Sparkles,
-  Zap,
-  ShoppingBag,
-  ShieldCheck,
-  ChevronRight,
-  Scale,
-  Award,
-  Info,
-} from 'lucide-react';
+  ConnectedStoreAvailability,
+  ProductBuyBox,
+  ProductPurchaseProvider,
+} from '@/components/catalog/product-purchase';
+import { FallbackImage } from '@/components/ui/fallback-image';
+import { StrainBadge, strainTint } from '@/components/ui/strain-badge';
+import { categoryPhoto } from '@/lib/brand-photos';
+import { cn, formatPct } from '@/lib/utils';
 
 export interface ProductPageProps {
   params: {
@@ -43,6 +40,15 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
   };
 }
 
+function Spec({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-surface-muted px-3 py-3 text-center">
+      <dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{label}</dt>
+      <dd className="mt-0.5 font-mono text-lg font-bold tabular-nums text-foreground">{value}</dd>
+    </div>
+  );
+}
+
 export default async function ProductDetailPage({ params, searchParams }: ProductPageProps) {
   const product = await getProductBySlug(params.slug, { zip: searchParams?.zip });
 
@@ -50,195 +56,141 @@ export default async function ProductDetailPage({ params, searchParams }: Produc
     notFound();
   }
 
-  const isOwtletPrice = product.priceMode === 'OWTLET' && product.owtletPrice;
+  const isOwtletPrice = !!(product.priceMode === 'OWTLET' && product.owtletPrice);
+  const price = isOwtletPrice ? product.owtletPrice : product.fromPrice;
+  const inStockCount = product.availability.filter((a) => a.inStock).length;
+
+  const specs: { label: string; value: string }[] = [];
+  if (product.thcPercent) specs.push({ label: 'THC', value: `${formatPct(product.thcPercent)}%` });
+  if (product.cbdPercent && parseFloat(product.cbdPercent) > 0) specs.push({ label: 'CBD', value: `${formatPct(product.cbdPercent)}%` });
+  if (product.weightGrams) specs.push({ label: 'Net weight', value: `${parseFloat(product.weightGrams)}g` });
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <StoreHeader />
 
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-10">
-          {/* Breadcrumb Navigation */}
-          <nav className="flex items-center space-x-2 text-xs text-muted-foreground">
-            <Link href="/shop" className="hover:text-primary transition-colors">
-              Shop
-            </Link>
-            <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-            <Link
-              href={`/shop/${product.category.slug}`}
-              className="hover:text-primary transition-colors uppercase tracking-wider"
-            >
-              {product.category.name}
-            </Link>
-            <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-            <span className="text-foreground truncate max-w-xs">{product.name}</span>
-          </nav>
+        <ProductPurchaseProvider availability={product.availability}>
+          <div className="mx-auto max-w-content space-y-12 px-4 py-6 sm:px-7 lg:py-8">
+            {/* Breadcrumb */}
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs font-semibold text-muted">
+              <Link href="/shop" className="rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                Shop
+              </Link>
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+              <Link
+                href={`/shop/${product.category.slug}`}
+                className="rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {product.category.name}
+              </Link>
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+              <span className="max-w-[12rem] truncate text-foreground sm:max-w-xs" aria-current="page">
+                {product.name}
+              </span>
+            </nav>
 
-          {/* Product Overview Section */}
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 items-start">
-            {/* Left: Media Presentation (5 cols) */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                {product.imageUrls && product.imageUrls.length > 0 ? (
-                  <img
-                    src={product.imageUrls[0]}
+            <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+              {/* Media */}
+              <div className="lg:sticky lg:top-36">
+                <div className={cn('relative aspect-square w-full overflow-hidden rounded-3xl', strainTint(product.strain?.type))}>
+                  <FallbackImage
+                    src={product.imageUrls?.[0]}
+                    fallback={categoryPhoto(product.category.slug)}
                     alt={product.name}
                     className="h-full w-full object-cover"
                   />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-owtlet-sage/20 text-muted-foreground">
-                    <Sparkles className="h-16 w-16 text-primary/50 mb-3" />
-                    <span className="font-heading text-lg text-foreground">{product.name}</span>
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground mt-1">
+                  {isOwtletPrice ? (
+                    <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-bold text-owtlet-mist">
+                      <Zap className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                      Featured in live shows
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {product.strain ? <StrainBadge type={product.strain.type} /> : null}
+                    <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
                       {product.category.name}
                     </span>
                   </div>
-                )}
-
-                {/* Live Show / One Price Badge */}
-                {isOwtletPrice && (
-                  <div className="absolute top-4 left-4">
-                    <Badge variant="live" className="shadow-lg py-1 px-3 text-xs">
-                      <Zap className="mr-1.5 h-3.5 w-3.5 fill-white" />
-                      One Owtlet Show Price
-                    </Badge>
-                  </div>
-                )}
-
-                {/* Strain Badge */}
-                {product.strain && (
-                  <div className="absolute top-4 right-4">
-                    <Badge variant="default" className="shadow-md text-xs font-bold uppercase tracking-wider">
-                      {product.strain.name} · {product.strain.type}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right: Product Details & Pricing (7 cols) */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Brand Header */}
-              {product.brand && (
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-                  <Award className="h-4 w-4" />
-                  <span>{product.brand.name}</span>
-                </div>
-              )}
-
-              {/* Product Headline */}
-              <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-normal leading-tight tracking-tight text-foreground">
-                {product.name}
-              </h1>
-
-              {/* Potency & Weight Specs Grid */}
-              <div className="flex flex-wrap items-center gap-3">
-                {product.thcPercent && (
-                  <div className="rounded-xl border border-border bg-card px-3.5 py-2 text-center shadow-xs">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      THC
-                    </div>
-                    <div className="font-heading text-base text-foreground">
-                      {product.thcPercent}%
-                    </div>
-                  </div>
-                )}
-
-                {product.cbdPercent && parseFloat(product.cbdPercent) > 0 && (
-                  <div className="rounded-xl border border-border bg-card px-3.5 py-2 text-center shadow-xs">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      CBD
-                    </div>
-                    <div className="font-heading text-base text-foreground">
-                      {product.cbdPercent}%
-                    </div>
-                  </div>
-                )}
-
-                {product.weightGrams && (
-                  <div className="rounded-xl border border-border bg-card px-3.5 py-2 text-center shadow-xs">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Net Weight
-                    </div>
-                    <div className="font-heading text-base text-foreground flex items-center justify-center">
-                      <Scale className="mr-1 h-3.5 w-3.5 text-muted-foreground" />
-                      {product.weightGrams}g
-                    </div>
-                  </div>
-                )}
-
-                {product.sku && (
-                  <div className="rounded-xl border border-border bg-card px-3.5 py-2 text-center shadow-xs">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      SKU
-                    </div>
-                    <div className="text-xs font-mono text-muted-foreground mt-0.5">
-                      {product.sku}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Price Callout */}
-              <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-2">
-                <div className="flex items-baseline gap-3">
-                  <span className="font-heading text-3xl sm:text-4xl font-normal text-foreground">
-                    ${isOwtletPrice ? product.owtletPrice : product.fromPrice || '—'}
-                  </span>
-                  {isOwtletPrice ? (
-                    <Badge variant="default" className="text-xs font-bold">
-                      One Price at Every Partner Store
-                    </Badge>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">
-                      Lowest in-stock dispensary price
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  {isOwtletPrice
-                    ? 'Show products feature standardized pricing across all participating licensed dispensaries.'
-                    : 'Dispensary pricing may vary slightly based on fulfillment method and location.'}
-                </p>
-              </div>
-
-              {/* Description */}
-              {product.description && (
-                <div className="space-y-2">
-                  <h3 className="font-heading text-sm text-foreground uppercase tracking-wider">
-                    About this craft strain
-                  </h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {product.description}
+                  <h1 className="font-heading text-3xl leading-tight tracking-tight text-foreground text-balance sm:text-4xl">
+                    {product.name}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    {product.brand ? (
+                      <>
+                        by <span className="font-bold text-foreground">{product.brand.name}</span>
+                      </>
+                    ) : null}
+                    {product.brand && product.strain ? ' · ' : null}
+                    {product.strain ? <span className="font-mono">{product.strain.name}</span> : null}
                   </p>
                 </div>
-              )}
 
-              {/* Compliance Box */}
-              <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-owtlet-ink">
-                <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  <strong>21+ Adult-Use Compliance:</strong> Owtlet facilitates reservations with licensed New York State dispensaries. ID verification and transaction completion occur directly with the dispensary at pickup or delivery.
+                {specs.length > 0 ? (
+                  <dl className={cn('grid gap-2', specs.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
+                    {specs.map((s) => (
+                      <Spec key={s.label} {...s} />
+                    ))}
+                  </dl>
+                ) : null}
+
+                <ProductBuyBox
+                  productId={product.id}
+                  productName={product.name}
+                  price={price ?? null}
+                  isOwtletPrice={isOwtletPrice}
+                />
+
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span
+                    className={cn('h-2 w-2 rounded-full', inStockCount > 0 ? 'bg-success' : 'bg-muted')}
+                    aria-hidden="true"
+                  />
+                  {inStockCount > 0
+                    ? `In stock at ${inStockCount} partner store${inStockCount > 1 ? 's' : ''} · pick your store below`
+                    : 'Not in stock at partner stores right now'}
                 </p>
+
+                {product.description ? (
+                  <div className="space-y-2 border-t border-border pt-6">
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted">About this product</h2>
+                    <p className="text-sm leading-relaxed text-foreground/90">{product.description}</p>
+                  </div>
+                ) : null}
+
+                {product.sku ? (
+                  <p className="font-mono text-xs text-muted">SKU {product.sku}</p>
+                ) : null}
+
+                <div className="flex items-start gap-3 rounded-2xl bg-surface-muted p-4 text-xs leading-relaxed text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
+                  <p>
+                    <strong className="text-foreground">21+ Adult-Use Compliance:</strong> Owtlet facilitates reservations with
+                    licensed New York State dispensaries. ID verification and transaction completion occur directly with the
+                    dispensary at pickup or delivery.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Dispensary Availability Section */}
-          <div className="pt-6 border-t border-border">
-            <StoreAvailabilityList
-              productSlug={product.slug}
-              initialAvailability={product.availability}
-              priceMode={product.priceMode}
-              owtletPrice={product.owtletPrice}
-            />
+            <div className="border-t border-border pt-10">
+              <ConnectedStoreAvailability
+                productSlug={product.slug}
+                priceMode={product.priceMode}
+                owtletPrice={product.owtletPrice}
+              />
+            </div>
           </div>
-        </div>
+        </ProductPurchaseProvider>
       </main>
 
       <StoreFooter />
     </div>
   );
 }
-

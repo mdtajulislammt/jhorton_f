@@ -1,13 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { ProductSummaryDto } from '@/server/products';
+import { useSearchParams } from 'next/navigation';
+import { Loader2, PackageSearch } from 'lucide-react';
+import type { ProductSummaryDto } from '@/server/products';
 import { ProductCard } from './product-card';
-import { FilterBar } from './filter-bar';
+import { ProductGridSkeleton } from './catalog-skeleton';
+import { ActiveFilterChips, CatalogTransitionContext, FilterRail, MobileFilterSheet } from './filter-rail';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
-import { Sparkles, PackageSearch, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 export interface CatalogViewProps {
   title?: string;
@@ -19,127 +20,127 @@ export interface CatalogViewProps {
   currentCategory?: string;
 }
 
+/** Shop page (design v3 `.shop`): filter rail card on the left, title bar + chips + 3-up grid on the right. */
 export function CatalogView({
-  title = 'Craft Cannabis Catalog',
-  subtitle = 'Curated adult-use flower, pre-rolls, vapes, and concentrates from licensed New York cultivators.',
+  title = 'Shop all',
+  subtitle,
   initialProducts,
   initialNextCursor,
-  categories,
   brands,
-  currentCategory,
+  currentCategory = '',
 }: CatalogViewProps) {
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const params = React.useMemo(() => new URLSearchParams(searchParams?.toString() ?? ''), [searchParams]);
+  const [isPending, startTransition] = React.useTransition();
+
   const [products, setProducts] = React.useState<ProductSummaryDto[]>(initialProducts);
   const [nextCursor, setNextCursor] = React.useState<string | null>(initialNextCursor);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const [loadMoreError, setLoadMoreError] = React.useState(false);
 
-  // Sync state when props change (e.g. from server component navigation)
+  // Sync state when the server page re-renders with new filters.
   React.useEffect(() => {
     setProducts(initialProducts);
     setNextCursor(initialNextCursor);
+    setLoadMoreError(false);
   }, [initialProducts, initialNextCursor]);
+
+  const activeCount = ['q', 'strainType', 'brand'].filter((k) => params.get(k)).length + (params.get('minThc') || params.get('maxThc') ? 1 : 0);
 
   const handleLoadMore = async () => {
     if (!nextCursor || isLoadingMore) return;
     setIsLoadingMore(true);
+    setLoadMoreError(false);
 
     try {
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set('cursor', nextCursor);
-      const res = await fetch(`/api/products${currentUrl.search}`);
+      const query = new URLSearchParams(params.toString());
+      if (currentCategory) query.set('category', currentCategory);
+      query.set('cursor', nextCursor);
+      const res = await fetch(`/api/products?${query.toString()}`);
       const data = await res.json();
 
       if (data.success && data.data?.items) {
         setProducts((prev) => [...prev, ...data.data.items]);
         setNextCursor(data.data.nextCursor || null);
+      } else {
+        setLoadMoreError(true);
       }
-    } catch (err) {
-      console.error('Failed to load more products:', err);
+    } catch {
+      setLoadMoreError(true);
     } finally {
       setIsLoadingMore(false);
     }
   };
 
-  const handleAddToCart = (productId: string) => {
-    // Navigates or adds item to cart
-    const prod = products.find((p) => p.id === productId);
-    if (prod) {
-      router.push(`/product/${prod.slug}`);
-    }
-  };
+  const maxStores = products.reduce((m, p) => Math.max(m, p.availableAtCount), 0);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-      {/* Title & Headline Banner */}
-      <div className="space-y-2">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-0.5 text-xs font-semibold text-owtlet-ink">
-          <Sparkles className="h-3.5 w-3.5 text-owtlet-ink" />
-          <span>New York Adult-Use 21+</span>
-        </div>
-        <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-foreground">
-          {title}
-        </h1>
-        <p className="max-w-2xl text-sm sm:text-base text-muted-foreground leading-relaxed">
-          {subtitle}
-        </p>
-      </div>
+    <CatalogTransitionContext.Provider value={startTransition}>
+      <div className="mx-auto grid max-w-content gap-6 px-4 py-6 sm:px-7 lg:grid-cols-[240px_1fr]">
+        {/* Desktop rail */}
+        <aside className="hidden lg:block" aria-label="Catalog filters">
+          <div className="sticky top-36">
+            <FilterRail brands={brands} />
+          </div>
+        </aside>
 
-      {/* Filter and Search Bar */}
-      <FilterBar
-        categories={categories}
-        brands={brands}
-        totalCount={products.length}
-      />
+        <div className="min-w-0">
+          {/* Title bar */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="font-heading text-[26px] leading-tight text-foreground">{title}</h1>
+              <p className="font-mono text-[13px] text-muted" aria-live="polite">
+                {products.length}
+                {nextCursor ? '+' : ''} product{products.length === 1 ? '' : 's'}
+                {maxStores > 0 ? ` · up to ${maxStores} store${maxStores === 1 ? '' : 's'}` : ''}
+              </p>
+              {subtitle ? <p className="sr-only">{subtitle}</p> : null}
+            </div>
+            <MobileFilterSheet brands={brands} activeCount={activeCount} />
+          </div>
 
-      {/* Product Grid or Empty State */}
-      {products.length === 0 ? (
-        <EmptyState
-          icon={PackageSearch}
-          title="No cannabis products found"
-          description="We couldn't find any products matching your active filters. Try adjusting your search query, strain type, or category."
-          action={{
-            label: 'View All Products',
-            href: '/shop',
-          }}
-          className="my-12"
-        />
-      ) : (
-        <div
-          className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-          data-testid="product-grid"
-        >
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
+          <div className="mb-4 empty:hidden">
+            <ActiveFilterChips brands={brands} />
+          </div>
+
+          {isPending ? (
+            <ProductGridSkeleton count={6} />
+          ) : products.length === 0 ? (
+            <EmptyState
+              icon={PackageSearch}
+              title="No cannabis products found"
+              description="We couldn't find any products matching your active filters. Try adjusting your search query, strain type, THC range, or category."
+              action={{ label: 'View All Products', href: '/shop' }}
             />
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-[18px] md:grid-cols-3" data-testid="product-grid">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
 
-      {/* Cursor Pagination (Load More) */}
-      {nextCursor && (
-        <div className="pt-8 flex justify-center">
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={handleLoadMore}
-            disabled={isLoadingMore}
-            className="min-h-[48px] px-8 font-bold active:scale-[0.98] shadow-sm"
-          >
-            {isLoadingMore ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading Products...
-              </>
-            ) : (
-              'Load More Products'
-            )}
-          </Button>
+          {nextCursor && !isPending ? (
+            <div className="flex flex-col items-center gap-2 pt-8">
+              <Button variant="ink" size="lg" onClick={handleLoadMore} disabled={isLoadingMore} className="min-h-[48px] px-8 font-bold">
+                {isLoadingMore ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading Products...
+                  </>
+                ) : (
+                  'Load More Products'
+                )}
+              </Button>
+              {loadMoreError ? (
+                <p role="alert" className="text-sm text-danger">
+                  We couldn&apos;t load more products. Please try again.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
-      )}
-    </div>
+      </div>
+    </CatalogTransitionContext.Provider>
   );
 }
-

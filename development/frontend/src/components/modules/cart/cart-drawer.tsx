@@ -65,7 +65,7 @@ export function CartDrawer() {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2.5">
-            <ShoppingBag className="h-5 w-5 text-primary" />
+            <ShoppingBag className="h-5 w-5 text-foreground" />
             <h2 className="font-heading text-lg text-foreground">Your Stash</h2>
             <Badge variant="secondary" className="font-semibold text-xs px-2 py-0.5">
               {itemCount} {itemCount === 1 ? 'item' : 'items'}
@@ -96,7 +96,7 @@ export function CartDrawer() {
             <CartSkeleton />
           ) : isExpired ? (
             <div className="py-12 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mb-4">
+              <div className="h-12 w-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
                 <RefreshCw className="h-6 w-6" />
               </div>
               <h3 className="font-heading text-base text-foreground mb-1">
@@ -150,12 +150,12 @@ export function CartDrawer() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-base">
                 <span className="font-medium text-muted-foreground">Estimated Subtotal</span>
-                <span className="font-heading text-xl font-bold text-foreground">
+                <span className="font-mono text-xl font-bold tabular-nums text-foreground">
                   ${estimatedSubtotal}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+                <ShieldCheck className="h-3.5 w-3.5 text-success shrink-0" />
                 <span>Partner store fulfillment & 21+ ID verified upon delivery/pickup</span>
               </p>
             </div>
@@ -175,7 +175,7 @@ export function CartDrawer() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-muted-foreground hover:text-destructive h-8 px-2 active:scale-[0.98]"
+                  className="text-xs text-muted-foreground hover:text-danger h-8 px-2 active:scale-[0.98]"
                   onClick={() => clearCart()}
                   disabled={isClearing}
                 >
@@ -184,7 +184,7 @@ export function CartDrawer() {
                 <Link
                   href="/shop"
                   onClick={closeCart}
-                  className="text-xs text-primary hover:underline font-medium"
+                  className="text-xs font-bold text-foreground underline-offset-4 hover:underline"
                 >
                   Continue Shopping
                 </Link>

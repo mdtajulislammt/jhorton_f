@@ -28,7 +28,7 @@ export function OrderHistory() {
   };
 
   return (
-    <Card className="border border-border/80 bg-card shadow-sm">
+    <Card id="orders" className="scroll-mt-36 border border-border/80 bg-card shadow-sm">
       <CardHeader>
         <CardTitle className="text-xl font-heading flex items-center gap-2 text-foreground">
           <Package className="h-5 w-5 text-primary" />
@@ -124,7 +124,7 @@ export function OrderHistory() {
                               href={sub.handoffUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground"
                             >
                               Store Handoff
                               <ExternalLink className="h-3 w-3" />

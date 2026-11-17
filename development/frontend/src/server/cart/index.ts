@@ -56,7 +56,7 @@ export type CartWithRelations = Prisma.CartGetPayload<{
             category: true;
             strain: true;
             brand: true;
-            inventory: true;
+            inventory: { include: { dispensary: { select: { isActive: true } } } };
           };
         };
         channelBrand: true;
@@ -74,7 +74,8 @@ const cartInclude = {
           category: true,
           strain: true,
           brand: true,
-          inventory: true,
+          // isActive lets the cart price per-store lines from active stores only (same as the catalog)
+          inventory: { include: { dispensary: { select: { isActive: true } } } },
         },
       },
       channelBrand: true,
@@ -102,7 +103,10 @@ export function formatCartDto(cart: CartWithRelations, now = new Date()): CartDe
 
   const items: CartLineDto[] = cart.items.map((item) => {
     const product = item.product;
-    const pricing = computeCatalogPricing(product);
+    // Same pool as the catalog "From" price: active partner stores only. Without the inventory list,
+    // per-store lines with no preferred store were priced at $0.00 (TASK-023).
+    const activeInventories = product.inventory.filter((inv) => inv.dispensary?.isActive !== false);
+    const pricing = computeCatalogPricing(product, activeInventories);
 
     let priceMode: PriceMode;
     let unitPrice: string;

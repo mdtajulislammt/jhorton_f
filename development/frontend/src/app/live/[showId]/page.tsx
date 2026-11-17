@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/server/db';
+import { isAgeVerified } from '@/server/age-session/verified';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
@@ -10,7 +11,8 @@ import { ProductCard } from '@/components/catalog/product-card';
 import { computeCatalogPricing, formatMoney } from '@/server/pricing';
 import { ProductSummaryDto } from '@/server/products';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SectionHeader } from '@/components/ui/section-header';
 import { Radio, Clock, ShieldCheck, MapPin, ArrowLeft, ShoppingBag } from 'lucide-react';
 
 interface LiveShowPageProps {
@@ -39,6 +41,8 @@ export async function generateMetadata({ params }: LiveShowPageProps): Promise<M
 }
 
 export default async function LiveShowPage({ params }: LiveShowPageProps) {
+  // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
+  const ageVerified = await isAgeVerified();
   const show = await prisma.liveShow.findFirst({
     where: {
       OR: [{ id: params.showId }, { terrificShowId: params.showId }],
@@ -91,156 +95,162 @@ export default async function LiveShowPage({ params }: LiveShowPageProps) {
 
   const isLive = show.status === 'LIVE';
   const isReplay = show.status === 'REPLAY';
+  const isScheduled = show.status === 'SCHEDULED';
   const source = isReplay ? 'terrific_replay' : 'terrific_live';
+
+  const scheduledLabel = show.scheduledAt
+    ? new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: 'America/New_York',
+        timeZoneName: 'short',
+      }).format(show.scheduledAt)
+    : null;
+
+  const steps = [
+    'Tap any pinned product in the stream, or below, to add it to your Owtlet cart.',
+    'Show items carry one Owtlet price at every partner dispensary.',
+    'Your cart is held until 30 minutes after the show ends.',
+    'Check out and we route your order to licensed stores near you.',
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <StoreHeader />
 
-      <main className="flex-1 pb-16">
-        {/* Navigation Breadcrumb / Back Link */}
-        <div className="border-b border-border/60 bg-muted/20 py-3">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="flex-1">
+        {/* Stage */}
+        <section className="dark bg-background text-foreground">
+          <div className="mx-auto max-w-content px-4 pb-8 pt-4 sm:px-7 lg:pb-10">
             <Link
               href="/live"
-              className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              className="mb-4 inline-flex min-h-[36px] items-center rounded-sm text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-              All Live Shows & Replays
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              All Live Shows &amp; Replays
             </Link>
-          </div>
-        </div>
 
-        {/* Video Player & Info Section */}
-        <section className="py-6 sm:py-8 border-b border-border/60">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left / Top: Terrific Video Player */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
               <div className="lg:col-span-8">
-                <TerrificEmbed
-                  embeddingId={show.embeddingId}
-                  liveShowId={show.id}
-                  source={source}
-                  title={show.title}
-                  showBadge={true}
-                  aspectRatio="video"
-                  className="w-full shadow-lg"
-                />
+                <div className="overflow-hidden rounded-3xl ring-1 ring-border">
+                  <TerrificEmbed
+                    ageVerified={ageVerified}
+                    embeddingId={show.embeddingId}
+                    liveShowId={show.id}
+                    source={source}
+                    title={show.title}
+                    showBadge={true}
+                    aspectRatio="video"
+                    className="w-full"
+                  />
+                </div>
 
-                {/* Show Details Bar */}
-                <div className="mt-6 flex flex-col space-y-4">
+                <div className="mt-5 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     {isLive ? (
-                      <Badge className="bg-accent text-accent-foreground font-bold text-xs uppercase px-2.5 py-0.5 animate-pulse flex items-center gap-1">
-                        <Radio className="h-3 w-3" />
-                        LIVE STREAMING
-                      </Badge>
+                      <Badge variant="live" className="animate-live-ring">Live now</Badge>
+                    ) : isReplay ? (
+                      <Badge variant="replay" className="dark:bg-card">Replay</Badge>
+                    ) : isScheduled ? (
+                      <Badge variant="upcoming">Upcoming</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-xs font-semibold uppercase">
-                        {show.status}
-                      </Badge>
+                      <Badge variant="outline" className="uppercase">{show.status}</Badge>
                     )}
-
-                    {show.brand && (
-                      <Badge variant="secondary" className="text-xs font-medium">
+                    {show.brand ? (
+                      <Link
+                        href={`/brands/${show.brand.slug}`}
+                        className="inline-flex min-h-[28px] items-center rounded-full bg-card px-3 text-xs font-semibold text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
                         Presented by {show.brand.name}
-                      </Badge>
-                    )}
-
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      Show End + 30 Min Cart Hold
-                    </span>
+                      </Link>
+                    ) : null}
+                    {isScheduled && scheduledLabel ? (
+                      <span className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" aria-hidden="true" />
+                        {scheduledLabel}
+                      </span>
+                    ) : null}
                   </div>
 
-                  <h1 className="font-heading text-2xl sm:text-3xl text-foreground">
+                  <h1 className="font-heading text-2xl tracking-tight text-foreground text-balance sm:text-3xl lg:text-4xl">
                     {show.title}
                   </h1>
 
-                  {show.description && (
-                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
-                      {show.description}
-                    </p>
-                  )}
+                  {show.description ? (
+                    <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">{show.description}</p>
+                  ) : null}
                 </div>
               </div>
 
-              {/* Right: Show Info & Quick Compliance Box */}
-              <div className="lg:col-span-4 flex flex-col space-y-6">
-                <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
-                  <h3 className="font-heading text-base text-foreground flex items-center gap-2">
-                    <Radio className="h-4 w-4 text-accent" />
-                    How Live Shopping Works
-                  </h3>
-
-                  <ul className="text-xs text-muted-foreground space-y-2.5 leading-normal">
-                    <li className="flex items-start gap-2">
-                      <span className="font-bold text-foreground">1.</span>
-                      <span>Tap any pinned product in the video stream to add to your Owtlet cart instantly.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="font-bold text-foreground">2.</span>
-                      <span>Show items feature uniform Owtlet pricing across all partner dispensaries.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="font-bold text-foreground">3.</span>
-                      <span>Your cart reservation is held until 30 minutes after the show ends.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="font-bold text-foreground">4.</span>
-                      <span>Tap checkout to route items to your nearest licensed dispensary.</span>
-                    </li>
-                  </ul>
-
-                  <div className="pt-2 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
-                    <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-                    <span>21+ Adult-Use NY Legal Cannabis Only</span>
+              <aside className="space-y-4 lg:col-span-4">
+                <div className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
+                  <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+                    <Radio className="h-4 w-4 text-accent" aria-hidden="true" />
+                    How live shopping works
+                  </h2>
+                  <ol className="space-y-3">
+                    {steps.map((step, i) => (
+                      <li key={step} className="flex items-start gap-3 text-sm leading-snug text-muted-foreground">
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary font-mono text-xs font-bold text-primary-foreground">
+                          {i + 1}
+                        </span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                    <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    Cart held until show end + 30 minutes
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-3">
-                  <h4 className="font-heading text-sm text-foreground flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    Fulfillment Coverage
-                  </h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Delivery and pickup available across Manhattan, Brooklyn, Queens, Westchester, and Long Island from licensed retail dispensaries.
+                <div className="space-y-2 rounded-3xl bg-card p-5 sm:p-6">
+                  <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Fulfillment coverage
+                  </h2>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    Delivery and pickup across Manhattan, Brooklyn, Queens, Westchester, and Long Island from licensed retail
+                    dispensaries.
+                  </p>
+                  <p className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    21+ Adult-Use NY Legal Cannabis Only
                   </p>
                 </div>
-              </div>
+              </aside>
             </div>
           </div>
         </section>
 
-        {/* Pinned Products Section */}
-        {pinnedProducts.length > 0 && (
-          <section className="py-12">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="font-heading text-2xl text-foreground">
-                    Pinned Products in This Show ({pinnedProducts.length})
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Tap to add to cart or view strain profiles and retail availability.
-                  </p>
-                </div>
-                <Link href="/shop">
-                  <Button variant="outline" size="sm" className="border-border">
-                    <ShoppingBag className="mr-1.5 h-4 w-4" />
-                    Browse Catalog
-                  </Button>
-                </Link>
-              </div>
+        {/* Pinned products */}
+        <section className="py-12 lg:py-16">
+          <div className="mx-auto max-w-content px-4 sm:px-7">
+            <SectionHeader
+              title={`Pinned in this show (${pinnedProducts.length})`}
+              description="Add straight to your cart, or open a product for strain details and store availability."
+              action={{ href: '/shop', label: 'Browse catalog' }}
+            />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            {pinnedProducts.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
                 {pinnedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
-            </div>
-          </section>
-        )}
+            ) : (
+              <EmptyState
+                icon={ShoppingBag}
+                title={isScheduled ? 'Products drop when the show goes live' : 'No products pinned to this show'}
+                description="Browse the catalog for flower, pre-rolls, vapes and more available at partner dispensaries."
+                action={{ label: 'Browse Catalog', href: '/shop' }}
+              />
+            )}
+          </div>
+        </section>
       </main>
 
       <StoreFooter />

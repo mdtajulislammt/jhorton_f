@@ -37,7 +37,7 @@ export function NoCoverageAlert({ zip, onSwitchToPickup }: NoCoverageAlertProps)
           type="button"
           onClick={onSwitchToPickup}
           data-testid="switch-to-pickup-btn"
-          className="bg-primary text-primary-foreground hover:bg-owtlet-volt font-semibold text-xs px-4 py-2 h-9 rounded-xl active:scale-[0.98]"
+          className="bg-primary text-primary-foreground hover:bg-primary-hover font-semibold text-xs px-4 py-2 h-9 rounded-xl active:scale-[0.98]"
         >
           <Store className="h-3.5 w-3.5 mr-1.5" />
           Switch to Dispensary Pickup

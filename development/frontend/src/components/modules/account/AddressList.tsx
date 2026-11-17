@@ -185,7 +185,7 @@ export function AddressList() {
                       {addr.isDefault && (
                         <Badge
                           variant="outline"
-                          className="border-primary/40 text-primary bg-primary/10 text-[10px] py-0 px-1.5"
+                          className="border-transparent text-foreground bg-primary/25 text-[10px] py-0 px-1.5"
                         >
                           Default
                         </Badge>
@@ -232,7 +232,7 @@ export function AddressList() {
                       size="sm"
                       onClick={() => handleSetDefault(addr.id)}
                       disabled={updateAddressMutation.isPending}
-                      className="text-xs text-muted-foreground hover:text-primary h-7 px-2"
+                      className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
                     >
                       <Star className="mr-1 h-3 w-3" />
                       Make Default
