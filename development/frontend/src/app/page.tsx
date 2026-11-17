@@ -18,6 +18,7 @@ import { formatPct } from '@/lib/utils';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
 import { BrandGrid } from '@/components/modules/brands';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 60; // Revalidate every minute
 
 export default async function HomePage() {

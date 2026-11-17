@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   description: 'Experience interactive live shows and drops featuring licensed New York craft cannabis cultivators. Watch live, explore replays, or shop on-demand reels.',
 };
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 export default async function LiveIndexPage() {

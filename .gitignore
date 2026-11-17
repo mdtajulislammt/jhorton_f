@@ -8,6 +8,7 @@ node_modules/
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Environment files (never commit secrets)
 .env
@@ -22,10 +23,10 @@ yarn-error.log*
 
 # OS & IDE
 .DS_Store
+._*
 Thumbs.db
 .vscode/
 .idea/
 
 # Testing coverage
 coverage/
-

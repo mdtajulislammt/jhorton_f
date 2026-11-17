@@ -33,6 +33,7 @@ export async function generateMetadata({
   }
 }
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 30;
 
 export default async function BrandStorefrontPage({

@@ -8,14 +8,14 @@ const iconMap: Record<ToastType, React.ReactNode> = {
   success: <CheckCircle2 className="h-5 w-5 text-owtlet-ink shrink-0" />,
   error: <AlertCircle className="h-5 w-5 text-destructive shrink-0" />,
   info: <Info className="h-5 w-5 text-owtlet-ink shrink-0" />,
-  warning: <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />,
+  warning: <AlertTriangle className="h-5 w-5 text-warning-foreground shrink-0" />,
 };
 
 const styleMap: Record<ToastType, string> = {
   success: 'bg-owtlet-mint border-owtlet-ink text-owtlet-ink shadow-lg',
   error: 'bg-destructive/10 border-destructive text-destructive shadow-lg backdrop-blur-md',
-  info: 'bg-white border-owtlet-ink text-owtlet-ink shadow-lg',
-  warning: 'bg-amber-50 border-amber-500 text-amber-900 shadow-lg',
+  info: 'bg-card border-owtlet-ink text-owtlet-ink shadow-lg',
+  warning: 'bg-warning/20 border-warning text-warning-foreground shadow-lg',
 };
 
 export function Toaster() {

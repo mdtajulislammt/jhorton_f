@@ -27,7 +27,7 @@ export function SubOrderCard({ subOrder, onChangeStore }: SubOrderCardProps) {
   const renderAssignmentBadge = () => {
     if (subOrder.channelBrandId) {
       return (
-        <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-[11px] font-semibold">
+        <Badge className="bg-accent/15 text-accent border-accent/30 text-[11px] font-semibold">
           Brand partner store
         </Badge>
       );

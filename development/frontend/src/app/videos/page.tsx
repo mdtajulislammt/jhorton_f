@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   description: 'Watch interactive shoppable video reels featuring New York licensed craft cannabis cultivators. Tap in-video items to add directly to your cart.',
 };
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 export default async function VideosIndexPage() {

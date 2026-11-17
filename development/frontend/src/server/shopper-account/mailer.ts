@@ -81,15 +81,21 @@ export class ConsoleOrSmtpMailer implements MailerService {
         console.log(`[Mailer:SMTP] Successfully sent password reset email to ${email}`);
         return;
       } catch (err) {
-        console.error(`[Mailer:SMTP] Failed to send password reset email to ${email}:`, err);
-        // Fall back to console logging
+        console.error(`[Mailer:SMTP] Failed to send password reset email to ${email}`);
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error('Unable to send password reset email. Please contact support.');
+        }
       }
     }
 
-    // Default development / test fallback: log link to console
-    console.log(
-      `\n--------------------------------------------------\n[Mailer] Password reset email for: ${email}\nReset Link: ${resetUrl}\nExpires: 1 hour\n--------------------------------------------------\n`
-    );
+    // Security: Only log reset link in non-production environments
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(
+        `\n--------------------------------------------------\n[Mailer] Password reset email for: ${email}\nReset Link: ${resetUrl}\nExpires: 1 hour\n--------------------------------------------------\n`
+      );
+    } else {
+      console.warn(`[Mailer] Warning: SMTP is not configured in production. Password reset email was not sent for ${email}.`);
+    }
   }
 }
 

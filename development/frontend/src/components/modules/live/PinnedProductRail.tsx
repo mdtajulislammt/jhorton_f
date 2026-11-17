@@ -145,7 +145,7 @@ export function PinnedProductRail({
                     size="sm"
                     className={`w-full min-h-[44px] font-bold active:scale-[0.98] transition-all ${
                       isAdded
-                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        ? 'bg-success text-success-foreground hover:bg-success/90'
                         : 'bg-primary text-primary-foreground hover:bg-owtlet-volt'
                     }`}
                   >
