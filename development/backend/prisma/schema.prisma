@@ -1,0 +1,455 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+}
+
+enum StrainType {
+  INDICA
+  SATIVA
+  HYBRID
+  CBD
+}
+
+enum CartStatus {
+  ACTIVE
+  CHECKED_OUT
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  HANDED_OFF
+  PARTIALLY_CONFIRMED
+  CONFIRMED
+  CANCELLED
+}
+
+enum SubOrderStatus {
+  PENDING
+  HANDED_OFF
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
+
+enum HandoffChannel {
+  LEAFLY
+  RETAILER_PAGE
+}
+
+enum ShowStatus {
+  SCHEDULED
+  LIVE
+  REPLAY
+  ARCHIVED
+}
+
+enum VideoFormat {
+  LIVE_SHOW
+  SHOPPABLE_VIDEO
+}
+
+enum FulfillmentType {
+  PICKUP
+  DELIVERY
+}
+
+enum HoursKind {
+  STORE
+  DELIVERY
+}
+
+enum AssignmentSource {
+  AUTO
+  PROFILE_DEFAULT
+  SHOPPER_CHANGED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String?
+  role         Role     @default(ADMIN)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Brand {
+  id           String            @id @default(uuid())
+  name         String
+  slug         String            @unique
+  description  String?
+  logoUrl      String?           @map("logo_url")
+  bannerUrl    String?           @map("banner_url")
+  isActive     Boolean           @default(true) @map("is_active")
+  sortOrder    Int               @default(0) @map("sort_order")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+  products     Product[]
+  dispensaries BrandDispensary[]
+  liveShows    LiveShow[]
+  cartItems    CartItem[]
+
+  @@map("brands")
+}
+
+model BrandDispensary {
+  brandId      String     @map("brand_id")
+  dispensaryId String     @map("dispensary_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  brand        Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  dispensary   Dispensary @relation(fields: [dispensaryId], references: [id], onDelete: Cascade)
+
+  @@id([brandId, dispensaryId])
+  @@index([dispensaryId])
+  @@map("brand_dispensaries")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  sortOrder Int       @default(0) @map("sort_order")
+  products  Product[]
+
+  @@map("categories")
+}
+
+model Strain {
+  id       String     @id @default(uuid())
+  name     String     @unique
+  type     StrainType
+  products Product[]
+
+  @@map("strains")
+}
+
+model Product {
+  id                String   @id @default(uuid())
+  name              String
+  slug              String   @unique
+  description       String?
+  brandId           String?  @map("brand_id")
+  categoryId        String   @map("category_id")
+  strainId          String?  @map("strain_id")
+  thcPercent        Decimal? @map("thc_percent") @db.Decimal(5, 2)
+  cbdPercent        Decimal? @map("cbd_percent") @db.Decimal(5, 2)
+  weightGrams       Decimal? @map("weight_grams") @db.Decimal(8, 2)
+  imageUrls         String[] @map("image_urls")
+  owtletPrice       Decimal? @map("owtlet_price") @db.Decimal(10, 2)
+  sku               String?  @unique
+  terrificProductId String?  @unique @map("terrific_product_id")
+  shopifyLegacyId   String?  @map("shopify_legacy_id")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  brand        Brand?        @relation(fields: [brandId], references: [id])
+  category     Category      @relation(fields: [categoryId], references: [id])
+  strain       Strain?       @relation(fields: [strainId], references: [id])
+  inventory    Inventory[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  showProducts ShowProduct[]
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([strainId])
+  @@index([isActive])
+  @@map("products")
+}
+
+model Dispensary {
+  id                 String         @id @default(uuid())
+  name               String
+  slug               String         @unique
+  licenseNumber      String?        @map("license_number")
+  addressLine1       String         @map("address_line1")
+  city               String
+  state              String         @default("NY")
+  zip                String
+  latitude           Decimal?       @db.Decimal(9, 6)
+  longitude          Decimal?       @db.Decimal(9, 6)
+  offersPickup       Boolean        @default(true) @map("offers_pickup")
+  offersDelivery     Boolean        @default(true) @map("offers_delivery")
+  coverageZips       String[]       @map("coverage_zips")
+  timezone           String         @default("America/New_York")
+  handoffChannel     HandoffChannel @default(RETAILER_PAGE) @map("handoff_channel")
+  handoffUrlTemplate String?        @map("handoff_url_template")
+  leaflyStoreId      String?        @map("leafly_store_id")
+  webhookSecret      String         @map("webhook_secret")
+  isActive           Boolean        @default(true) @map("is_active")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  hours              DispensaryHours[]
+  inventory          Inventory[]
+  subOrders          SubOrder[]
+  brands             BrandDispensary[]
+  defaultForShoppers Shopper[]         @relation("ShopperDefaultStore")
+
+  @@index([zip])
+  @@map("dispensaries")
+}
+
+model DispensaryHours {
+  id           String     @id @default(uuid())
+  dispensaryId String     @map("dispensary_id")
+  kind         HoursKind  @default(STORE)
+  dayOfWeek    Int        @map("day_of_week")
+  opensAt      String     @map("opens_at")
+  closesAt     String     @map("closes_at")
+  isClosed     Boolean    @default(false) @map("is_closed")
+  dispensary   Dispensary @relation(fields: [dispensaryId], references: [id], onDelete: Cascade)
+
+  @@unique([dispensaryId, kind, dayOfWeek])
+  @@map("dispensary_hours")
+}
+
+model Inventory {
+  id           String     @id @default(uuid())
+  productId    String     @map("product_id")
+  dispensaryId String     @map("dispensary_id")
+  price        Decimal?   @db.Decimal(10, 2)
+  stockQty     Int        @default(0) @map("stock_qty")
+  externalSku  String?    @map("external_sku")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  dispensary   Dispensary @relation(fields: [dispensaryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, dispensaryId])
+  @@index([dispensaryId])
+  @@map("inventory")
+}
+
+model Shopper {
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  passwordHash        String               @map("password_hash")
+  firstName           String?              @map("first_name")
+  lastName            String?              @map("last_name")
+  phone               String?
+  homeZip             String?              @map("home_zip")
+  defaultDispensaryId String?              @map("default_dispensary_id")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  defaultDispensary   Dispensary?          @relation("ShopperDefaultStore", fields: [defaultDispensaryId], references: [id], onDelete: SetNull)
+  addresses           ShopperAddress[]
+  carts               Cart[]
+  orders              Order[]
+  resetTokens         PasswordResetToken[]
+
+  @@index([defaultDispensaryId])
+  @@map("shoppers")
+}
+
+model ShopperAddress {
+  id        String   @id @default(uuid())
+  shopperId String   @map("shopper_id")
+  label     String?
+  line1     String
+  line2     String?
+  city      String
+  state     String   @default("NY")
+  zip       String
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  shopper   Shopper  @relation(fields: [shopperId], references: [id], onDelete: Cascade)
+
+  @@index([shopperId])
+  @@map("shopper_addresses")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  shopperId String    @map("shopper_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  shopper   Shopper   @relation(fields: [shopperId], references: [id], onDelete: Cascade)
+
+  @@index([shopperId])
+  @@map("password_reset_tokens")
+}
+
+model Cart {
+  id             String     @id @default(uuid())
+  sessionToken   String     @unique @map("session_token")
+  shopperId      String?    @map("shopper_id")
+  status         CartStatus @default(ACTIVE)
+  zip            String?
+  liveShowId     String?    @map("live_show_id")
+  lastActivityAt DateTime   @default(now()) @map("last_activity_at")
+  expiresAt      DateTime   @map("expires_at")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  shopper        Shopper?   @relation(fields: [shopperId], references: [id], onDelete: SetNull)
+  liveShow       LiveShow?  @relation(fields: [liveShowId], references: [id], onDelete: SetNull)
+  items          CartItem[]
+  order          Order?
+
+  @@index([expiresAt])
+  @@index([liveShowId])
+  @@index([shopperId])
+  @@map("carts")
+}
+
+model CartItem {
+  id                    String   @id @default(uuid())
+  cartId                String   @map("cart_id")
+  productId             String   @map("product_id")
+  quantity              Int
+  source                String   @default("catalog")
+  channelBrandId        String?  @map("channel_brand_id")
+  liveShowId            String?  @map("live_show_id")
+  preferredDispensaryId String?  @map("preferred_dispensary_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+  cart                  Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product               Product  @relation(fields: [productId], references: [id])
+  channelBrand          Brand?   @relation(fields: [channelBrandId], references: [id], onDelete: SetNull)
+
+  @@unique([cartId, productId, channelBrandId])
+  @@index([productId])
+  @@index([channelBrandId])
+  @@map("cart_items")
+}
+
+model Order {
+  id               String          @id @default(uuid())
+  orderNumber      String          @unique @map("order_number")
+  cartId           String?         @unique @map("cart_id")
+  shopperId        String?         @map("shopper_id")
+  fulfillmentType  FulfillmentType @map("fulfillment_type")
+  zip              String
+  contactFirstName String          @map("contact_first_name")
+  contactLastName  String          @map("contact_last_name")
+  contactEmail     String          @map("contact_email")
+  contactPhone     String          @map("contact_phone")
+  deliveryLine1    String?         @map("delivery_line1")
+  deliveryLine2    String?         @map("delivery_line2")
+  deliveryCity     String?         @map("delivery_city")
+  deliveryState    String?         @map("delivery_state")
+  status           OrderStatus     @default(PENDING)
+  subtotal         Decimal         @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  cart             Cart?           @relation(fields: [cartId], references: [id])
+  shopper          Shopper?        @relation(fields: [shopperId], references: [id], onDelete: SetNull)
+  subOrders        SubOrder[]
+
+  @@index([status])
+  @@index([shopperId])
+  @@map("orders")
+}
+
+model SubOrder {
+  id              String           @id @default(uuid())
+  orderId         String           @map("order_id")
+  dispensaryId    String           @map("dispensary_id")
+  fulfillmentType FulfillmentType  @map("fulfillment_type")
+  assignment      AssignmentSource @default(AUTO)
+  channelBrandId  String?          @map("channel_brand_id")
+  status          SubOrderStatus   @default(PENDING)
+  handoffChannel  HandoffChannel   @map("handoff_channel")
+  handoffUrl      String?          @map("handoff_url")
+  handedOffAt     DateTime?        @map("handed_off_at")
+  confirmationRef String?          @map("confirmation_ref")
+  confirmationUrl String?          @map("confirmation_url")
+  confirmedAt     DateTime?        @map("confirmed_at")
+  subtotal        Decimal          @db.Decimal(10, 2)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  order           Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  dispensary      Dispensary       @relation(fields: [dispensaryId], references: [id])
+  items           OrderItem[]
+
+  @@index([orderId])
+  @@index([dispensaryId, status])
+  @@map("sub_orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  subOrderId String   @map("sub_order_id")
+  productId  String   @map("product_id")
+  name       String
+  quantity   Int
+  unitPrice  Decimal  @map("unit_price") @db.Decimal(10, 2)
+  subOrder   SubOrder @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id])
+
+  @@index([subOrderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model LiveShow {
+  id             String        @id @default(uuid())
+  title          String
+  description    String?
+  format         VideoFormat   @default(LIVE_SHOW)
+  brandId        String?       @map("brand_id")
+  terrificShowId String?       @unique @map("terrific_show_id")
+  embeddingId    String        @default("Cki70GhqvLgWGhJbSxg2") @map("embedding_id")
+  status         ShowStatus    @default(SCHEDULED)
+  scheduledAt    DateTime?     @map("scheduled_at")
+  scheduledEndAt DateTime?     @map("scheduled_end_at")
+  startedAt      DateTime?     @map("started_at")
+  endedAt        DateTime?     @map("ended_at")
+  thumbnailUrl   String?       @map("thumbnail_url")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  brand          Brand?        @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  products       ShowProduct[]
+  heldCarts      Cart[]
+
+  @@index([status, scheduledAt])
+  @@index([brandId])
+  @@map("live_shows")
+}
+
+model ShowProduct {
+  showId    String   @map("show_id")
+  productId String   @map("product_id")
+  sortOrder Int      @default(0) @map("sort_order")
+  show      LiveShow @relation(fields: [showId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([showId, productId])
+  @@index([productId])
+  @@map("show_products")
+}
+
+model AgeVerificationSession {
+  id          String   @id @default(uuid())
+  sessionHash String   @unique @map("session_hash")
+  confirmed   Boolean
+  ipHash      String?  @map("ip_hash")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+  expiresAt   DateTime @map("expires_at")
+
+  @@map("age_verification_sessions")
+}
+
+model CoverageZip {
+  zip       String  @id
+  region    String
+  latitude  Decimal @db.Decimal(9, 6)
+  longitude Decimal @db.Decimal(9, 6)
+
+  @@map("coverage_zips")
+}

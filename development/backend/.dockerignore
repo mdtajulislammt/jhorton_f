@@ -1,0 +1,24 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+dist
+build
+
+# Git and OS
+.git
+.github
+.gitignore
+.DS_Store
+*.log
+
+# Environment and secrets
+.env
+.env*.local
+!.env.example
+
+# Test and docs
+coverage
+tests
+

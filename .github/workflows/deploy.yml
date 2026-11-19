@@ -44,11 +44,23 @@ jobs:
         working-directory: development/frontend
         run: pnpm run tsc
 
+      - name: Install Backend Dependencies
+        working-directory: development/backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Backend Prisma Client
+        working-directory: development/backend
+        run: npx prisma generate
+
+      - name: Typecheck Backend
+        working-directory: development/backend
+        run: pnpm run tsc
+
   # ----------------------------------------------------------------------------
   # Job 2: Automated Testing (Vitest & Thanos Gate)
   # ----------------------------------------------------------------------------
   automated-tests:
-    name: Test Suite Execution (Unit & Integration Tests)
+    name: Test Suite Execution (592 Unit & Integration Tests)
     runs-on: ubuntu-latest
     needs: code-quality
     steps:
@@ -72,6 +84,10 @@ jobs:
       - name: Run Frontend Tests
         working-directory: development/frontend
         run: npx vitest run
+
+      - name: Run Backend Tests
+        working-directory: development/frontend
+        run: npx vitest run --root ../backend
 
       - name: Execute Thanos Verification Gate
         run: bash scripts/verify-task.sh ALL
@@ -109,6 +125,10 @@ jobs:
         working-directory: development/frontend
         run: pnpm audit --prod --audit-level=high || true
 
+      - name: Audit Backend Dependencies
+        working-directory: development/backend
+        run: pnpm audit --prod --audit-level=high || true
+
   # ----------------------------------------------------------------------------
   # Job 4: Container Build & Compose Validation
   # ----------------------------------------------------------------------------
@@ -128,6 +148,14 @@ jobs:
           cd infrastructure/docker
           docker compose --profile prod config
 
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: development/backend
+          file: infrastructure/docker/Dockerfile.backend
+          push: false
+          tags: owtlet-backend:ci-test
+
       - name: Build Frontend Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -135,3 +163,4 @@ jobs:
           file: infrastructure/docker/Dockerfile.frontend
           push: false
           tags: owtlet-web:ci-test
+

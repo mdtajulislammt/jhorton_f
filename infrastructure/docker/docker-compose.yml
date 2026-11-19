@@ -1,6 +1,6 @@
 # ==============================================================================
 # Owtlet™ Production Docker Compose (infrastructure/docker/docker-compose.yml)
-# Unified Full-Stack Architecture: Next.js Storefront & REST API (port 3000)
+# Decoupled Architecture: Next.js Frontend (port 3000) + NestJS Backend (port 4000)
 # Reverse Proxy: Nginx 1.27 + Let's Encrypt SSL + owtlet.live 301 Redirect
 # Local dev:   docker compose up -d postgres (or with --profile redis)
 # Production:  docker compose --profile prod up -d --build
@@ -36,6 +36,31 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ../../development/backend
+      dockerfile: ../../infrastructure/docker/Dockerfile.backend
+    container_name: owtlet_backend
+    restart: unless-stopped
+    profiles: ["prod"]
+    env_file:
+      - ../../.env
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-owtlet}:${POSTGRES_PASSWORD:-owtlet}@postgres:5432/${POSTGRES_DB:-owtlet}?schema=public
+    expose:
+      - "4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   web:
     build:
       context: ../../development/frontend
@@ -49,10 +74,13 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-owtlet}:${POSTGRES_PASSWORD:-owtlet}@postgres:5432/${POSTGRES_DB:-owtlet}?schema=public
+      NEXT_PUBLIC_BACKEND_URL: http://backend:4000
     expose:
       - "3000"
     depends_on:
       postgres:
+        condition: service_healthy
+      backend:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
@@ -75,6 +103,8 @@ services:
       - /var/www/certbot:/var/www/certbot:ro
     depends_on:
       web:
+        condition: service_healthy
+      backend:
         condition: service_healthy
 
   certbot:
