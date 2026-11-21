@@ -338,7 +338,11 @@ export class AccountController {
     }
 
     try {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      if (!baseUrl && process.env.NODE_ENV === 'production') {
+        throw new Error('CRITICAL SECURITY ERROR: NEXT_PUBLIC_APP_URL environment variable is missing in production.');
+      }
+      baseUrl = baseUrl || `${req.protocol}://${req.get('host')}`;
       const clientIp = req.ip || req.socket.remoteAddress;
       const result = await requestPasswordReset(parsed.data, baseUrl, clientIp);
       return {

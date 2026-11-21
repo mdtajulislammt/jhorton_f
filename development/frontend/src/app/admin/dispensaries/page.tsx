@@ -52,12 +52,15 @@ export default function AdminDispensariesPage() {
     offersPickup: true,
     offersDelivery: true,
     coverageZips: ['10001', '10002', '10003'],
-    handoffChannel: 'RETAILER_PAGE',
-    handoffUrlTemplate: '',
-    leaflyStoreId: '',
+    platform: 'OTHER',
+    cartBaseUrl: '',
+    allowedHosts: '',
+    handoffNotes: '',
     isActive: true,
     hours: [] as any[],
   });
+
+  const [isRunningHealthCheck, setIsRunningHealthCheck] = useState(false);
 
   const [newZipInput, setNewZipInput] = useState('');
   const [activeHoursTab, setActiveHoursTab] = useState<'STORE' | 'DELIVERY'>('STORE');
@@ -114,9 +117,10 @@ export default function AdminDispensariesPage() {
       offersPickup: true,
       offersDelivery: true,
       coverageZips: ['10001', '10002', '10003'],
-      handoffChannel: 'RETAILER_PAGE',
-      handoffUrlTemplate: 'https://store.example.com/checkout?ref={subOrderId}',
-      leaflyStoreId: '',
+      platform: 'OTHER',
+      cartBaseUrl: '',
+      allowedHosts: '',
+      handoffNotes: '',
       isActive: true,
       hours: initialHours,
     });
@@ -166,9 +170,10 @@ export default function AdminDispensariesPage() {
         offersPickup: d.offersPickup,
         offersDelivery: d.offersDelivery,
         coverageZips: d.coverageZips || [],
-        handoffChannel: d.handoffChannel || 'RETAILER_PAGE',
-        handoffUrlTemplate: d.handoffUrlTemplate || '',
-        leaflyStoreId: d.leaflyStoreId || '',
+        platform: (d as any).platform || 'OTHER',
+        cartBaseUrl: (d as any).cartBaseUrl || '',
+        allowedHosts: ((d as any).allowedHosts || []).join(', '),
+        handoffNotes: (d as any).handoffNotes || '',
         isActive: d.isActive,
         hours: populatedHours,
       });
@@ -238,10 +243,17 @@ export default function AdminDispensariesPage() {
         : '/api/admin/dispensaries';
       const method = editingDispensary ? 'PATCH' : 'POST';
 
+      const payload = {
+        ...formData,
+        allowedHosts: formData.allowedHosts
+          ? formData.allowedHosts.split(',').map((h) => h.trim()).filter(Boolean)
+          : [],
+      };
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -260,6 +272,24 @@ export default function AdminDispensariesPage() {
     }
   };
 
+  const handleRunHealthCheck = async () => {
+    setIsRunningHealthCheck(true);
+    try {
+      const res = await fetch('/api/admin/health-check/run', { method: 'POST' });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        alert('Vendor health check completed successfully');
+        fetchDispensaries();
+      } else {
+        alert(json.error?.message || 'Health check failed');
+      }
+    } catch {
+      alert('Network error running health check');
+    } finally {
+      setIsRunningHealthCheck(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -272,13 +302,28 @@ export default function AdminDispensariesPage() {
             Configure partner dispensaries, delivery coverage ZIPs, and operating/delivery hours.
           </p>
         </div>
-        <Button
-          onClick={openCreateModal}
-          className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold h-11 px-5 active:scale-[0.98] transition-all"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Licensed Dispensary
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleRunHealthCheck}
+            disabled={isRunningHealthCheck}
+            variant="outline"
+            className="border-border text-foreground hover:bg-secondary h-11 px-4 active:scale-[0.98]"
+          >
+            {isRunningHealthCheck ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
+            ) : (
+              <Clock className="w-4 h-4 mr-2 text-primary" />
+            )}
+            Run Health Check
+          </Button>
+          <Button
+            onClick={openCreateModal}
+            className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold h-11 px-5 active:scale-[0.98] transition-all"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Licensed Dispensary
+          </Button>
+        </div>
       </div>
 
       {/* Dispensaries Cards Grid */}
@@ -354,9 +399,26 @@ export default function AdminDispensariesPage() {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-border flex items-center justify-between text-xs text-muted">
-                  <span>Handoff: {d.handoffChannel}</span>
-                  <span>{d.hoursCount} Hours Windows</span>
+                <div className="pt-2 border-t border-border flex flex-col gap-1 text-xs text-muted">
+                  <div className="flex items-center justify-between">
+                    <span>Platform: {(d as any).platform || d.handoffChannel}</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] font-semibold ${
+                        (d as any).healthStatus === 'OK'
+                          ? 'text-success border-success/30'
+                          : (d as any).healthStatus === 'UNREACHABLE'
+                          ? 'text-danger border-danger/30'
+                          : 'text-warning border-warning/30'
+                      }`}
+                    >
+                      {(d as any).healthStatus || 'HEALTH: OK'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Last checked: {(d as any).lastHealthCheckAt ? new Date((d as any).lastHealthCheckAt).toLocaleDateString() : 'Never'}</span>
+                    <span>{d.hoursCount} Hours Windows</span>
+                  </div>
                 </div>
 
                 <Button
@@ -586,7 +648,25 @@ export default function AdminDispensariesPage() {
                         isClosed: false,
                       };
 
-                    return (
+                    const handleRunHealthCheck = async () => {
+    setIsRunningHealthCheck(true);
+    try {
+      const res = await fetch('/api/admin/health-check/run', { method: 'POST' });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        alert('Vendor health check completed successfully');
+        fetchDispensaries();
+      } else {
+        alert(json.error?.message || 'Health check failed');
+      }
+    } catch {
+      alert('Network error running health check');
+    } finally {
+      setIsRunningHealthCheck(false);
+    }
+  };
+
+  return (
                       <div
                         key={dayIndex}
                         className="flex items-center justify-between gap-3 py-1.5 border-b border-border text-xs"
@@ -652,41 +732,58 @@ export default function AdminDispensariesPage() {
                 </div>
               </div>
 
-              {/* Handoff Configuration */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Platform & Handoff Configuration */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-background border border-border">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Checkout Handoff Channel
+                    Vendor Platform
                   </label>
                   <select
-                    value={formData.handoffChannel}
-                    onChange={(e) => setFormData({ ...formData, handoffChannel: e.target.value })}
-                    className="w-full bg-background border border-border text-foreground rounded-md px-3 h-10 text-sm"
+                    value={formData.platform}
+                    onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                    className="w-full bg-card border border-border text-foreground rounded-md px-3 h-10 text-sm"
                   >
-                    <option value="RETAILER_PAGE">Retailer Website (Direct Menu URL)</option>
-                    <option value="LEAFLY">Leafly Integration (Pickup/Delivery Link)</option>
+                    <option value="WOOCOMMERCE">WooCommerce (Multi Add-to-Cart)</option>
+                    <option value="SHOPIFY">Shopify (Direct Cart Link)</option>
+                    <option value="BIGCOMMERCE">BigCommerce (Signed Cart Payload)</option>
+                    <option value="OTHER">Other / Deep Link (Default)</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {formData.handoffChannel === 'LEAFLY' ? 'Leafly Store ID' : 'Handoff URL Template'}
+                    Cart Base URL (HTTPS)
                   </label>
-                  {formData.handoffChannel === 'LEAFLY' ? (
-                    <Input
-                      value={formData.leaflyStoreId}
-                      onChange={(e) => setFormData({ ...formData, leaflyStoreId: e.target.value })}
-                      placeholder="leafly-store-id-xxx"
-                      className="bg-background border-border text-foreground h-10"
-                    />
-                  ) : (
-                    <Input
-                      value={formData.handoffUrlTemplate}
-                      onChange={(e) => setFormData({ ...formData, handoffUrlTemplate: e.target.value })}
-                      placeholder="https://retailer.com/order?ref={subOrderId}"
-                      className="bg-background border-border text-foreground h-10"
-                    />
-                  )}
+                  <Input
+                    value={formData.cartBaseUrl}
+                    onChange={(e) => setFormData({ ...formData, cartBaseUrl: e.target.value })}
+                    placeholder="https://shop.dispensary.com"
+                    className="bg-card border-border text-foreground h-10"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Allowed Redirect Hosts (comma separated)
+                  </label>
+                  <Input
+                    value={formData.allowedHosts}
+                    onChange={(e) => setFormData({ ...formData, allowedHosts: e.target.value })}
+                    placeholder="dispensary.com, www.dispensary.com, shop.dispensary.com"
+                    className="bg-card border-border text-foreground h-10 font-mono text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Handoff Notes
+                  </label>
+                  <Input
+                    value={formData.handoffNotes}
+                    onChange={(e) => setFormData({ ...formData, handoffNotes: e.target.value })}
+                    placeholder="e.g. Requires WooCommerce multi add-to-cart plugin"
+                    className="bg-card border-border text-foreground h-10 text-xs"
+                  />
                 </div>
               </div>
 

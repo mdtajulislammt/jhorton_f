@@ -1,17 +1,17 @@
-import { FulfillmentType, AssignmentSource, Prisma } from '@prisma/client';
+import crypto from 'crypto';
+import { FulfillmentType, AssignmentSource, Prisma, HandoffChannel } from '@prisma/client';
 import { prisma } from '../db';
 import { calculateDistanceMiles, getZipInfo } from '../dispensaries/distance';
 import { getDispensaryHoursToday, isDeliveringNow, isOpenNow } from '../dispensaries/hours';
 import { NoCoverageError } from '../dispensaries/types';
 import { calculateCartExpiration, isCartExpired } from '../cart/expiry';
 import { CartExpiredError } from '../cart';
-import { allocateCart } from './allocate';
+import { formatMoney, PriceMode } from '../pricing';
 import {
-  AllocatorCartLine,
-  AllocatorDispensaryCandidate,
-  AllocatorInventoryItem,
   DistributionResult,
-  ItemOverride,
+  AllocatedSubOrder,
+  AllocatedOrderItem,
+  UnfulfillableLine,
 } from './types';
 
 export interface CreateDistributionPreviewOptions {
@@ -19,15 +19,14 @@ export interface CreateDistributionPreviewOptions {
   cartSessionToken?: string;
   fulfillmentType: FulfillmentType;
   zip?: string | null;
-  itemOverrides?: ItemOverride[];
+  excludeProductIds?: string[];
   preferredDispensaryId?: string | null;
-  preferredDispensarySource?: AssignmentSource;
   now?: Date;
 }
 
 /**
- * Loads cart and inventory from database and computes distribution preview.
- * (docs/06 §4, docs/08 §8.1)
+ * Creates distribution preview for ONE selected dispensary.
+ * All cart items are fulfilled by the single selected dispensary.
  */
 export async function createDistributionPreview(
   options: CreateDistributionPreviewOptions
@@ -36,9 +35,8 @@ export async function createDistributionPreview(
     cartId,
     cartSessionToken,
     fulfillmentType,
-    itemOverrides = [],
     preferredDispensaryId = null,
-    preferredDispensarySource = AssignmentSource.SHOPPER_CHANGED,
+    excludeProductIds = [],
     now = new Date(),
   } = options;
 
@@ -55,7 +53,6 @@ export async function createDistributionPreview(
     }
   }
 
-  // Centroid lookup for distance calculation
   const zipInfo = cleanZip ? await getZipInfo(cleanZip) : null;
 
   // 2. Load Cart
@@ -73,7 +70,11 @@ export async function createDistributionPreview(
     include: {
       items: {
         include: {
-          product: true,
+          product: {
+            include: {
+              inventory: true,
+            },
+          },
           channelBrand: true,
         },
         orderBy: { createdAt: 'asc' },
@@ -97,132 +98,195 @@ export async function createDistributionPreview(
     throw new CartExpiredError();
   }
 
-  // 3. Prepare Cart Lines for Allocator
-  const lines: AllocatorCartLine[] = cart.items.map((item) => ({
-    id: item.id,
-    productId: item.productId,
-    name: item.product.name,
-    quantity: item.quantity,
-    channelBrandId: item.channelBrandId,
-    preferredDispensaryId: item.preferredDispensaryId,
-    owtletPrice:
-      item.product.owtletPrice !== null && item.product.owtletPrice !== undefined
-        ? Number(item.product.owtletPrice)
-        : null,
-  }));
+  // 3. Resolve target dispensary
+  const targetDispensaryId = preferredDispensaryId || cart.selectedDispensaryId;
 
-  const productIds = Array.from(new Set(lines.map((l) => l.productId)));
-
-  // 4. Fetch All Active Dispensaries
+  // Fetch active dispensaries
   const dispensaries = await prisma.dispensary.findMany({
     where: { isActive: true },
-    include: {
-      hours: true,
-      brands: true,
-    },
+    include: { hours: true },
   });
 
-  // 5. Fetch Inventory for Cart Products Across All Active Dispensaries
-  const inventories = await prisma.inventory.findMany({
-    where: {
-      productId: { in: productIds },
-    },
-  });
+  let selectedDispensary = targetDispensaryId
+    ? dispensaries.find((d) => d.id === targetDispensaryId)
+    : null;
 
-  // Group inventories by dispensaryId -> Map<productId, inventory>
-  const inventoryByDisp = new Map<string, Map<string, AllocatorInventoryItem>>();
-  for (const inv of inventories) {
-    let dispMap = inventoryByDisp.get(inv.dispensaryId);
-    if (!dispMap) {
-      dispMap = new Map();
-      inventoryByDisp.set(inv.dispensaryId, dispMap);
+  // If none selected yet, auto-select nearest if location known, else first active
+  if (!selectedDispensary && dispensaries.length > 0) {
+    if (zipInfo?.coordinates) {
+      dispensaries.sort((a, b) => {
+        const distA =
+          a.latitude && a.longitude
+            ? calculateDistanceMiles(
+                zipInfo.coordinates.latitude,
+                zipInfo.coordinates.longitude,
+                Number(a.latitude),
+                Number(a.longitude)
+              )
+            : Number.MAX_VALUE;
+        const distB =
+          b.latitude && b.longitude
+            ? calculateDistanceMiles(
+                zipInfo.coordinates.latitude,
+                zipInfo.coordinates.longitude,
+                Number(b.latitude),
+                Number(b.longitude)
+              )
+            : Number.MAX_VALUE;
+        return distA - distB;
+      });
     }
-    dispMap.set(inv.productId, {
-      productId: inv.productId,
-      dispensaryId: inv.dispensaryId,
-      stockQty: inv.stockQty,
-      price: inv.price !== null ? Number(inv.price) : null,
-    });
+    selectedDispensary = dispensaries[0];
   }
 
-  // 6. Build Candidate Dispensaries
-  const candidates: AllocatorDispensaryCandidate[] = dispensaries.map((disp) => {
-    let distanceMiles: number | null = null;
-    if (zipInfo?.coordinates && disp.latitude && disp.longitude) {
-      distanceMiles = calculateDistanceMiles(
-        zipInfo.coordinates.latitude,
-        zipInfo.coordinates.longitude,
-        Number(disp.latitude),
-        Number(disp.longitude)
-      );
+  if (!selectedDispensary) {
+    return {
+      zip: cleanZip,
+      fulfillmentType,
+      subOrders: [],
+      unfulfillable: cart.items.map((i) => ({
+        productId: i.productId,
+        name: i.product.name,
+        reason: 'NO_ELIGIBLE_STORES',
+        suggestions: [],
+      })),
+      total: '0.00',
+      previewHash: 'none',
+    };
+  }
+
+  // 4. Calculate Distance and Hours for Selected Dispensary
+  let distanceMiles: number | null = null;
+  if (zipInfo?.coordinates && selectedDispensary.latitude && selectedDispensary.longitude) {
+    distanceMiles = calculateDistanceMiles(
+      zipInfo.coordinates.latitude,
+      zipInfo.coordinates.longitude,
+      Number(selectedDispensary.latitude),
+      Number(selectedDispensary.longitude)
+    );
+  }
+
+  const timeZone = selectedDispensary.timezone || 'America/New_York';
+  const storeOpen = isOpenNow(selectedDispensary.hours as any, now, timeZone);
+  const storeHours = getDispensaryHoursToday(selectedDispensary.hours as any, 'STORE' as any, now, timeZone);
+  const deliveryOpen = selectedDispensary.offersDelivery
+    ? isDeliveringNow(selectedDispensary.hours as any, now, timeZone)
+    : false;
+  const deliveryHours = selectedDispensary.offersDelivery
+    ? getDispensaryHoursToday(selectedDispensary.hours as any, 'DELIVERY' as any, now, timeZone)
+    : null;
+
+  // 5. Query VendorProductMapping for selected dispensary
+  const productIds = cart.items.map((i) => i.productId);
+  const mappings = await prisma.vendorProductMapping.findMany({
+    where: {
+      productId: { in: productIds },
+      dispensaryId: selectedDispensary.id,
+    },
+  });
+
+  const mappingMap = new Map(mappings.map((m) => [m.productId, m]));
+
+  const orderItems: AllocatedOrderItem[] = [];
+  const unfulfillable: UnfulfillableLine[] = [];
+  let totalNum = 0;
+
+  const effectiveHandoffChannel =
+    selectedDispensary.handoffChannel === HandoffChannel.ORDER_REQUEST
+      ? HandoffChannel.ORDER_REQUEST
+      : selectedDispensary.platform === 'WOOCOMMERCE'
+      ? HandoffChannel.WOOCOMMERCE
+      : selectedDispensary.platform === 'SHOPIFY'
+      ? HandoffChannel.SHOPIFY
+      : selectedDispensary.platform === 'BIGCOMMERCE'
+      ? HandoffChannel.BIGCOMMERCE
+      : HandoffChannel.DEEP_LINK;
+
+  for (const item of cart.items) {
+    // If excluded by shopper, leave out of SubOrder and preview calculations
+    if (excludeProductIds.includes(item.productId)) {
+      continue;
     }
 
-    const timeZone = disp.timezone || 'America/New_York';
-    const storeOpen = isOpenNow(disp.hours, now, timeZone);
-    const storeHours = getDispensaryHoursToday(disp.hours, 'STORE', now, timeZone);
-    const deliveryOpen = disp.offersDelivery
-      ? isDeliveringNow(disp.hours, now, timeZone)
-      : false;
-    const deliveryHours = disp.offersDelivery
-      ? getDispensaryHoursToday(disp.hours, 'DELIVERY', now, timeZone)
-      : null;
+    const product = item.product;
+    const mapping = mappingMap.get(item.productId);
 
-    const brandIds = disp.brands.map((b) => b.brandId);
-    const invMap = inventoryByDisp.get(disp.id) || new Map();
+    // Calculate line price
+    let unitPrice: string;
+    let priceMode: PriceMode;
 
-    return {
-      id: disp.id,
-      name: disp.name,
-      slug: disp.slug,
-      offersPickup: disp.offersPickup,
-      offersDelivery: disp.offersDelivery,
-      coverageZips: disp.coverageZips,
-      isOpenNow: storeOpen,
-      hoursToday: storeHours,
-      isDeliveringNow: deliveryOpen,
-      deliveryHoursToday: deliveryHours,
-      distanceMiles,
-      handoffChannel: disp.handoffChannel,
-      brandIds,
-      inventories: invMap,
-    };
-  });
+    if (product.owtletPrice != null) {
+      priceMode = 'OWTLET';
+      unitPrice = formatMoney(product.owtletPrice);
+    } else {
+      priceMode = 'PER_STORE';
+      const storeInv = product.inventory.find(
+        (inv) => inv.dispensaryId === selectedDispensary!.id
+      );
+      unitPrice = storeInv ? formatMoney(storeInv.price) : '0.00';
+    }
 
-  // 7. Run Pure Allocator
-  const allocation = allocateCart({
-    lines,
-    fulfillmentType,
-    zip: cleanZip,
-    itemOverrides,
-    preferredDispensaryId,
-    preferredDispensarySource,
-    now,
-    candidates,
-    allActiveDispensaries: candidates,
-  });
+    const lineTotalNum = Number(unitPrice) * item.quantity;
+    totalNum += lineTotalNum;
 
-  // 8. Hydrate brand information on subOrders if channelBrandId exists
-  if (allocation.subOrders.some((so) => so.channelBrandId)) {
-    const brandIdsToFetch = Array.from(
-      new Set(
-        allocation.subOrders
-          .map((so) => so.channelBrandId)
-          .filter((id): id is string => Boolean(id))
-      )
-    );
-
-    const brands = await prisma.brand.findMany({
-      where: { id: { in: brandIdsToFetch } },
-      select: { id: true, name: true, slug: true },
+    orderItems.push({
+      productId: item.productId,
+      name: product.name,
+      quantity: item.quantity,
+      unitPrice,
+      priceMode,
+      lineTotal: lineTotalNum.toFixed(2),
     });
 
-    const brandMap = new Map(brands.map((b) => [b.id, b]));
-    for (const subOrder of allocation.subOrders) {
-      if (subOrder.channelBrandId) {
-        subOrder.channelBrand = brandMap.get(subOrder.channelBrandId) || null;
+    // Check if unfulfillable / unmapped
+    // If items are unmapped and dispensary channel is DEEP_LINK, allow the order (items listed for manual add)
+    // Only flag unfulfillable if not DEEP_LINK
+    if (!mapping || !mapping.isAvailable) {
+      if (effectiveHandoffChannel !== HandoffChannel.DEEP_LINK) {
+        unfulfillable.push({
+          productId: item.productId,
+          name: product.name,
+          reason: 'NOT_AT_SELECTED_STORE',
+          suggestions: [],
+        });
       }
     }
   }
 
-  return allocation;
+  const subOrder: AllocatedSubOrder = {
+    dispensaryId: selectedDispensary.id,
+    dispensaryName: selectedDispensary.name,
+    fulfillmentType,
+    assignment: cart.selectionSource || AssignmentSource.AUTO,
+    channelBrandId: null,
+    channelBrand: null,
+    isOpenNow: storeOpen,
+    hoursToday: storeHours ? { opensAt: storeHours.opensAt, closesAt: storeHours.closesAt } : null,
+    isDeliveringNow: deliveryOpen,
+    deliveryHoursToday: deliveryHours ? { opensAt: deliveryHours.opensAt, closesAt: deliveryHours.closesAt } : null,
+    distanceMiles,
+    items: orderItems,
+    subtotal: totalNum.toFixed(2),
+    handoffChannel: effectiveHandoffChannel,
+    alternatives: [],
+  };
+
+  const previewHashPayload = JSON.stringify({
+    dispensaryId: selectedDispensary.id,
+    total: totalNum.toFixed(2),
+    items: orderItems.map((i) => ({ p: i.productId, q: i.quantity, pr: i.unitPrice })),
+    fulfillmentType,
+    zip: cleanZip,
+  });
+
+  const previewHash = crypto.createHash('sha256').update(previewHashPayload).digest('hex').slice(0, 16);
+
+  return {
+    zip: cleanZip,
+    fulfillmentType,
+    subOrders: [subOrder],
+    unfulfillable,
+    total: totalNum.toFixed(2),
+    previewHash,
+  };
 }

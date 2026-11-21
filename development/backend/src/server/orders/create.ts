@@ -108,7 +108,7 @@ export async function createOrder(
     cartId: cart.id,
     fulfillmentType: input.fulfillmentType,
     zip: input.zip,
-    itemOverrides: input.itemOverrides,
+    excludeProductIds: input.excludeProductIds,
     preferredDispensaryId: input.preferredDispensaryId,
     now,
   });

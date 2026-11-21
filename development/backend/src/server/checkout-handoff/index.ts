@@ -1,4 +1,4 @@
 export * from './types';
-export * from './providers';
 export * from './handoff-service';
-
+export * from './signed-payload';
+export * from './adapters';

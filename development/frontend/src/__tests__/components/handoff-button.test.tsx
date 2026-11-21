@@ -7,36 +7,38 @@ const renderClean = (component: React.ReactElement) => {
   return renderToString(component).replace(/<!--.*?-->/g, '');
 };
 
-describe('HandoffButton Component (Friday & Jarvis UI Verification - TASK-013, AC-HND-01)', () => {
+describe('HandoffButton Component (Single Vendor Checkout Handoff)', () => {
   const baseProps = {
     subOrderId: 'sub-order-uuid-1',
     orderId: 'order-uuid-1',
-    dispensaryName: 'Gotham Greenery',
-    handoffChannel: 'RETAILER_PAGE',
+    dispensaryName: 'Cannablooms',
+    handoffChannel: 'WOOCOMMERCE',
+    platform: 'WOOCOMMERCE',
     status: 'PENDING',
   };
 
-  it('renders dispensary name and Retailer Menu channel badge', () => {
+  it('renders dispensary name and platform badge', () => {
     const html = renderClean(<HandoffButton {...baseProps} />);
 
-    expect(html).toContain('Gotham Greenery');
-    expect(html).toContain('Retailer Menu');
+    expect(html).toContain('Cannablooms');
+    expect(html).toContain('WOOCOMMERCE');
     expect(html).toContain('Ready for Handoff');
-    expect(html).toContain('Complete Order at Gotham Greenery');
+    expect(html).toContain('Continue to Cannablooms checkout');
   });
 
-  it('renders Leafly channel badge when handoffChannel is LEAFLY', () => {
+  it('renders Shopify platform badge when platform is SHOPIFY', () => {
     const html = renderClean(
       <HandoffButton
         {...baseProps}
-        dispensaryName="Kings County Botanicals"
-        handoffChannel="LEAFLY"
+        dispensaryName="Culture House"
+        handoffChannel="SHOPIFY"
+        platform="SHOPIFY"
       />
     );
 
-    expect(html).toContain('Kings County Botanicals');
-    expect(html).toContain('Leafly Handoff');
-    expect(html).toContain('Complete Order on Leafly (Kings County Botanicals)');
+    expect(html).toContain('Culture House');
+    expect(html).toContain('SHOPIFY');
+    expect(html).toContain('Continue to Culture House checkout');
   });
 
   it('displays the mandatory zero-ID and zero-payment compliance notice', () => {
@@ -55,12 +57,11 @@ describe('HandoffButton Component (Friday & Jarvis UI Verification - TASK-013, A
       <HandoffButton
         {...baseProps}
         status="HANDED_OFF"
-        initialHandoffUrl="https://gothamgreenery.ny.retailer.com/order?ref=sub-order-uuid-1"
       />
     );
 
     expect(html).toContain('Transferred to Store');
-    expect(html).toContain('Reopen Gotham Greenery Order Page');
+    expect(html).toContain('Reopen Cannablooms Order Page');
   });
 
   it('renders finalized confirmation badge when status is CONFIRMED', () => {
@@ -69,8 +70,8 @@ describe('HandoffButton Component (Friday & Jarvis UI Verification - TASK-013, A
     );
 
     expect(html).toContain('Order Confirmed');
-    expect(html).toContain('This sub-order has been finalized and confirmed by Gotham Greenery.');
-    expect(html).not.toContain('Complete Order at Gotham Greenery');
+    expect(html).toContain('This sub-order has been finalized and confirmed by Cannablooms.');
+    expect(html).not.toContain('Continue to Cannablooms checkout');
   });
 
   it('enforces min-h-[44px] ergonomic touch target and active compression', () => {
@@ -80,4 +81,3 @@ describe('HandoffButton Component (Friday & Jarvis UI Verification - TASK-013, A
     expect(html).toContain('active:scale-[0.98]');
   });
 });
-

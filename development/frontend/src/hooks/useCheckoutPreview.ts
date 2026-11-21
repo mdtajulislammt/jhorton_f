@@ -29,14 +29,13 @@ export function useCheckoutPreview() {
     zip,
     deliveryAddress,
     contact,
-    preferredDispensaryId,
-    itemOverrides,
+    excludeProductIds,
     saveToProfile,
     setFulfillmentType,
-    setItemOverride,
-    removeItemOverride,
-    clearItemOverrides,
-    setPreferredDispensaryId,
+    setExcludeProductIds,
+    addExcludeProductId,
+    removeExcludeProductId,
+    clearExcludeProductIds,
     resetCheckout,
   } = useCheckoutStore();
 
@@ -49,16 +48,14 @@ export function useCheckoutPreview() {
       ...CHECKOUT_PREVIEW_QUERY_KEY,
       fulfillmentType,
       activeZip,
-      preferredDispensaryId,
-      itemOverrides,
+      excludeProductIds,
       cart?.itemCount ?? 0,
     ],
     queryFn: async () => {
       const payload = {
         fulfillmentType,
         zip: activeZip ? activeZip : null,
-        preferredDispensaryId: preferredDispensaryId || null,
-        itemOverrides,
+        excludeProductIds,
       };
 
       const res = await apiClient.post<DistributionResult>('/orders/preview', payload);
@@ -86,10 +83,7 @@ export function useCheckoutPreview() {
     },
   });
 
-  const isNoCoverage =
-    previewQuery.error?.code === 'NO_COVERAGE' ||
-    previewQuery.error?.message?.toLowerCase().includes('outside the 5 supported ny regions') ||
-    false;
+  const isNoCoverage = previewQuery.error?.code === 'NO_COVERAGE';
 
   // Place Order Mutation
   const placeOrderMutation = useMutation<OrderCreatedDto, ApiError, void>({
@@ -105,7 +99,12 @@ export function useCheckoutPreview() {
         } as ApiError;
       }
 
-      if (preview.unfulfillable && preview.unfulfillable.length > 0) {
+      // Only unfulfillable items that are NOT excluded will block order
+      const remainingUnfulfillable = (preview.unfulfillable || []).filter(
+        (u) => !excludeProductIds.includes(u.productId)
+      );
+
+      if (remainingUnfulfillable.length > 0) {
         throw {
           success: false,
           statusCode: 422,
@@ -140,8 +139,7 @@ export function useCheckoutPreview() {
       const orderPayload: CreateOrderInput = {
         fulfillmentType,
         zip: activeZip,
-        preferredDispensaryId: preferredDispensaryId || null,
-        itemOverrides,
+        excludeProductIds,
         contact: {
           firstName: contact.firstName.trim(),
           lastName: contact.lastName.trim(),
@@ -239,10 +237,11 @@ export function useCheckoutPreview() {
     isPlacingOrder: placeOrderMutation.isPending,
     placeOrderError: placeOrderMutation.error,
     switchToPickup,
-    setItemOverride,
-    removeItemOverride,
-    clearItemOverrides,
-    setPreferredDispensaryId,
+    excludeProductIds,
+    setExcludeProductIds,
+    addExcludeProductId,
+    removeExcludeProductId,
+    clearExcludeProductIds,
     removeCartItem: removeCartItemMutation.mutate,
     isRemovingCartItem: removeCartItemMutation.isPending,
   };

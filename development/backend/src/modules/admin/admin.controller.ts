@@ -11,9 +11,11 @@ import {
   Req,
   Res,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { AdminGuard, PublicAdmin } from '../../common/guards/admin.guard';
 import {
   adminLogin,
   getAdminFromToken,
@@ -37,8 +39,18 @@ import {
   getAdminDispensaryById,
   createAdminDispensary,
   updateAdminDispensary,
+  getAdminDispensaryPlatform,
+  updateAdminDispensaryPlatform,
   AdminDispensaryError,
 } from '../../server/admin/dispensaries-service';
+import {
+  listAdminMappings,
+  upsertSingleMapping,
+  importMappingsFromCsv,
+  AdminMappingError,
+} from '../../server/admin/mappings-service';
+import { syncWooProducts } from '../../server/admin/woocommerce-sync-service';
+import { runVendorHealthCheck } from '../../server/admin/vendor-health-service';
 import {
   listAdminBrands,
   getAdminBrandById,
@@ -75,8 +87,10 @@ function getAdminCookieToken(req: Request): string | undefined {
 
 @ApiTags('Admin Console')
 @Controller('admin')
+@UseGuards(AdminGuard)
 export class AdminController {
   // Auth
+  @PublicAdmin()
   @Post('login')
   @ApiOperation({ summary: 'Admin login (argon2id + owt_admin session)' })
   async login(@Body() body: any, @Res() res: Response) {
@@ -107,6 +121,7 @@ export class AdminController {
     }
   }
 
+  @PublicAdmin()
   @Post('logout')
   @ApiOperation({ summary: 'Admin logout' })
   async logout(@Res() res: Response) {
@@ -370,6 +385,132 @@ export class AdminController {
       return res.status(status).json({
         success: false,
         error: { code: err.code || 'INTERNAL_ERROR', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  @Get('dispensaries/:id/platform')
+  @ApiOperation({ summary: 'Get dispensary platform and redirection settings' })
+  async getDispensaryPlatform(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const data = await getAdminDispensaryPlatform(id);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data,
+        message: 'Dispensary platform configuration fetched',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      const status = err instanceof AdminDispensaryError ? err.status : 500;
+      return res.status(status).json({
+        success: false,
+        error: { code: err.code || 'INTERNAL_ERROR', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  @Put('dispensaries/:id/platform')
+  @ApiOperation({ summary: 'Set dispensary platform, cartBaseUrl, allowedHosts, notes' })
+  async updateDispensaryPlatform(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Res() res: Response
+  ) {
+    try {
+      const data = await updateAdminDispensaryPlatform(id, body);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data,
+        message: 'Dispensary platform updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      const status = err instanceof AdminDispensaryError ? err.status : 500;
+      return res.status(status).json({
+        success: false,
+        error: { code: err.code || 'INTERNAL_ERROR', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  // Vendor Product Mappings
+  @Get('mappings')
+  @ApiOperation({ summary: 'List vendor product mappings with optional dispensary filter' })
+  async getMappings(
+    @Query('dispensaryId') dispensaryId: string,
+    @Query('search') search: string,
+    @Res() res: Response
+  ) {
+    try {
+      const items = await listAdminMappings({ dispensaryId, search });
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: { items, total: items.length },
+        message: 'Mappings fetched successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      const status = err instanceof AdminMappingError ? err.status : 500;
+      return res.status(status).json({
+        success: false,
+        error: { code: err.code || 'INTERNAL_ERROR', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  @Put('mappings')
+  @ApiOperation({ summary: 'Upsert single vendor product mapping' })
+  async upsertMapping(@Body() body: any, @Res() res: Response) {
+    try {
+      const mapping = await upsertSingleMapping(body);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: mapping,
+        message: 'Mapping updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      const status = err instanceof AdminMappingError ? err.status : 500;
+      return res.status(status).json({
+        success: false,
+        error: { code: err.code || 'INTERNAL_ERROR', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  @Post('mappings/import')
+  @ApiOperation({ summary: 'Import vendor product mappings from CSV' })
+  async importMappings(@Body() body: any, @Res() res: Response) {
+    try {
+      const csvContent = typeof body === 'string' ? body : body.csv || body.content || '';
+      if (!csvContent || typeof csvContent !== 'string') {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: { code: 'INVALID_CSV', message: 'CSV content is required as string or body.csv' },
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const report = await importMappingsFromCsv(csvContent);
+      const isCompleteSuccess = report.failed === 0;
+
+      return res.status(isCompleteSuccess ? HttpStatus.OK : HttpStatus.BAD_REQUEST).json({
+        success: isCompleteSuccess,
+        data: report,
+        message: isCompleteSuccess
+          ? `CSV imported: ${report.created} created, ${report.updated} updated`
+          : `CSV import failed with ${report.failed} error(s). No rows were written.`,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: { code: 'IMPORT_ERROR', message: err.message },
         timestamp: new Date().toISOString(),
       });
     }
@@ -683,6 +824,49 @@ export class AdminController {
       return res.status(status).json({
         success: false,
         error: { code: err.code || 'INTERNAL_ERROR', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  // WooCommerce Product Sync
+  @Post('sync/woocommerce')
+  @ApiOperation({ summary: 'Synchronize products from WooCommerce API' })
+  async syncWooCommerce(@Body() body: any, @Res() res: Response) {
+    try {
+      const dryRun = Boolean(body?.dryRun);
+      const report = await syncWooProducts({ dryRun });
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: report,
+        message: `WooCommerce sync completed ${dryRun ? '(DRY RUN)' : ''}`,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: { code: 'WOO_SYNC_ERROR', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  // Vendor Health Check
+  @Post('health-check/run')
+  @ApiOperation({ summary: 'Run vendor health check across all active dispensaries' })
+  async runHealthCheck(@Res() res: Response) {
+    try {
+      const report = await runVendorHealthCheck();
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: report,
+        message: 'Vendor health check completed successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: { code: 'HEALTH_CHECK_ERROR', message: err.message },
         timestamp: new Date().toISOString(),
       });
     }

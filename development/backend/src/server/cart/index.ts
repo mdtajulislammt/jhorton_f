@@ -66,7 +66,7 @@ export type CartWithRelations = Prisma.CartGetPayload<{
   };
 }>;
 
-const cartInclude = {
+export const cartInclude = {
   items: {
     include: {
       product: {
@@ -170,6 +170,8 @@ export function formatCartDto(cart: CartWithRelations, now = new Date()): CartDe
     id: cart.id,
     sessionToken: cart.sessionToken,
     status: cart.status,
+    selectedDispensaryId: cart.selectedDispensaryId || null,
+    selectionSource: cart.selectionSource || null,
     expiresAt: expiresAt.toISOString(),
     lastActivityAt: cart.lastActivityAt.toISOString(),
     hold,
@@ -551,3 +553,6 @@ export async function clearCart(sessionToken: string): Promise<CartDetailDto> {
 
   return formatCartDto(updatedCart);
 }
+
+export * from './vendors';
+export * from './types';

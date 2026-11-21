@@ -1,5 +1,5 @@
 import { prisma } from '../db';
-import { HandoffChannel, HoursKind } from '@prisma/client';
+import { HandoffChannel, HoursKind, VendorPlatform } from '@prisma/client';
 
 export class AdminDispensaryError extends Error {
   constructor(
@@ -9,6 +9,43 @@ export class AdminDispensaryError extends Error {
   ) {
     super(message);
     this.name = 'AdminDispensaryError';
+  }
+}
+
+export function platformToHandoffChannel(platform: VendorPlatform, currentHandoff?: HandoffChannel): HandoffChannel {
+  if (currentHandoff === HandoffChannel.ORDER_REQUEST) {
+    return HandoffChannel.ORDER_REQUEST;
+  }
+  switch (platform) {
+    case 'WOOCOMMERCE':
+      return HandoffChannel.WOOCOMMERCE;
+    case 'SHOPIFY':
+      return HandoffChannel.SHOPIFY;
+    case 'BIGCOMMERCE':
+      return HandoffChannel.BIGCOMMERCE;
+    case 'OTHER':
+    default:
+      return HandoffChannel.DEEP_LINK;
+  }
+}
+
+export function validateCartBaseUrl(urlStr: string, allowedHosts: string[]) {
+  let parsed: URL;
+  try {
+    parsed = new URL(urlStr);
+  } catch {
+    throw new AdminDispensaryError('INVALID_CART_URL', 'cartBaseUrl must be a valid URL', 400);
+  }
+  if (parsed.protocol !== 'https:') {
+    throw new AdminDispensaryError('INVALID_CART_URL', 'cartBaseUrl must use HTTPS protocol', 400);
+  }
+  const host = parsed.hostname.toLowerCase();
+  const isAllowed = allowedHosts.some((allowed) => {
+    const clean = allowed.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    return host === clean || host.endsWith(`.${clean}`);
+  });
+  if (!isAllowed) {
+    throw new AdminDispensaryError('HOST_NOT_ALLOWED', 'cartBaseUrl host must be listed in allowedHosts', 400);
   }
 }
 
@@ -34,16 +71,28 @@ export interface CreateDispensaryInput {
   offersDelivery?: boolean;
   coverageZips?: string[];
   timezone?: string;
-  handoffChannel?: 'LEAFLY' | 'RETAILER_PAGE';
+  handoffChannel?: 'WOOCOMMERCE' | 'SHOPIFY' | 'BIGCOMMERCE' | 'DEEP_LINK' | 'ORDER_REQUEST';
+  platform?: VendorPlatform;
   websiteUrl?: string | null;
+  cartBaseUrl?: string | null;
+  allowedHosts?: string[];
+  handoffNotes?: string | null;
+  lastHealthCheckAt?: Date | null;
+  healthStatus?: string | null;
   handoffUrlTemplate?: string | null;
-  leaflyStoreId?: string | null;
   webhookSecret?: string;
   isActive?: boolean;
   hours?: HourInput[];
 }
 
 export interface UpdateDispensaryInput extends Partial<CreateDispensaryInput> {}
+
+export interface UpdateDispensaryPlatformInput {
+  platform: VendorPlatform;
+  cartBaseUrl?: string | null;
+  allowedHosts?: string[];
+  handoffNotes?: string | null;
+}
 
 function slugify(text: string): string {
   return text
@@ -84,9 +133,14 @@ export async function listAdminDispensaries() {
     coverageZips: d.coverageZips,
     timezone: d.timezone,
     handoffChannel: d.handoffChannel,
+    platform: d.platform,
     websiteUrl: d.websiteUrl,
+    cartBaseUrl: d.cartBaseUrl,
+    allowedHosts: d.allowedHosts,
+    handoffNotes: d.handoffNotes,
+    lastHealthCheckAt: d.lastHealthCheckAt ? d.lastHealthCheckAt.toISOString() : null,
+    healthStatus: d.healthStatus,
     handoffUrlTemplate: d.handoffUrlTemplate,
-    leaflyStoreId: d.leaflyStoreId,
     webhookSecret: d.webhookSecret,
     isActive: d.isActive,
     inventoryCount: d._count.inventory,
@@ -134,9 +188,14 @@ export async function getAdminDispensaryById(id: string) {
     coverageZips: d.coverageZips,
     timezone: d.timezone,
     handoffChannel: d.handoffChannel,
+    platform: d.platform,
     websiteUrl: d.websiteUrl,
+    cartBaseUrl: d.cartBaseUrl,
+    allowedHosts: d.allowedHosts,
+    handoffNotes: d.handoffNotes,
+    lastHealthCheckAt: d.lastHealthCheckAt ? d.lastHealthCheckAt.toISOString() : null,
+    healthStatus: d.healthStatus,
     handoffUrlTemplate: d.handoffUrlTemplate,
-    leaflyStoreId: d.leaflyStoreId,
     webhookSecret: d.webhookSecret,
     isActive: d.isActive,
     hours: d.hours.map((h) => ({
@@ -210,10 +269,9 @@ export async function createAdminDispensary(data: CreateDispensaryInput) {
       offersDelivery: data.offersDelivery ?? false,
       coverageZips: data.coverageZips || [data.zip],
       timezone: data.timezone || 'America/New_York',
-      handoffChannel: (data.handoffChannel as HandoffChannel) || 'RETAILER_PAGE',
+      handoffChannel: (data.handoffChannel as HandoffChannel) || 'DEEP_LINK',
       websiteUrl: data.websiteUrl ?? null,
       handoffUrlTemplate: data.handoffUrlTemplate ?? null,
-      leaflyStoreId: data.leaflyStoreId ?? null,
       webhookSecret,
       isActive: data.isActive ?? true,
       hours: {
@@ -255,11 +313,27 @@ export async function updateAdminDispensary(id: string, data: UpdateDispensaryIn
   if (data.coverageZips !== undefined) updateData.coverageZips = data.coverageZips;
   if (data.timezone !== undefined) updateData.timezone = data.timezone;
   if (data.handoffChannel !== undefined) updateData.handoffChannel = data.handoffChannel;
+  if (data.platform !== undefined) {
+    updateData.platform = data.platform;
+    if (data.handoffChannel === undefined) {
+      updateData.handoffChannel = platformToHandoffChannel(data.platform, existing.handoffChannel);
+    }
+  }
   if (data.websiteUrl !== undefined) updateData.websiteUrl = data.websiteUrl;
+  if (data.cartBaseUrl !== undefined) updateData.cartBaseUrl = data.cartBaseUrl;
+  if (data.allowedHosts !== undefined) updateData.allowedHosts = data.allowedHosts;
+  if (data.handoffNotes !== undefined) updateData.handoffNotes = data.handoffNotes;
+  if (data.lastHealthCheckAt !== undefined) updateData.lastHealthCheckAt = data.lastHealthCheckAt;
+  if (data.healthStatus !== undefined) updateData.healthStatus = data.healthStatus;
   if (data.handoffUrlTemplate !== undefined) updateData.handoffUrlTemplate = data.handoffUrlTemplate;
-  if (data.leaflyStoreId !== undefined) updateData.leaflyStoreId = data.leaflyStoreId;
   if (data.webhookSecret !== undefined) updateData.webhookSecret = data.webhookSecret;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
+
+  const targetCartUrl = data.cartBaseUrl !== undefined ? data.cartBaseUrl : existing.cartBaseUrl;
+  const targetAllowedHosts = data.allowedHosts !== undefined ? data.allowedHosts : existing.allowedHosts;
+  if (targetCartUrl) {
+    validateCartBaseUrl(targetCartUrl, targetAllowedHosts);
+  }
 
   // Run update inside transaction if hours are also modified
   const result = await prisma.$transaction(async (tx) => {
@@ -300,4 +374,78 @@ export async function updateAdminDispensary(id: string, data: UpdateDispensaryIn
   });
 
   return result;
+}
+
+export async function getAdminDispensaryPlatform(id: string) {
+  const d = await prisma.dispensary.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      platform: true,
+      websiteUrl: true,
+      cartBaseUrl: true,
+      allowedHosts: true,
+      handoffNotes: true,
+      lastHealthCheckAt: true,
+      healthStatus: true,
+    },
+  });
+
+  if (!d) {
+    throw new AdminDispensaryError('NOT_FOUND', 'Dispensary not found', 404);
+  }
+
+  return {
+    ...d,
+    lastHealthCheckAt: d.lastHealthCheckAt ? d.lastHealthCheckAt.toISOString() : null,
+  };
+}
+
+export async function updateAdminDispensaryPlatform(
+  id: string,
+  data: UpdateDispensaryPlatformInput
+) {
+  const existing = await prisma.dispensary.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AdminDispensaryError('NOT_FOUND', 'Dispensary not found', 404);
+  }
+
+  const updateData: any = {};
+  if (data.platform !== undefined) {
+    updateData.platform = data.platform;
+    updateData.handoffChannel = platformToHandoffChannel(data.platform, existing.handoffChannel);
+  }
+  if (data.cartBaseUrl !== undefined) updateData.cartBaseUrl = data.cartBaseUrl;
+  if (data.allowedHosts !== undefined) updateData.allowedHosts = data.allowedHosts;
+  if (data.handoffNotes !== undefined) updateData.handoffNotes = data.handoffNotes;
+
+  const targetCartUrl = data.cartBaseUrl !== undefined ? data.cartBaseUrl : existing.cartBaseUrl;
+  const targetAllowedHosts = data.allowedHosts !== undefined ? data.allowedHosts : existing.allowedHosts;
+  if (targetCartUrl) {
+    validateCartBaseUrl(targetCartUrl, targetAllowedHosts);
+  }
+
+  const updated = await prisma.dispensary.update({
+    where: { id },
+    data: updateData,
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      platform: true,
+      websiteUrl: true,
+      cartBaseUrl: true,
+      allowedHosts: true,
+      handoffNotes: true,
+      lastHealthCheckAt: true,
+      healthStatus: true,
+    },
+  });
+
+  return {
+    ...updated,
+    lastHealthCheckAt: updated.lastHealthCheckAt ? updated.lastHealthCheckAt.toISOString() : null,
+  };
 }

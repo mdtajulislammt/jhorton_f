@@ -14,6 +14,7 @@ import {
   Loader2,
   DollarSign,
   Tag,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,11 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+
+  // WooCommerce Sync state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncDryRun, setSyncDryRun] = useState(false);
+  const [syncReport, setSyncReport] = useState<any | null>(null);
 
   // Form Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -200,6 +206,29 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleSyncWoo = async () => {
+    setIsSyncing(true);
+    setSyncReport(null);
+    try {
+      const res = await fetch('/api/admin/sync/woocommerce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun: syncDryRun }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSyncReport(data.data);
+        fetchProducts();
+      } else {
+        alert(data.error?.message || 'Sync failed');
+      }
+    } catch {
+      alert('Network error initiating WooCommerce sync');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -212,16 +241,69 @@ export default function AdminProductsPage() {
             Manage cannabis strains, inventory details, and uniform Owtlet live show pricing.
           </p>
         </div>
-        <Button
-          onClick={openCreateModal}
-          className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold h-11 px-5 active:scale-[0.98] transition-all"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Cannabis Product
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg text-xs text-foreground">
+            <input
+              type="checkbox"
+              id="dryRunToggle"
+              checked={syncDryRun}
+              onChange={(e) => setSyncDryRun(e.target.checked)}
+              className="accent-primary"
+            />
+            <label htmlFor="dryRunToggle" className="cursor-pointer">Dry Run</label>
+          </div>
+          <Button
+            onClick={handleSyncWoo}
+            disabled={isSyncing}
+            variant="outline"
+            className="border-border text-foreground hover:bg-secondary h-11 px-4 active:scale-[0.98]"
+          >
+            {isSyncing ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2 text-primary" />
+            )}
+            Sync from WooCommerce
+          </Button>
+          <Button
+            onClick={openCreateModal}
+            className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold h-11 px-5 active:scale-[0.98] transition-all"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Cannabis Product
+          </Button>
+        </div>
       </div>
 
-      {/* Filters Bar */}
+      {/* WooCommerce Sync Report Modal / Banner */}
+      {syncReport && (
+        <div className="p-4 rounded-xl border border-primary/40 bg-card space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-foreground">
+              WooCommerce Sync Report {syncReport.dryRun ? '(Dry Run)' : ''}
+            </span>
+            <button
+              onClick={() => setSyncReport(null)}
+              className="text-muted-foreground hover:text-foreground text-xs"
+            >
+              Dismiss
+            </button>
+          </div>
+          <div className="flex gap-4 font-mono text-[11px]">
+            <span className="text-primary font-semibold">Created: {syncReport.created}</span>
+            <span className="text-secondary-foreground font-semibold">Updated: {syncReport.updated}</span>
+            <span className="text-muted-foreground font-semibold">Skipped: {syncReport.skipped}</span>
+            <span className="text-destructive font-semibold">Errors: {syncReport.errors?.length || 0}</span>
+          </div>
+          {syncReport.errors && syncReport.errors.length > 0 && (
+            <ul className="text-destructive text-[11px] list-disc list-inside space-y-0.5 max-h-24 overflow-y-auto">
+              {syncReport.errors.map((e: string, i: number) => (
+                <li key={i}>{e}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />

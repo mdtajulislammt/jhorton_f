@@ -45,6 +45,15 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
+function getAgeSecret(customSecret?: string): string {
+  if (customSecret) return customSecret;
+  const envSecret = process.env.AGE_COOKIE_SECRET;
+  if (!envSecret && process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL SECURITY ERROR: AGE_COOKIE_SECRET environment variable is missing in production.');
+  }
+  return envSecret || 'owtlet_age_cookie_default_secret_min_32_chars';
+}
+
 /**
  * Creates an HMAC-signed token for the 21+ age attestation cookie.
  * Format: `<nonce>.<expiresAtTimestampMs>.<hmacSha256Hex>`
@@ -53,7 +62,7 @@ export async function signAgeToken(
   customSecret?: string,
   ttlMs = AGE_COOKIE_TTL_MS
 ): Promise<{ token: string; nonce: string; expiresAt: Date }> {
-  const secret = customSecret || process.env.AGE_COOKIE_SECRET || 'owtlet_age_cookie_default_secret_min_32_chars';
+  const secret = getAgeSecret(customSecret);
   const key = await getHmacKey(secret);
 
   const nonceBytes = new Uint8Array(16);
@@ -111,7 +120,7 @@ export async function verifyAgeToken(
     return { valid: false, reason: 'EXPIRED' };
   }
 
-  const secret = customSecret || process.env.AGE_COOKIE_SECRET || 'owtlet_age_cookie_default_secret_min_32_chars';
+  const secret = getAgeSecret(customSecret);
   const key = await getHmacKey(secret);
 
   const payload = `${nonce}.${expiresTimestampStr}`;

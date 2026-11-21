@@ -50,7 +50,6 @@ export function useCart() {
       source?: string;
       liveShowId?: string;
       channelBrandSlug?: string;
-      preferredDispensaryId?: string;
     }) => {
       const payload: CartSyncPayload = {
         action: 'addProductToCart',
@@ -63,7 +62,6 @@ export function useCart() {
             externalId: params.externalId,
             sku: params.sku,
             quantity: params.quantity ?? 1,
-            preferredDispensaryId: params.preferredDispensaryId,
           },
         ],
       };
@@ -87,7 +85,6 @@ export function useCart() {
     mutationFn: async (params: {
       productId: string;
       quantity: number;
-      preferredDispensaryId?: string;
     }) => {
       const payload: CartSyncPayload = {
         action: 'updateProductInCart',
@@ -95,7 +92,6 @@ export function useCart() {
           {
             productId: params.productId,
             quantity: params.quantity,
-            preferredDispensaryId: params.preferredDispensaryId,
           },
         ],
       };

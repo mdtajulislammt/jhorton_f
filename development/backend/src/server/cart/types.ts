@@ -1,9 +1,36 @@
 import { z } from 'zod';
-import { CartStatus } from '@prisma/client';
+import { CartStatus, AssignmentSource } from '@prisma/client';
 import { PriceMode } from '../pricing';
 import { CartHoldMetadata } from './expiry';
+import { HoursWindowDto } from '../dispensaries/types';
 
 export type { CartHoldMetadata } from './expiry';
+
+export interface CartVendorDto {
+  dispensaryId: string;
+  name: string;
+  slug: string;
+  address: string;
+  city: string;
+  zip: string;
+  distanceMiles: number | null;
+  isOpenNow: boolean;
+  hoursToday: HoursWindowDto | null;
+  offersDelivery: boolean;
+  isDeliveringNow: boolean;
+  deliveryHoursToday: HoursWindowDto | null;
+  mappedItemCount: number;
+  totalCartItemCount: number;
+  isPreselected: boolean;
+}
+
+export interface CartVendorWarningDto {
+  cartItemId: string;
+  productId: string;
+  productName: string;
+  sku: string | null;
+  reason: 'UNMAPPED' | 'UNAVAILABLE';
+}
 
 export const cartProductInputSchema = z.object({
   externalId: z.string().trim().optional(),
@@ -60,6 +87,8 @@ export interface CartDetailDto {
   id: string;
   sessionToken: string;
   status: CartStatus;
+  selectedDispensaryId: string | null;
+  selectionSource: AssignmentSource | null;
   expiresAt: string;
   lastActivityAt: string;
   hold: CartHoldMetadata;

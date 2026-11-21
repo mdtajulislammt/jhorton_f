@@ -2,9 +2,11 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
+  Query,
   Req,
   Res,
   HttpStatus,
@@ -17,11 +19,15 @@ import {
   getCartBySessionToken,
   clearCart,
   syncCartItems,
+  getCartVendors,
+  setCartVendor,
+  getCartVendorWarnings,
   CartExpiredError,
   UnmappedProductException,
 } from '../../server/cart';
 import { CART_COOKIE_NAME, CART_COOKIE_OPTIONS } from '../../server/cart/session';
 import { cartSyncSchema, CartSyncAction } from '../../server/cart/types';
+import { SHOPPER_COOKIE_NAME, verifyShopperToken } from '../../server/shopper-account/crypto';
 
 function getSessionToken(req: Request): string | null {
   return (
@@ -131,6 +137,114 @@ export class CartController {
   @ApiOperation({ summary: 'Remove items from cart' })
   async removeItem(@Body() body: any, @Req() req: Request, @Res() res: Response) {
     return this.handleSync(body, req, res, 'removeProductFromCart');
+  }
+
+  @Get('vendors')
+  @ApiOperation({ summary: 'Get active dispensaries sorted by distance with cart mapping stats' })
+  async getVendors(
+    @Query('zip') zip: string | undefined,
+    @Query('lat') lat: string | undefined,
+    @Query('lng') lng: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    let sessionToken = getSessionToken(req);
+    if (!sessionToken) {
+      const fresh = await getOrCreateCart(null);
+      sessionToken = fresh.sessionToken;
+      setCookie(res, sessionToken);
+    }
+
+    let shopperId: string | null = null;
+    const rawShopperCookie = req.cookies?.[SHOPPER_COOKIE_NAME];
+    if (rawShopperCookie) {
+      const verification = await verifyShopperToken(rawShopperCookie);
+      if (verification.valid && verification.shopperId) {
+        shopperId = verification.shopperId;
+      }
+    }
+
+    const latNum = lat ? parseFloat(lat) : undefined;
+    const lngNum = lng ? parseFloat(lng) : undefined;
+
+    const data = await getCartVendors(sessionToken, {
+      zip: zip || null,
+      lat: isNaN(latNum as any) ? null : latNum,
+      lng: isNaN(lngNum as any) ? null : lngNum,
+      shopperId,
+    });
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      statusCode: HttpStatus.OK,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  @Put('vendor')
+  @ApiOperation({ summary: 'Set selected dispensary for cart' })
+  async setVendor(@Body() body: any, @Req() req: Request, @Res() res: Response) {
+    let sessionToken = getSessionToken(req);
+    if (!sessionToken) {
+      const fresh = await getOrCreateCart(null);
+      sessionToken = fresh.sessionToken;
+      setCookie(res, sessionToken);
+    }
+
+    const dispensaryId = body?.dispensaryId;
+    if (!dispensaryId || typeof dispensaryId !== 'string') {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        error: { code: 'VALIDATION_ERROR', message: 'dispensaryId is required' },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    try {
+      const updatedCart = await setCartVendor(sessionToken, dispensaryId);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        statusCode: HttpStatus.OK,
+        data: updatedCart,
+        message: 'Cart dispensary updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        error: { code: 'DISPENSARY_NOT_FOUND', message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  @Get('warnings')
+  @ApiOperation({ summary: 'Get unmapped or unavailable cart items for selected vendor' })
+  async getWarnings(
+    @Query('dispensaryId') dispensaryId: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const sessionToken = getSessionToken(req);
+    if (!sessionToken) {
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        statusCode: HttpStatus.OK,
+        data: [],
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const warnings = await getCartVendorWarnings(sessionToken, dispensaryId || null);
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      statusCode: HttpStatus.OK,
+      data: warnings,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   private async handleSync(

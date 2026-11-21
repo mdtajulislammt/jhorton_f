@@ -48,7 +48,7 @@ export const previewDistributionSchema = z
       .optional()
       .nullable(),
     preferredDispensaryId: z.string().uuid().optional().nullable(),
-    itemOverrides: z.array(itemOverrideSchema).optional().default([]),
+    excludeProductIds: z.array(z.string().uuid()).optional().default([]),
   })
   .strict()
   .refine(
@@ -69,7 +69,7 @@ export const createOrderSchema = z
     fulfillmentType: z.enum(['PICKUP', 'DELIVERY']),
     zip: z.string().trim().regex(/^\d{5}$/, 'Valid 5-digit ZIP code required'),
     preferredDispensaryId: z.string().uuid().optional().nullable(),
-    itemOverrides: z.array(itemOverrideSchema).optional().default([]),
+    excludeProductIds: z.array(z.string().uuid()).optional().default([]),
     contact: contactSchema,
     deliveryAddress: deliveryAddressSchema.optional().nullable(),
     saveToProfile: z.boolean().optional().default(false),

@@ -74,7 +74,6 @@ export function ProductBuyBox({ productId, productName, price, isOwtletPrice }: 
         productId,
         quantity: qty,
         source: 'catalog',
-        preferredDispensaryId: selected?.dispensaryId,
       });
       setState('added');
     } catch {

@@ -122,7 +122,6 @@ export async function importProducts(
           owtletPrice: rec.owtletPrice,
           sku,
           terrificProductId: rec.terrificProductId,
-          externalId: rec.externalId,
           isActive: true,
         },
         create: {
@@ -138,7 +137,6 @@ export async function importProducts(
           owtletPrice: rec.owtletPrice,
           sku,
           terrificProductId: rec.terrificProductId,
-          externalId: rec.externalId,
           isActive: true,
         },
       });
@@ -160,14 +158,12 @@ export async function importProducts(
               update: {
                 price: inv.price,
                 stockQty: inv.stockQty,
-                isAvailable: inv.stockQty > 0,
               },
               create: {
                 productId: product.id,
                 dispensaryId: dispensary.id,
                 price: inv.price,
                 stockQty: inv.stockQty,
-                isAvailable: inv.stockQty > 0,
               },
             });
           }

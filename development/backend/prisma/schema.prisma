@@ -22,6 +22,7 @@ enum StrainType {
 enum CartStatus {
   ACTIVE
   CHECKED_OUT
+  CONVERTED
   EXPIRED
 }
 
@@ -42,8 +43,11 @@ enum SubOrderStatus {
 }
 
 enum HandoffChannel {
-  LEAFLY
-  RETAILER_PAGE
+  WOOCOMMERCE
+  SHOPIFY
+  BIGCOMMERCE
+  DEEP_LINK
+  ORDER_REQUEST
 }
 
 enum ShowStatus {
@@ -61,6 +65,13 @@ enum VideoFormat {
 enum FulfillmentType {
   PICKUP
   DELIVERY
+}
+
+enum VendorPlatform {
+  WOOCOMMERCE
+  SHOPIFY
+  BIGCOMMERCE
+  OTHER
 }
 
 enum HoursKind {
@@ -163,7 +174,8 @@ model Product {
   inventory    Inventory[]
   cartItems    CartItem[]
   orderItems   OrderItem[]
-  showProducts ShowProduct[]
+  showProducts   ShowProduct[]
+  vendorMappings VendorProductMapping[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -187,10 +199,16 @@ model Dispensary {
   offersDelivery     Boolean        @default(true) @map("offers_delivery")
   coverageZips       String[]       @map("coverage_zips")
   timezone           String         @default("America/New_York")
-  handoffChannel     HandoffChannel @default(RETAILER_PAGE) @map("handoff_channel")
+  handoffChannel     HandoffChannel @default(DEEP_LINK) @map("handoff_channel")
+  platform           VendorPlatform @default(OTHER)
   websiteUrl         String?        @map("website_url")
+  cartBaseUrl        String?        @map("cart_base_url")
+  allowedHosts       String[]       @default([]) @map("allowed_hosts")
+  handoffNotes       String?        @map("handoff_notes")
+  shopifyStorefrontParam Boolean    @default(false) @map("shopify_storefront_param")
+  lastHealthCheckAt  DateTime?      @map("last_health_check_at")
+  healthStatus       String?        @map("health_status")
   handoffUrlTemplate String?        @map("handoff_url_template")
-  leaflyStoreId      String?        @map("leafly_store_id")
   webhookSecret      String         @map("webhook_secret")
   isActive           Boolean        @default(true) @map("is_active")
   createdAt          DateTime       @default(now()) @map("created_at")
@@ -200,7 +218,9 @@ model Dispensary {
   inventory          Inventory[]
   subOrders          SubOrder[]
   brands             BrandDispensary[]
-  defaultForShoppers Shopper[]         @relation("ShopperDefaultStore")
+  defaultForShoppers   Shopper[]              @relation("ShopperDefaultStore")
+  vendorMappings       VendorProductMapping[]
+  carts                Cart[]                 @relation("CartSelectedDispensary")
 
   @@index([zip])
   @@map("dispensaries")
@@ -287,24 +307,28 @@ model PasswordResetToken {
 }
 
 model Cart {
-  id             String     @id @default(uuid())
-  sessionToken   String     @unique @map("session_token")
-  shopperId      String?    @map("shopper_id")
-  status         CartStatus @default(ACTIVE)
-  zip            String?
-  liveShowId     String?    @map("live_show_id")
-  lastActivityAt DateTime   @default(now()) @map("last_activity_at")
-  expiresAt      DateTime   @map("expires_at")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
-  shopper        Shopper?   @relation(fields: [shopperId], references: [id], onDelete: SetNull)
-  liveShow       LiveShow?  @relation(fields: [liveShowId], references: [id], onDelete: SetNull)
-  items          CartItem[]
-  order          Order?
+  id                   String            @id @default(uuid())
+  sessionToken         String            @unique @map("session_token")
+  shopperId            String?           @map("shopper_id")
+  selectedDispensaryId String?           @map("selected_dispensary_id")
+  selectionSource      AssignmentSource? @map("selection_source")
+  status               CartStatus        @default(ACTIVE)
+  zip                  String?
+  liveShowId           String?           @map("live_show_id")
+  lastActivityAt       DateTime          @default(now()) @map("last_activity_at")
+  expiresAt            DateTime          @map("expires_at")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+  shopper              Shopper?          @relation(fields: [shopperId], references: [id], onDelete: SetNull)
+  selectedDispensary   Dispensary?       @relation("CartSelectedDispensary", fields: [selectedDispensaryId], references: [id], onDelete: SetNull)
+  liveShow             LiveShow?         @relation(fields: [liveShowId], references: [id], onDelete: SetNull)
+  items                CartItem[]
+  order                Order?
 
   @@index([expiresAt])
   @@index([liveShowId])
   @@index([shopperId])
+  @@index([selectedDispensaryId])
   @@map("carts")
 }
 
@@ -366,6 +390,7 @@ model SubOrder {
   status          SubOrderStatus   @default(PENDING)
   handoffChannel  HandoffChannel   @map("handoff_channel")
   handoffUrl      String?          @map("handoff_url")
+  handoffWarnings Json?            @map("handoff_warnings")
   handedOffAt     DateTime?        @map("handed_off_at")
   confirmationRef String?          @map("confirmation_ref")
   confirmationUrl String?          @map("confirmation_url")
@@ -453,4 +478,23 @@ model CoverageZip {
   longitude Decimal @db.Decimal(9, 6)
 
   @@map("coverage_zips")
+}
+
+model VendorProductMapping {
+  id              String     @id @default(uuid())
+  productId       String     @map("product_id")
+  dispensaryId    String     @map("dispensary_id")
+  ourSku          String     @map("our_sku")
+  vendorProductId String?    @map("vendor_product_id")
+  vendorVariantId String?    @map("vendor_variant_id")
+  vendorSku       String?    @map("vendor_sku")
+  isAvailable     Boolean    @default(true) @map("is_available")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  product         Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  dispensary      Dispensary @relation(fields: [dispensaryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, dispensaryId])
+  @@index([dispensaryId])
+  @@map("vendor_product_mappings")
 }

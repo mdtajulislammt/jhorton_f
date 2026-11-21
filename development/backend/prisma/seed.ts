@@ -1,5 +1,6 @@
-import { PrismaClient, Role, StrainType, HoursKind, HandoffChannel, ShowStatus, VideoFormat } from '@prisma/client';
+import { PrismaClient, Role, StrainType, HoursKind, HandoffChannel, ShowStatus, VideoFormat, VendorPlatform } from '@prisma/client';
 import * as argon2 from 'argon2';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -121,8 +122,8 @@ async function main() {
       offersDelivery: true,
       coverageZips: ['11738', '11701', '11706', '11710', '11714', '11722', '11735', '11743', '11746', '11747', '11753', '11756', '11758', '11762', '11783', '11788', '11791', '11797'],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://cannablooms.com/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_cannablooms_key',
       hours: [
         // Store: Sun–Thu 8AM–12AM (08:00 - 00:00), Fri–Sat 8AM–1AM (08:00 - 01:00)
@@ -159,8 +160,8 @@ async function main() {
       offersDelivery: true,
       coverageZips: ['11201', '11205', '11206', '11211', '11222', '11249', '11101', '11102', '11106', '11385'],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://culturehousenyc.com/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_culture_house_key',
       hours: [
         // Store: Sun 9AM–10PM, Mon–Sat 9AM–11PM
@@ -197,8 +198,8 @@ async function main() {
       offersDelivery: false,
       coverageZips: [],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://herbwellcannabis.com/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_herbwell_key',
       hours: [
         // Store: Sun 9AM–8:30PM, Mon–Wed 9AM–9:30PM, Thu–Sat 9AM–10:30PM
@@ -227,8 +228,8 @@ async function main() {
       offersDelivery: false,
       coverageZips: [],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://www.kingshouseoffire.com/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_kings_house_of_fire_key',
       hours: [
         // Store: Sun 10AM–6PM, Mon–Sat 9AM–9PM
@@ -257,8 +258,8 @@ async function main() {
       offersDelivery: true,
       coverageZips: ['10001', '10002', '10003', '10011', '10012', '10013', '10014', '10016', '10018', '10019', '10020', '10021', '10022', '10023', '10024', '10025', '10028', '10036'],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://nicklzny.com/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_nicklz_key',
       hours: [
         // Store: Sun–Wed 10AM–11PM, Thu–Sat 10AM–12AM (10:00 - 00:00)
@@ -295,8 +296,8 @@ async function main() {
       offersDelivery: false,
       coverageZips: [],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://qubenyc.com/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_qube_key',
       hours: [
         // Store: every day 8AM–2AM (08:00 - 02:00) (TODO: confirm, source says "Sun - Mon")
@@ -325,8 +326,8 @@ async function main() {
       offersDelivery: true,
       coverageZips: ['11101', '11102', '11103', '11105', '11106', '11370', '11372', '11377', '11378'],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://terpbrosnyc.com/astoria/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_terp_bros_astoria_key',
       hours: [
         // Store: Sun–Wed 8AM–10PM, Thu–Sat 8AM–11PM
@@ -363,8 +364,8 @@ async function main() {
       offersDelivery: true,
       coverageZips: ['11414', '11416', '11417', '11418', '11419', '11420', '11421', '11374', '11375', '11379', '11385'],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://terpbrosnyc.com/ozone-park/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_terp_bros_ozone_park_key',
       hours: [
         // Store: Sun–Wed 8AM–10PM, Thu–Sat 8AM–11PM
@@ -401,8 +402,8 @@ async function main() {
       offersDelivery: false,
       coverageZips: [],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://zenzest.com/staten-island/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_zen_zest_si_key',
       hours: [
         // Store: Sun 9AM–8PM, Mon–Thu 9AM–10PM, Fri–Sat 9AM–11PM
@@ -431,8 +432,8 @@ async function main() {
       offersDelivery: false,
       coverageZips: [],
       timezone: 'America/New_York',
-      handoffChannel: HandoffChannel.RETAILER_PAGE,
-      handoffUrlTemplate: 'https://zenzest.com/queens/order?ref={subOrderId}',
+      handoffChannel: HandoffChannel.DEEP_LINK,
+      handoffUrlTemplate: null,
       webhookSecret: 'whsec_zen_zest_nassau_key',
       hours: [
         // Store: Sun 9AM–10PM, Mon–Tue 9AM–12AM (09:00 - 00:00), Wed–Fri 9AM–2AM (09:00 - 02:00), Sat 9AM–12AM (09:00 - 00:00)
@@ -450,6 +451,25 @@ async function main() {
   const dispensaryMap: Record<string, string> = {};
 
   for (const disp of dispensariesData) {
+    let hostname: string | null = null;
+    try {
+      if (disp.websiteUrl) {
+        hostname = new URL(disp.websiteUrl).hostname;
+      }
+    } catch {}
+
+    const allowedHosts: string[] = [];
+    if (hostname) {
+      allowedHosts.push(hostname);
+      if (hostname.startsWith('www.')) {
+        allowedHosts.push(hostname.replace(/^www\./, ''));
+      } else {
+        allowedHosts.push(`www.${hostname}`);
+      }
+    }
+    const cartBaseUrl = disp.websiteUrl || null;
+    const generatedSecret = crypto.randomBytes(32).toString('hex');
+
     const record = await prisma.dispensary.upsert({
       where: { slug: disp.slug },
       update: {
@@ -461,14 +481,17 @@ async function main() {
         zip: disp.zip,
         latitude: disp.latitude,
         longitude: disp.longitude,
+        platform: VendorPlatform.OTHER,
         websiteUrl: disp.websiteUrl,
+        cartBaseUrl,
+        allowedHosts,
         offersPickup: disp.offersPickup,
         offersDelivery: disp.offersDelivery,
         coverageZips: disp.coverageZips,
         timezone: disp.timezone,
         handoffChannel: disp.handoffChannel,
         handoffUrlTemplate: disp.handoffUrlTemplate,
-        webhookSecret: disp.webhookSecret,
+        // webhookSecret is kept untouched on update
         isActive: true,
       },
       create: {
@@ -481,14 +504,17 @@ async function main() {
         zip: disp.zip,
         latitude: disp.latitude,
         longitude: disp.longitude,
+        platform: VendorPlatform.OTHER,
         websiteUrl: disp.websiteUrl,
+        cartBaseUrl,
+        allowedHosts,
         offersPickup: disp.offersPickup,
         offersDelivery: disp.offersDelivery,
         coverageZips: disp.coverageZips,
         timezone: disp.timezone,
         handoffChannel: disp.handoffChannel,
         handoffUrlTemplate: disp.handoffUrlTemplate,
-        webhookSecret: disp.webhookSecret,
+        webhookSecret: generatedSecret,
         isActive: true,
       },
     });

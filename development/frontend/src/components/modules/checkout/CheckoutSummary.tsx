@@ -111,7 +111,7 @@ export function CheckoutSummary({
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2">
-            <span>Place Cannabis Order</span>
+            <span>Continue to partner checkout</span>
             <ArrowRight className="h-4 w-4" />
           </span>
         )}

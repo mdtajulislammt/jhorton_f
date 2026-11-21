@@ -42,7 +42,11 @@ export interface RecordAgeSessionParams {
 export async function recordAgeVerificationSession(params: RecordAgeSessionParams) {
   try {
     const sessionHash = await hashSha256(params.nonce);
-    const salt = process.env.IP_HASH_SALT || 'owtlet_ip_hash_salt_2026';
+    let salt = process.env.IP_HASH_SALT;
+    if (!salt && process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL SECURITY ERROR: IP_HASH_SALT environment variable is missing in production.');
+    }
+    salt = salt || 'owtlet_ip_hash_salt_2026';
     const ipHash = params.ip ? await hashSha256(`${params.ip}:${salt}`) : null;
 
     return await db.ageVerificationSession.upsert({

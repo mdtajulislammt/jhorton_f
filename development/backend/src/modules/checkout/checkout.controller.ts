@@ -1,21 +1,21 @@
 import {
   Controller,
-  Post,
-  Body,
+  Get,
+  Query,
   Req,
   Res,
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { CART_COOKIE_NAME } from '../../server/cart/session';
+import { CART_COOKIE_NAME, CART_COOKIE_OPTIONS, generateCartSessionToken } from '../../server/cart/session';
+import { verifyShopperToken } from '../../server/shopper-account/crypto';
 import {
-  checkoutHandoffSchema,
-  executeCheckoutHandoff,
+  generateHandoffRedirect,
   ForbiddenOrderAccessError,
   OrderNotFoundError,
-  ProviderConfigurationError,
   SubOrderNotFoundError,
+  HandoffError,
 } from '../../server/checkout-handoff';
 
 function getSessionToken(req: Request): string | null {
@@ -29,100 +29,51 @@ function getSessionToken(req: Request): string | null {
 @ApiTags('Checkout Handoff')
 @Controller('checkout')
 export class CheckoutController {
-  @Post('handoff')
+  @Get('handoff/redirect')
   @ApiOperation({
-    summary: 'Compliant dispensary checkout handoff (Zero ID / Zero payment, Leafly & retailer redirects)',
+    summary: 'Direct 302 redirect to vendor cart with verified host and UTM tracking',
   })
-  async handoff(@Body() body: any, @Req() req: Request, @Res() res: Response) {
-    const parseResult = checkoutHandoffSchema.safeParse(body);
-    if (!parseResult.success) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        success: false,
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid handoff request payload',
-          details: parseResult.error.errors.map((e) => ({
-            field: e.path.join('.'),
-            message: e.message,
-          })),
-        },
-        timestamp: new Date().toISOString(),
-      });
+  async redirect(
+    @Query('orderId') orderId: string,
+    @Query('subOrderId') subOrderId: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    if (!orderId) {
+      return res.redirect(HttpStatus.FOUND, '/checkout?handoffError=VALIDATION_ERROR');
     }
 
-    const { orderId, subOrderId } = parseResult.data;
     const sessionToken = getSessionToken(req);
     const shopperCookie = req.cookies?.['owt_shopper'] || null;
+    let verifiedShopperId: string | null = null;
+    if (shopperCookie) {
+      const verification = await verifyShopperToken(shopperCookie);
+      if (verification.valid && verification.shopperId) {
+        verifiedShopperId = verification.shopperId;
+      }
+    }
 
     try {
-      const result = await executeCheckoutHandoff({
+      const { redirectUrl } = await generateHandoffRedirect({
         orderId,
         subOrderId,
         session: {
           cartSessionToken: sessionToken,
-          shopperId: shopperCookie,
+          shopperId: verifiedShopperId,
         },
       });
 
-      return res.status(HttpStatus.OK).json({
-        success: true,
-        statusCode: HttpStatus.OK,
-        data: result,
-        message: 'Ready for handoff',
-        timestamp: new Date().toISOString(),
-      });
+      // Clear/rotate cart cookie after conversion
+      const clearCart = process.env.CLEAR_CART_AFTER_HANDOFF !== 'false';
+      if (clearCart) {
+        const freshToken = generateCartSessionToken();
+        res.cookie(CART_COOKIE_NAME, freshToken, CART_COOKIE_OPTIONS);
+      }
+
+      return res.redirect(HttpStatus.FOUND, redirectUrl);
     } catch (err: any) {
-      if (err instanceof OrderNotFoundError || err.code === 'NOT_FOUND') {
-        return res.status(HttpStatus.NOT_FOUND).json({
-          success: false,
-          statusCode: HttpStatus.NOT_FOUND,
-          error: {
-            code: 'NOT_FOUND',
-            message: err.message || 'Order not found',
-          },
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      if (err instanceof SubOrderNotFoundError || err.code === 'SUB_ORDER_NOT_FOUND') {
-        return res.status(HttpStatus.NOT_FOUND).json({
-          success: false,
-          statusCode: HttpStatus.NOT_FOUND,
-          error: {
-            code: 'SUB_ORDER_NOT_FOUND',
-            message: err.message || 'Sub-order not found',
-          },
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      if (err instanceof ForbiddenOrderAccessError || err.code === 'FORBIDDEN') {
-        return res.status(HttpStatus.FORBIDDEN).json({
-          success: false,
-          statusCode: HttpStatus.FORBIDDEN,
-          error: {
-            code: 'FORBIDDEN',
-            message: err.message || 'Access to order denied',
-          },
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      if (err instanceof ProviderConfigurationError) {
-        return res.status(HttpStatus.BAD_GATEWAY).json({
-          success: false,
-          statusCode: HttpStatus.BAD_GATEWAY,
-          error: {
-            code: 'UPSTREAM_ERROR',
-            message: err.message,
-          },
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      throw err;
+      const errorCode = err.code || (err instanceof OrderNotFoundError ? 'NOT_FOUND' : err instanceof ForbiddenOrderAccessError ? 'FORBIDDEN' : 'HANDOFF_ERROR');
+      return res.redirect(HttpStatus.FOUND, `/checkout?handoffError=${encodeURIComponent(errorCode)}`);
     }
   }
 }
-

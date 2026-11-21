@@ -18,11 +18,6 @@ export interface ContactInfo {
   phone: string;
 }
 
-export interface ItemOverride {
-  productId: string;
-  dispensaryId: string;
-}
-
 interface CheckoutState {
   fulfillmentType: FulfillmentType;
   zip: string;
@@ -30,8 +25,7 @@ interface CheckoutState {
   zipArea: string | null;
   deliveryAddress: DeliveryAddress;
   contact: ContactInfo;
-  preferredDispensaryId: string | null;
-  itemOverrides: ItemOverride[];
+  excludeProductIds: string[];
   saveToProfile: boolean;
 
   // Actions
@@ -39,10 +33,10 @@ interface CheckoutState {
   setZip: (zip: string, area?: string | null) => void;
   setDeliveryAddress: (address: Partial<DeliveryAddress>) => void;
   setContact: (contact: Partial<ContactInfo>) => void;
-  setPreferredDispensaryId: (dispensaryId: string | null) => void;
-  setItemOverride: (productId: string, dispensaryId: string) => void;
-  removeItemOverride: (productId: string) => void;
-  clearItemOverrides: () => void;
+  setExcludeProductIds: (ids: string[]) => void;
+  addExcludeProductId: (id: string) => void;
+  removeExcludeProductId: (id: string) => void;
+  clearExcludeProductIds: () => void;
   setSaveToProfile: (save: boolean) => void;
   resetCheckout: () => void;
 }
@@ -70,8 +64,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       zipArea: 'Manhattan',
       deliveryAddress: initialAddress,
       contact: initialContact,
-      preferredDispensaryId: null,
-      itemOverrides: [],
+      excludeProductIds: [],
       saveToProfile: false,
 
       setFulfillmentType: (fulfillmentType) => set({ fulfillmentType }),
@@ -97,23 +90,19 @@ export const useCheckoutStore = create<CheckoutState>()(
           contact: { ...state.contact, ...contactUpdates },
         })),
 
-      setPreferredDispensaryId: (preferredDispensaryId) =>
-        set({ preferredDispensaryId }),
+      setExcludeProductIds: (excludeProductIds) => set({ excludeProductIds }),
 
-      setItemOverride: (productId, dispensaryId) =>
+      addExcludeProductId: (id) =>
         set((state) => ({
-          itemOverrides: [
-            ...state.itemOverrides.filter((o) => o.productId !== productId),
-            { productId, dispensaryId },
-          ],
+          excludeProductIds: Array.from(new Set([...state.excludeProductIds, id])),
         })),
 
-      removeItemOverride: (productId) =>
+      removeExcludeProductId: (id) =>
         set((state) => ({
-          itemOverrides: state.itemOverrides.filter((o) => o.productId !== productId),
+          excludeProductIds: state.excludeProductIds.filter((item) => item !== id),
         })),
 
-      clearItemOverrides: () => set({ itemOverrides: [], preferredDispensaryId: null }),
+      clearExcludeProductIds: () => set({ excludeProductIds: [] }),
 
       setSaveToProfile: (saveToProfile) => set({ saveToProfile }),
 
@@ -124,8 +113,7 @@ export const useCheckoutStore = create<CheckoutState>()(
           zipArea: 'Manhattan',
           deliveryAddress: initialAddress,
           contact: initialContact,
-          preferredDispensaryId: null,
-          itemOverrides: [],
+          excludeProductIds: [],
           saveToProfile: false,
         }),
     }),
@@ -142,6 +130,7 @@ export const useCheckoutStore = create<CheckoutState>()(
         zipArea: state.zipArea,
         deliveryAddress: state.deliveryAddress,
         contact: state.contact,
+        excludeProductIds: state.excludeProductIds,
         saveToProfile: state.saveToProfile,
       }),
     }

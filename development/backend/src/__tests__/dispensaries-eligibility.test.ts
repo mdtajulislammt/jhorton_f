@@ -154,7 +154,7 @@ describe('Dispensary Eligibility & Distance (T-DST-03, T-FUL-01)', () => {
         offersDelivery: false,
         coverageZips: [],
         timezone: 'America/New_York',
-        handoffChannel: 'LEAFLY',
+        handoffChannel: 'DEEP_LINK',
         hours: [],
       };
 

@@ -14,7 +14,36 @@ export const API_ENDPOINTS = {
   DISPENSARIES: '/api/dispensaries',
   ORDERS_PREVIEW: '/api/orders/preview',
   ORDERS: '/api/orders',
+  CART_VENDORS: '/api/cart/vendors',
+  CART_VENDOR: '/api/cart/vendor',
+  CART_WARNINGS: '/api/cart/warnings',
 } as const;
+
+export interface CartVendorDto {
+  dispensaryId: string;
+  name: string;
+  slug: string;
+  address: string;
+  city: string;
+  zip: string;
+  distanceMiles: number | null;
+  isOpenNow: boolean;
+  hoursToday: DispensaryHoursWindowDto | null;
+  offersDelivery: boolean;
+  isDeliveringNow: boolean;
+  deliveryHoursToday: DispensaryHoursWindowDto | null;
+  mappedItemCount: number;
+  totalCartItemCount: number;
+  isPreselected: boolean;
+}
+
+export interface CartVendorWarningDto {
+  cartItemId: string;
+  productId: string;
+  productName: string;
+  sku: string | null;
+  reason: 'UNMAPPED' | 'UNAVAILABLE';
+}
 
 export interface SystemHealthDto {
   status: string;
@@ -295,6 +324,13 @@ export interface AdminDispensaryDto {
   coverageZips: string[];
   timezone: string;
   handoffChannel: string;
+  platform?: VendorPlatform;
+  websiteUrl?: string | null;
+  cartBaseUrl?: string | null;
+  allowedHosts?: string[];
+  handoffNotes?: string | null;
+  lastHealthCheckAt?: string | null;
+  healthStatus?: string | null;
   handoffUrlTemplate: string | null;
   leaflyStoreId: string | null;
   webhookSecret: string;
@@ -633,14 +669,11 @@ export const AssignmentSource = {
 export type AssignmentSource = (typeof AssignmentSource)[keyof typeof AssignmentSource];
 
 export const HandoffChannel = {
-  DUTCHIE: 'DUTCHIE',
-  MEADOW: 'MEADOW',
-  TREEZ: 'TREEZ',
-  JANE: 'JANE',
-  BLAZE: 'BLAZE',
-  RETAILER_PORTAL: 'RETAILER_PORTAL',
-  MANUAL: 'MANUAL',
-  LEAFLY: 'LEAFLY',
+  WOOCOMMERCE: 'WOOCOMMERCE',
+  SHOPIFY: 'SHOPIFY',
+  BIGCOMMERCE: 'BIGCOMMERCE',
+  DEEP_LINK: 'DEEP_LINK',
+  ORDER_REQUEST: 'ORDER_REQUEST',
 } as const;
 export type HandoffChannel = (typeof HandoffChannel)[keyof typeof HandoffChannel];
 
@@ -708,6 +741,8 @@ export interface CartDetailDto {
   id: string;
   sessionToken: string;
   status: 'ACTIVE' | 'EXPIRED' | 'CHECKED_OUT' | 'ABANDONED';
+  selectedDispensaryId?: string | null;
+  selectionSource?: string | null;
   expiresAt: string;
   lastActivityAt: string;
   hold: CartHoldMetadata;
@@ -790,7 +825,7 @@ export interface CreateOrderInput {
   fulfillmentType: FulfillmentType;
   zip: string;
   preferredDispensaryId?: string | null;
-  itemOverrides?: Array<{ productId: string; dispensaryId: string }>;
+  excludeProductIds?: string[];
   saveToProfile?: boolean;
   contact: {
     firstName: string;
@@ -925,5 +960,52 @@ export interface CategorySummaryDto {
   name: string;
   sortOrder?: number;
 }
+
+export type VendorPlatform = 'WOOCOMMERCE' | 'SHOPIFY' | 'BIGCOMMERCE' | 'OTHER';
+
+export const VendorPlatform = {
+  WOOCOMMERCE: 'WOOCOMMERCE',
+  SHOPIFY: 'SHOPIFY',
+  BIGCOMMERCE: 'BIGCOMMERCE',
+  OTHER: 'OTHER',
+} as const;
+
+export interface VendorMappingDto {
+  id: string;
+  productId: string;
+  dispensaryId: string;
+  ourSku: string;
+  vendorProductId: string | null;
+  vendorVariantId: string | null;
+  vendorSku: string | null;
+  isAvailable: boolean;
+  updatedAt: string;
+  product?: {
+    id: string;
+    name: string;
+    sku: string | null;
+    slug: string;
+    isActive: boolean;
+  };
+  dispensary?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
+
+export interface DispensaryPlatformConfigDto {
+  id: string;
+  name: string;
+  slug: string;
+  platform: VendorPlatform;
+  websiteUrl: string | null;
+  cartBaseUrl: string | null;
+  allowedHosts: string[];
+  handoffNotes: string | null;
+  lastHealthCheckAt: string | null;
+  healthStatus: string | null;
+}
+
 
 

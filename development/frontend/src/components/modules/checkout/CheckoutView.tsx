@@ -9,44 +9,53 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useCart } from '@/hooks/useCart';
 import { useCheckoutStore } from '@/stores/checkout.store';
 import { useCheckoutPreview } from '@/hooks/useCheckoutPreview';
+import { useCartVendors } from '@/hooks/useCartVendors';
 import { FulfillmentToggle } from './FulfillmentToggle';
 import { DeliveryAddressForm } from './DeliveryAddressForm';
 import { PickupLocationForm } from './PickupLocationForm';
-import { SubOrderCard } from './SubOrderCard';
-import { UnfulfillableList } from './UnfulfillableList';
 import { ContactForm } from './ContactForm';
 import { NoCoverageAlert } from './NoCoverageAlert';
 import { CheckoutSummary } from './CheckoutSummary';
 import { CheckoutSkeleton } from './CheckoutSkeleton';
+import { VendorSelector } from './VendorSelector';
+import { VendorWarningsBanner } from './VendorWarningsBanner';
 import { useShopperProfile, useShopperAddresses } from '@/hooks/useShopperAccount';
+import { toast } from '@/stores/toast.store';
 
 export function CheckoutView() {
-  const { cart, isExpired } = useCart();
+  const { cart, isExpired, removeItem, isRemoving } = useCart();
   const {
     fulfillmentType,
     contact,
     deliveryAddress,
+    zip,
     setContact,
     setDeliveryAddress,
     setZip,
-    setPreferredDispensaryId,
-    setItemOverride,
+    excludeProductIds,
+    setExcludeProductIds,
   } = useCheckoutStore();
 
   const { data: shopperProfile } = useShopperProfile();
   const { data: shopperAddresses = [] } = useShopperAddresses();
 
-  // Pre-fill shopper profile preferences (homeZip, defaultStore)
+  const [coords, setCoords] = React.useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
+  const [zipInput, setZipInput] = React.useState(zip || '');
+  const [isLocating, setIsLocating] = React.useState(false);
+  const [ignoredWarnings, setIgnoredWarnings] = React.useState(false);
+
+  // Pre-fill shopper profile preferences (homeZip)
   React.useEffect(() => {
     if (shopperProfile) {
       if (shopperProfile.homeZip && !deliveryAddress.line1) {
         setZip(shopperProfile.homeZip);
-      }
-      if (shopperProfile.defaultDispensaryId) {
-        setPreferredDispensaryId(shopperProfile.defaultDispensaryId);
+        setZipInput(shopperProfile.homeZip);
       }
     }
-  }, [shopperProfile, setZip, setPreferredDispensaryId]);
+  }, [shopperProfile, setZip]);
 
   // Pre-fill default saved address
   React.useEffect(() => {
@@ -60,9 +69,26 @@ export function CheckoutView() {
           state: defaultAddr.state,
           zip: defaultAddr.zip,
         });
+        setZipInput(defaultAddr.zip);
       }
     }
   }, [shopperAddresses, setDeliveryAddress]);
+
+  // Vendor hook
+  const activeZip = (fulfillmentType === 'DELIVERY' ? deliveryAddress.zip : zip).trim();
+  const {
+    vendors,
+    selectedDispensaryId,
+    isLoadingVendors,
+    warnings,
+    selectVendor,
+    isSelectingVendor,
+    refetchVendors,
+  } = useCartVendors({
+    zip: activeZip || undefined,
+    lat: coords.lat,
+    lng: coords.lng,
+  });
 
   const {
     preview,
@@ -73,15 +99,75 @@ export function CheckoutView() {
     isFetchingPreview,
     previewError,
     isNoCoverage,
-    activeZip,
     hasValidZipForDelivery,
     placeOrder,
     isPlacingOrder,
     switchToPickup,
-    removeCartItem,
-    isRemovingCartItem,
     refetchPreview,
   } = useCheckoutPreview();
+
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocating(false);
+        setCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        toast.success('Location updated for nearest partner calculation');
+      },
+      (err) => {
+        setIsLocating(false);
+        toast.error('Unable to retrieve location. Please enter your ZIP code.');
+      },
+      { timeout: 10000 }
+    );
+  };
+
+  const handleApplyZip = () => {
+    if (/^\d{5}$/.test(zipInput.trim())) {
+      setZip(zipInput.trim());
+      refetchVendors();
+      refetchPreview();
+      toast.success(`ZIP set to ${zipInput.trim()}`);
+    } else {
+      toast.error('Please enter a valid 5-digit ZIP code');
+    }
+  };
+
+  const handleSelectVendor = async (dispensaryId: string) => {
+    try {
+      await selectVendor(dispensaryId);
+      setIgnoredWarnings(false);
+      refetchPreview();
+      toast.success('Fulfillment partner updated');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update partner');
+    }
+  };
+
+  const handleRemoveWarningItem = async (productId: string) => {
+    try {
+      await removeItem({ productId });
+      refetchPreview();
+      toast.success('Item removed from cart');
+    } catch (err: any) {
+      toast.error('Failed to remove item');
+    }
+  };
+
+  const handleContinueWithout = () => {
+    const warningProductIds = warnings.map((w) => w.productId);
+    setExcludeProductIds(Array.from(new Set([...excludeProductIds, ...warningProductIds])));
+    setIgnoredWarnings(true);
+    refetchPreview();
+    toast.info('Continuing without unavailable items');
+  };
 
   // Form validity check
   const isContactValid = Boolean(
@@ -96,7 +182,8 @@ export function CheckoutView() {
     (Boolean(deliveryAddress.line1?.trim() && deliveryAddress.city?.trim()) &&
       hasValidZipForDelivery);
 
-  const isFormValid = isContactValid && isAddressValid;
+  const hasBlockingWarnings = warnings.length > 0 && !ignoredWarnings;
+  const isFormValid = isContactValid && isAddressValid && !hasBlockingWarnings;
 
   const getValidationMessage = () => {
     if (fulfillmentType === 'DELIVERY' && !hasValidZipForDelivery) {
@@ -107,6 +194,9 @@ export function CheckoutView() {
     }
     if (!isContactValid) {
       return 'Please fill in all customer contact details.';
+    }
+    if (hasBlockingWarnings) {
+      return 'Please resolve unavailable items before continuing to partner checkout.';
     }
     return null;
   };
@@ -162,7 +252,7 @@ export function CheckoutView() {
             Cannabis Checkout
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Multi-dispensary routing across New York legal retail partners.
+            Select your licensed New York fulfillment dispensary partner.
           </p>
         </div>
 
@@ -181,15 +271,13 @@ export function CheckoutView() {
 
       {/* Main Checkout Layout: 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Fulfillment, Split Cards, Out of stock fixes */}
+        {/* Left Column: Fulfillment, Vendor Selection & Warnings */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Fulfillment Toggle */}
+          {/* 1. Fulfillment Toggle */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                1. Select Fulfillment Method
-              </span>
-            </div>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              1. Fulfillment Method
+            </span>
             <FulfillmentToggle />
           </div>
 
@@ -202,7 +290,7 @@ export function CheckoutView() {
             )}
           </div>
 
-          {/* No Coverage Alert (AC-FUL-01) */}
+          {/* No Coverage Alert */}
           {isNoCoverage && (
             <NoCoverageAlert
               zip={activeZip}
@@ -210,60 +298,33 @@ export function CheckoutView() {
             />
           )}
 
-          {/* Out of Stock Alert & Resolution (AC-OOS-01) */}
-          {unfulfillable.length > 0 && (
-            <UnfulfillableList
-              unfulfillable={unfulfillable}
-              onSwitchToStore={(productId, dispensaryId) => {
-                setItemOverride(productId, dispensaryId);
-              }}
-              onRemoveItem={(productId) => {
-                removeCartItem(productId);
-              }}
-              isRemoving={isRemovingCartItem}
+          {/* 2. Single Fulfillment Partner Dispensary Selector */}
+          <div className="space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              2. Licensed Partner Dispensary
+            </span>
+            <VendorSelector
+              vendors={vendors}
+              selectedDispensaryId={selectedDispensaryId}
+              onSelectVendor={handleSelectVendor}
+              isSelecting={isSelectingVendor || isLoadingVendors}
+              onUseLocation={handleUseLocation}
+              isLocating={isLocating}
+              zipInput={zipInput}
+              onZipChange={setZipInput}
+              onApplyZip={handleApplyZip}
+            />
+          </div>
+
+          {/* Unmapped / Unavailable Warnings Banner */}
+          {warnings.length > 0 && (
+            <VendorWarningsBanner
+              warnings={warnings}
+              onRemoveItem={handleRemoveWarningItem}
+              onContinueWithout={handleContinueWithout}
+              isRemoving={isRemoving}
             />
           )}
-
-          {/* Dispensary Split Cards (AC-HRS-01, AC-DLH-01, AC-SEL-01) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                2. Dispensary Allocation ({subOrders.length})
-              </span>
-              {subOrders.length > 1 && (
-                <span className="text-xs text-muted-foreground">
-                  Order split across multiple dispensaries
-                </span>
-              )}
-            </div>
-
-            {isLoadingPreview ? (
-              <div className="p-8 rounded-2xl border border-border bg-card/40 text-center space-y-3">
-                <RefreshCw className="h-6 w-6 mx-auto animate-spin text-primary" />
-                <p className="text-xs text-muted-foreground">
-                  Evaluating licensed store inventory and distance...
-                </p>
-              </div>
-            ) : subOrders.length === 0 && !isNoCoverage ? (
-              <div className="p-6 rounded-2xl border border-border bg-card text-center text-xs text-muted-foreground">
-                Enter your delivery address or pickup ZIP above to preview dispensary routing.
-              </div>
-            ) : (
-              subOrders.map((subOrder) => (
-                <SubOrderCard
-                  key={subOrder.dispensaryId}
-                  subOrder={subOrder}
-                  onChangeStore={(newDispensaryId) => {
-                    // Update all items in this sub-order to the chosen dispensary
-                    subOrder.items.forEach((item) => {
-                      setItemOverride(item.productId, newDispensaryId);
-                    });
-                    setPreferredDispensaryId(newDispensaryId);
-                  }}
-                />
-              ))
-            )}
-          </div>
         </div>
 
         {/* Right Column: Contact Info & Sticky Order Summary */}
@@ -278,12 +339,12 @@ export function CheckoutView() {
           <div className="sticky top-24">
             <CheckoutSummary
               total={total}
-              subOrderCount={subOrders.length}
+              subOrderCount={subOrders.length || 1}
               itemCount={cart.itemCount}
               onPlaceOrder={placeOrder}
               isPlacingOrder={isPlacingOrder}
               isLoadingPreview={isLoadingPreview}
-              hasUnfulfillableItems={unfulfillable.length > 0}
+              hasUnfulfillableItems={unfulfillable.length > 0 && !ignoredWarnings}
               isNoCoverage={isNoCoverage}
               isFormValid={isFormValid}
               validationMessage={getValidationMessage()}
@@ -294,4 +355,3 @@ export function CheckoutView() {
     </div>
   );
 }
-

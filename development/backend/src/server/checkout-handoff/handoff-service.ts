@@ -1,43 +1,116 @@
-import { SubOrderStatus } from '@prisma/client';
+import { HandoffChannel, SubOrderStatus, CartStatus } from '@prisma/client';
 import { prisma } from '../db';
 import { rollupOrderStatus } from '../orders/status';
-import { getHandoffProvider } from './providers';
 import {
-  CheckoutHandoffResult,
-  ExecuteHandoffOptions,
+  buildWooCommerceUrl,
+  buildShopifyUrl,
+  buildBigCommerceUrl,
+  buildDeepLinkUrl,
+  sendOrderRequest,
+  AdapterLineInput,
+  AdapterVendorInput,
+  AdapterResult,
+} from './adapters';
+import {
   ForbiddenOrderAccessError,
   OrderNotFoundError,
   SubOrderNotFoundError,
+  HandoffError,
 } from './types';
 
+export { verifySignedPayload, createSignedPayload } from './signed-payload';
+export * from './types';
+
 /**
- * Executes compliant checkout handoff for an order or specific sub-order.
- *
- * Rules (docs/08 §9, ADR-005, T-HND-01, AC-HND-01):
- * - Validates ownership: caller must match cart session token or authenticated shopper ID.
- * - Resolves handoff URL using appropriate provider (RetailerPageProvider or LeaflyProvider).
- * - Transitions sub-order status from PENDING to HANDED_OFF.
- * - Sets `SubOrder.handoffUrl` and `SubOrder.handedOffAt`.
- * - Recomputes and rolls up parent `Order.status` (e.g. HANDED_OFF when all are handed off).
- * - Zero ID & Zero Payment: no payment, credit card, or government ID data is stored or returned.
+ * Validates that the URL host is in the dispensary's allowedHosts list.
+ * Prevents open redirects (CWE-601).
  */
-export async function executeCheckoutHandoff(
-  options: ExecuteHandoffOptions
-): Promise<CheckoutHandoffResult> {
+export function validateHandoffHost(urlStr: string, allowedHosts: string[]): boolean {
+  try {
+    const parsed = new URL(urlStr);
+    const host = parsed.hostname.toLowerCase();
+    return allowedHosts.some((allowed) => {
+      const cleanAllowed = allowed.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      return host === cleanAllowed || host.endsWith(`.${cleanAllowed}`);
+    });
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Appends standard UTM tracking parameters to the handoff URL.
+ */
+export function appendUtmParameters(urlStr: string, orderNumber: string): string {
+  const url = new URL(urlStr);
+  url.searchParams.set('utm_source', 'owtlet');
+  url.searchParams.set('utm_medium', 'referral');
+  url.searchParams.set('utm_campaign', 'cart_handoff');
+  url.searchParams.set('utm_content', orderNumber);
+  return url.toString();
+}
+
+/**
+ * Builds the vendor handoff URL using the appropriate platform adapter.
+ */
+export async function buildVendorHandoffUrl(
+  channel: HandoffChannel,
+  vendor: AdapterVendorInput,
+  lines: AdapterLineInput[],
+  context: { orderId?: string; orderNumber: string; subOrderId: string; storefront?: boolean }
+): Promise<AdapterResult> {
+  switch (channel) {
+    case HandoffChannel.WOOCOMMERCE:
+      return buildWooCommerceUrl(vendor, lines, context);
+    case HandoffChannel.SHOPIFY:
+      return buildShopifyUrl(vendor, lines, context);
+    case HandoffChannel.BIGCOMMERCE:
+      return buildBigCommerceUrl(vendor, lines, context);
+    case HandoffChannel.ORDER_REQUEST:
+      return sendOrderRequest(vendor, lines, context);
+    case HandoffChannel.DEEP_LINK:
+    default:
+      return buildDeepLinkUrl(vendor, lines, context);
+  }
+}
+
+/**
+ * Generates the redirect URL for a specific order and marks it HANDED_OFF.
+ * Marks the cart as CONVERTED (if CLEAR_CART_AFTER_HANDOFF is true, default true).
+ */
+export async function generateHandoffRedirect(options: {
+  orderId: string;
+  subOrderId?: string;
+  session?: {
+    cartSessionToken?: string | null;
+    shopperId?: string | null;
+    isAdmin?: boolean;
+  };
+}): Promise<{ redirectUrl: string; orderNumber: string; warnings?: string[] }> {
   const { orderId, subOrderId, session = {} } = options;
 
-  // 1. Fetch order with sub-orders and dispensary information
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      cart: {
-        select: {
-          sessionToken: true,
-        },
-      },
+      cart: true,
       subOrders: {
         include: {
-          dispensary: true,
+          dispensary: {
+            include: {
+              vendorMappings: true,
+            },
+          },
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  sku: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
         orderBy: { createdAt: 'asc' },
       },
@@ -48,7 +121,7 @@ export async function executeCheckoutHandoff(
     throw new OrderNotFoundError(`Order with ID ${orderId} not found`);
   }
 
-  // 2. Authorization check (same logic as getOrderById)
+  // Authorization check
   const isAuthorized =
     session.isAdmin ||
     (session.shopperId && order.shopperId === session.shopperId) ||
@@ -60,90 +133,110 @@ export async function executeCheckoutHandoff(
     throw new ForbiddenOrderAccessError('You do not have permission to hand off this order');
   }
 
-  // 3. Filter target sub-orders if subOrderId was specified
-  let targetSubOrders = order.subOrders;
-  if (subOrderId) {
-    targetSubOrders = order.subOrders.filter((s) => s.id === subOrderId);
-    if (targetSubOrders.length === 0) {
-      throw new SubOrderNotFoundError(`Sub-order ${subOrderId} not found in order ${orderId}`);
+  // Target sub-order (single-vendor checkout = 1 SubOrder)
+  const targetSubOrder = subOrderId
+    ? order.subOrders.find((s) => s.id === subOrderId)
+    : order.subOrders[0];
+
+  if (!targetSubOrder) {
+    throw new SubOrderNotFoundError(`No sub-order found for order ${orderId}`);
+  }
+
+  const dispensary = targetSubOrder.dispensary;
+  const channel = targetSubOrder.handoffChannel || dispensary.handoffChannel || HandoffChannel.DEEP_LINK;
+
+  // Build mapped lines
+  const mappingMap = new Map(dispensary.vendorMappings.map((m) => [m.productId, m]));
+  const lines: AdapterLineInput[] = targetSubOrder.items.map((item) => {
+    const mapping = mappingMap.get(item.productId);
+    return {
+      productId: item.productId,
+      sku: item.product?.sku || item.productId,
+      name: item.name,
+      quantity: item.quantity,
+      price: item.unitPrice ? String(item.unitPrice) : null,
+      vendorProductId: mapping?.vendorProductId || null,
+      vendorVariantId: mapping?.vendorVariantId || null,
+      vendorSku: mapping?.vendorSku || null,
+    };
+  });
+
+  const vendorInput: AdapterVendorInput = {
+    id: dispensary.id,
+    name: dispensary.name,
+    slug: dispensary.slug,
+    websiteUrl: dispensary.websiteUrl,
+    cartBaseUrl: dispensary.cartBaseUrl,
+    webhookSecret: dispensary.webhookSecret,
+    allowedHosts: dispensary.allowedHosts,
+    handoffNotes: dispensary.handoffNotes,
+  };
+
+  const adapterResult = await buildVendorHandoffUrl(channel, vendorInput, lines, {
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    subOrderId: targetSubOrder.id,
+    storefront: dispensary.shopifyStorefrontParam,
+  });
+
+  // Host Whitelist Validation (Prevent Open Redirect - Fail closed if allowedHosts is empty)
+  if (channel === HandoffChannel.ORDER_REQUEST) {
+    // ORDER_REQUEST returns internal route e.g. /order/[id]?requested=1
+  } else {
+    if (!dispensary.allowedHosts || dispensary.allowedHosts.length === 0) {
+      throw new HandoffError('Dispensary allowedHosts whitelist is not configured', 'HOST_NOT_ALLOWED');
+    }
+    const isAllowed = validateHandoffHost(adapterResult.url, dispensary.allowedHosts);
+    if (!isAllowed) {
+      throw new HandoffError('Dispensary redirect host is not permitted by whitelist', 'HOST_NOT_ALLOWED');
     }
   }
 
-  // 4. Generate handoff URLs and update sub-orders in transaction
-  const handoffResults: CheckoutHandoffResult['handoffs'] = [];
+  // Append standard UTM tracking parameters for external URLs
+  const finalRedirectUrl = adapterResult.url.startsWith('http')
+    ? appendUtmParameters(adapterResult.url, order.orderNumber)
+    : adapterResult.url;
+
+  // Transition sub-order and order status in a transaction
   const now = new Date();
-
   await prisma.$transaction(async (tx) => {
-    for (const subOrder of targetSubOrders) {
-      const channel = subOrder.handoffChannel || subOrder.dispensary.handoffChannel;
-      const provider = getHandoffProvider(channel);
+    await tx.subOrder.update({
+      where: { id: targetSubOrder.id },
+      data: {
+        status: SubOrderStatus.HANDED_OFF,
+        handoffUrl: finalRedirectUrl,
+        handoffWarnings: adapterResult.warnings ? (adapterResult.warnings as any) : undefined,
+        handedOffAt: now,
+      },
+    });
 
-      const url = await provider.buildUrl({
-        subOrder: {
-          id: subOrder.id,
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          dispensaryId: subOrder.dispensaryId,
-          subtotal: Number(subOrder.subtotal),
-          fulfillmentType: subOrder.fulfillmentType,
-        },
-        dispensary: {
-          id: subOrder.dispensary.id,
-          name: subOrder.dispensary.name,
-          slug: subOrder.dispensary.slug,
-          handoffChannel: subOrder.dispensary.handoffChannel,
-          handoffUrlTemplate: subOrder.dispensary.handoffUrlTemplate,
-          leaflyStoreId: subOrder.dispensary.leaflyStoreId,
-        },
-        order: {
-          id: order.id,
-          orderNumber: order.orderNumber,
-          zip: order.zip,
-          contactFirstName: order.contactFirstName,
-          contactLastName: order.contactLastName,
-          contactEmail: order.contactEmail,
-          contactPhone: order.contactPhone,
-        },
-      });
-
-      // Sub-order status transition: PENDING -> HANDED_OFF. If already CONFIRMED, preserve CONFIRMED.
-      const newStatus =
-        subOrder.status === SubOrderStatus.PENDING
-          ? SubOrderStatus.HANDED_OFF
-          : subOrder.status;
-
-      await tx.subOrder.update({
-        where: { id: subOrder.id },
-        data: {
-          handoffUrl: url,
-          handedOffAt: subOrder.handedOffAt || now,
-          status: newStatus,
-        },
-      });
-
-      handoffResults.push({
-        subOrderId: subOrder.id,
-        channel,
-        url,
-        dispensaryName: subOrder.dispensary.name,
-      });
-    }
-
-    // 5. Recompute and roll up parent Order.status
-    const allSubOrders = await tx.subOrder.findMany({
+    const currentSubOrders = await tx.subOrder.findMany({
       where: { orderId: order.id },
       select: { status: true },
     });
 
-    const rolledUpStatus = rollupOrderStatus(allSubOrders.map((s) => s.status));
+    const rolledUpStatus = rollupOrderStatus(currentSubOrders.map((s) => s.status));
     await tx.order.update({
       where: { id: order.id },
       data: { status: rolledUpStatus },
     });
+
+    // Cart retention: mark cart as CONVERTED
+    const clearCart = process.env.CLEAR_CART_AFTER_HANDOFF !== 'false';
+    if (clearCart && order.cartId) {
+      await tx.cart.update({
+        where: { id: order.cartId },
+        data: {
+          status: CartStatus.CONVERTED,
+          lastActivityAt: now,
+        },
+      });
+    }
   });
 
   return {
-    handoffs: handoffResults,
+    redirectUrl: finalRedirectUrl,
+    orderNumber: order.orderNumber,
+    warnings: adapterResult.warnings,
   };
 }
-

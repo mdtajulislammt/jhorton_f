@@ -26,6 +26,7 @@ interface OrderConfirmationPageProps {
   };
   searchParams?: {
     confirmed?: string;
+    requested?: string;
   };
 }
 
@@ -39,6 +40,7 @@ export default async function OrderConfirmationPage({
   searchParams,
 }: OrderConfirmationPageProps) {
   const isJustConfirmed = searchParams?.confirmed === 'true';
+  const isRequested = searchParams?.requested === '1';
 
   let order: OrderDetailDto | null = null;
   try {
@@ -119,6 +121,21 @@ export default async function OrderConfirmationPage({
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Your dispensary received your reservation. The store team is preparing your order.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ORDER_REQUEST Banner */}
+          {isRequested && (
+            <div className="rounded-2xl border border-primary/40 bg-primary/10 p-4 sm:p-5 flex items-start gap-3.5 shadow-sm">
+              <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">
+                  Order Request Submitted!
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Your order details have been dispatched to the partner dispensary. They will review and confirm availability.
                 </p>
               </div>
             </div>
@@ -248,7 +265,25 @@ export default async function OrderConfirmationPage({
 
                       {/* Handoff Button Section (when not confirmed and not rejected) */}
                       {!isSubConfirmed && !isSubRejected && (
-                        <div className="p-4 sm:p-5 pt-0">
+                        <div className="p-4 sm:p-5 pt-0 space-y-3">
+                          {subOrder.handoffChannel === 'DEEP_LINK' && (
+                            <div className="rounded-xl bg-secondary/50 border border-border p-3 text-xs space-y-1.5">
+                              <p className="font-semibold text-foreground">
+                                Manual Cart Items Checklist
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                When redirected to {subOrder.dispensaryName}&apos;s website, add these items to your cart:
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-foreground">
+                                {subOrder.lines.map((l) => (
+                                  <li key={l.productId}>
+                                    {l.productName} &times; {l.quantity}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
                           <HandoffButton
                             subOrderId={subOrder.id}
                             orderId={order.id}

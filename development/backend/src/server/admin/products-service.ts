@@ -186,6 +186,11 @@ export async function createAdminProduct(data: CreateProductInput) {
     throw new AdminProductError('VALIDATION_ERROR', 'Name and category are required', 400);
   }
 
+  const isActive = data.isActive ?? true;
+  if (isActive && (!data.sku || !data.sku.trim())) {
+    throw new AdminProductError('SKU_REQUIRED', 'SKU is required for active products', 422);
+  }
+
   const slug = data.slug ? slugify(data.slug) : slugify(data.name);
 
   // Check unique slug
@@ -255,6 +260,13 @@ export async function updateAdminProduct(id: string, data: UpdateProductInput) {
       'Cannot remove Owtlet price: product is currently pinned in a scheduled or active live show (AC-ADM-01)',
       422
     );
+  }
+
+  // Validate SKU required for active products
+  const willBeActive = data.isActive !== undefined ? data.isActive : existing.isActive;
+  const targetSku = data.sku !== undefined ? data.sku : existing.sku;
+  if (willBeActive && (!targetSku || !targetSku.trim())) {
+    throw new AdminProductError('SKU_REQUIRED', 'SKU is required for active products', 422);
   }
 
   const updateData: any = {};

@@ -12,6 +12,7 @@ import {
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { CART_COOKIE_NAME } from '../../server/cart/session';
+import { verifyShopperToken } from '../../server/shopper-account/crypto';
 import { CartExpiredError } from '../../server/cart';
 import { NoCoverageError } from '../../server/dispensaries';
 import {
@@ -71,7 +72,7 @@ export class OrdersController {
       });
     }
 
-    const { fulfillmentType, zip, preferredDispensaryId, itemOverrides } =
+    const { fulfillmentType, zip, preferredDispensaryId, excludeProductIds } =
       parseResult.data;
 
     try {
@@ -80,7 +81,7 @@ export class OrdersController {
         fulfillmentType,
         zip,
         preferredDispensaryId,
-        itemOverrides,
+        excludeProductIds,
       });
 
       return res.status(HttpStatus.OK).json({
@@ -176,11 +177,18 @@ export class OrdersController {
     }
 
     const shopperCookie = req.cookies?.['owt_shopper'] || null;
+    let verifiedShopperId: string | null = null;
+    if (shopperCookie) {
+      const verification = await verifyShopperToken(shopperCookie);
+      if (verification.valid && verification.shopperId) {
+        verifiedShopperId = verification.shopperId;
+      }
+    }
 
     try {
       const result = await createOrder(parseResult.data, {
         cartSessionToken: sessionToken,
-        shopperId: shopperCookie,
+        shopperId: verifiedShopperId,
       });
 
       const statusCode = result.isExisting ? HttpStatus.OK : HttpStatus.CREATED;
@@ -278,11 +286,18 @@ export class OrdersController {
   async getOrder(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     const sessionToken = getSessionToken(req);
     const shopperCookie = req.cookies?.['owt_shopper'] || null;
+    let verifiedShopperId: string | null = null;
+    if (shopperCookie) {
+      const verification = await verifyShopperToken(shopperCookie);
+      if (verification.valid && verification.shopperId) {
+        verifiedShopperId = verification.shopperId;
+      }
+    }
 
     try {
       const order = await getOrderById(id, {
         cartSessionToken: sessionToken,
-        shopperId: shopperCookie,
+        shopperId: verifiedShopperId,
       });
 
       return res.status(HttpStatus.OK).json({

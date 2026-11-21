@@ -6,7 +6,7 @@ describe('Prisma Schema & Domain Compliance Verification', () => {
   const schemaPath = path.join(__dirname, '..', '..', 'prisma', 'schema.prisma');
   const schemaContent = fs.readFileSync(schemaPath, 'utf8');
 
-  it('contains all 21 domain models', () => {
+  it('contains all 22 domain models', () => {
     const requiredModels = [
       'User',
       'Brand',
@@ -29,6 +29,7 @@ describe('Prisma Schema & Domain Compliance Verification', () => {
       'ShowProduct',
       'AgeVerificationSession',
       'CoverageZip',
+      'VendorProductMapping',
     ];
 
     for (const model of requiredModels) {
@@ -36,7 +37,7 @@ describe('Prisma Schema & Domain Compliance Verification', () => {
     }
   });
 
-  it('contains all 11 domain enums', () => {
+  it('contains all 12 domain enums', () => {
     const requiredEnums = [
       'Role',
       'StrainType',
@@ -49,6 +50,7 @@ describe('Prisma Schema & Domain Compliance Verification', () => {
       'FulfillmentType',
       'HoursKind',
       'AssignmentSource',
+      'VendorPlatform',
     ];
 
     for (const en of requiredEnums) {
