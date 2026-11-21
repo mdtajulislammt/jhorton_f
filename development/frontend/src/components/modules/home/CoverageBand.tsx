@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { BRAND_PHOTOS } from '@/lib/brand-photos';
 import { cn } from '@/lib/utils';
 
-const AREAS = ['Manhattan', 'Brooklyn', 'Queens', 'Westchester', 'Long Island'];
+const AREAS = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island', 'Westchester', 'Long Island'];
 
 type CheckState =
   | { kind: 'idle' }

@@ -215,5 +215,70 @@ describe('Dispensary Hours & Timezone Evaluation (T-HRS-01, T-DLH-01)', () => {
       expect(deliveryHours).toEqual({ opensAt: '11:00', closesAt: '20:00' });
     });
   });
+
+  describe('Post-Midnight Shifts (12AM, 1AM, 2AM) & Partner Real-World Schedules', () => {
+    // Partner 1 (Cannablooms): Fri/Sat 8AM - 1AM
+    // Partner 6 (QUBE): 8AM - 2AM
+    // Partner 10 (Zen Zest Nassau): Mon/Tue 9AM - 12AM (00:00), Wed-Fri 9AM - 2AM (02:00)
+    const partnerShifts = [
+      {
+        kind: HoursKind.STORE,
+        dayOfWeek: 5, // Friday: 08:00 - 01:00 (closes 1AM Sat morning)
+        opensAt: '08:00',
+        closesAt: '01:00',
+        isClosed: false,
+      },
+      {
+        kind: HoursKind.STORE,
+        dayOfWeek: 6, // Saturday: 08:00 - 02:00 (closes 2AM Sun morning)
+        opensAt: '08:00',
+        closesAt: '02:00',
+        isClosed: false,
+      },
+      {
+        kind: HoursKind.STORE,
+        dayOfWeek: 1, // Monday: 09:00 - 00:00 (closes 12AM Tue midnight)
+        opensAt: '09:00',
+        closesAt: '00:00',
+        isClosed: false,
+      },
+    ];
+
+    it('12AM (00:00) closing: open at 23:59 on Monday', () => {
+      // Monday 2026-01-19 23:59 NY (04:59 UTC Tuesday)
+      const monLate = new Date('2026-01-20T04:59:00Z');
+      expect(isOpenNow(partnerShifts, monLate)).toBe(true);
+    });
+
+    it('12AM (00:00) closing: closed at 00:01 on Tuesday', () => {
+      // Tuesday 2026-01-20 00:01 NY (05:01 UTC Tuesday)
+      const tueEarly = new Date('2026-01-20T05:01:00Z');
+      expect(isOpenNow(partnerShifts, tueEarly)).toBe(false);
+    });
+
+    it('1AM (01:00) closing: open on Saturday morning at 00:30 (Friday shift)', () => {
+      // Saturday 2026-01-17 00:30 NY (05:30 UTC Saturday)
+      const satEarly = new Date('2026-01-17T05:30:00Z');
+      expect(isOpenNow(partnerShifts, satEarly)).toBe(true);
+    });
+
+    it('1AM (01:00) closing: closed on Saturday morning at 01:05', () => {
+      // Saturday 2026-01-17 01:05 NY (06:05 UTC Saturday)
+      const satClosed = new Date('2026-01-17T06:05:00Z');
+      expect(isOpenNow(partnerShifts, satClosed)).toBe(false);
+    });
+
+    it('2AM (02:00) closing: open on Sunday morning at 01:45 (Saturday shift)', () => {
+      // Sunday 2026-01-18 01:45 NY (06:45 UTC Sunday)
+      const sunEarly = new Date('2026-01-18T06:45:00Z');
+      expect(isOpenNow(partnerShifts, sunEarly)).toBe(true);
+    });
+
+    it('2AM (02:00) closing: closed on Sunday morning at 02:05', () => {
+      // Sunday 2026-01-18 02:05 NY (07:05 UTC Sunday)
+      const sunClosed = new Date('2026-01-18T07:05:00Z');
+      expect(isOpenNow(partnerShifts, sunClosed)).toBe(false);
+    });
+  });
 });
 

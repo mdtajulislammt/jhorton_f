@@ -188,6 +188,7 @@ model Dispensary {
   coverageZips       String[]       @map("coverage_zips")
   timezone           String         @default("America/New_York")
   handoffChannel     HandoffChannel @default(RETAILER_PAGE) @map("handoff_channel")
+  websiteUrl         String?        @map("website_url")
   handoffUrlTemplate String?        @map("handoff_url_template")
   leaflyStoreId      String?        @map("leafly_store_id")
   webhookSecret      String         @map("webhook_secret")

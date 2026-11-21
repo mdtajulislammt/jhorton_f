@@ -123,6 +123,7 @@ export async function findEligible(
       deliveryHoursToday: deliveryHours,
       distanceMiles,
       handoffChannel: disp.handoffChannel,
+      websiteUrl: disp.websiteUrl,
       handoffUrlTemplate: disp.handoffUrlTemplate,
     };
   });

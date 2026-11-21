@@ -4,6 +4,8 @@ export const SUPPORTED_NY_REGIONS = [
   'MANHATTAN',
   'BROOKLYN',
   'QUEENS',
+  'BRONX',
+  'STATEN_ISLAND',
   'WESTCHESTER',
   'LONG_ISLAND',
 ] as const;

@@ -35,6 +35,7 @@ export interface CreateDispensaryInput {
   coverageZips?: string[];
   timezone?: string;
   handoffChannel?: 'LEAFLY' | 'RETAILER_PAGE';
+  websiteUrl?: string | null;
   handoffUrlTemplate?: string | null;
   leaflyStoreId?: string | null;
   webhookSecret?: string;
@@ -83,6 +84,7 @@ export async function listAdminDispensaries() {
     coverageZips: d.coverageZips,
     timezone: d.timezone,
     handoffChannel: d.handoffChannel,
+    websiteUrl: d.websiteUrl,
     handoffUrlTemplate: d.handoffUrlTemplate,
     leaflyStoreId: d.leaflyStoreId,
     webhookSecret: d.webhookSecret,
@@ -132,6 +134,7 @@ export async function getAdminDispensaryById(id: string) {
     coverageZips: d.coverageZips,
     timezone: d.timezone,
     handoffChannel: d.handoffChannel,
+    websiteUrl: d.websiteUrl,
     handoffUrlTemplate: d.handoffUrlTemplate,
     leaflyStoreId: d.leaflyStoreId,
     webhookSecret: d.webhookSecret,
@@ -208,6 +211,7 @@ export async function createAdminDispensary(data: CreateDispensaryInput) {
       coverageZips: data.coverageZips || [data.zip],
       timezone: data.timezone || 'America/New_York',
       handoffChannel: (data.handoffChannel as HandoffChannel) || 'RETAILER_PAGE',
+      websiteUrl: data.websiteUrl ?? null,
       handoffUrlTemplate: data.handoffUrlTemplate ?? null,
       leaflyStoreId: data.leaflyStoreId ?? null,
       webhookSecret,
@@ -251,6 +255,7 @@ export async function updateAdminDispensary(id: string, data: UpdateDispensaryIn
   if (data.coverageZips !== undefined) updateData.coverageZips = data.coverageZips;
   if (data.timezone !== undefined) updateData.timezone = data.timezone;
   if (data.handoffChannel !== undefined) updateData.handoffChannel = data.handoffChannel;
+  if (data.websiteUrl !== undefined) updateData.websiteUrl = data.websiteUrl;
   if (data.handoffUrlTemplate !== undefined) updateData.handoffUrlTemplate = data.handoffUrlTemplate;
   if (data.leaflyStoreId !== undefined) updateData.leaflyStoreId = data.leaflyStoreId;
   if (data.webhookSecret !== undefined) updateData.webhookSecret = data.webhookSecret;

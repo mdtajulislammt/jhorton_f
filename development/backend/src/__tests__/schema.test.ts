@@ -103,6 +103,8 @@ describe('Prisma Schema & Domain Compliance Verification', () => {
     expect(regions.has('MANHATTAN')).toBe(true);
     expect(regions.has('BROOKLYN')).toBe(true);
     expect(regions.has('QUEENS')).toBe(true);
+    expect(regions.has('BRONX')).toBe(true);
+    expect(regions.has('STATEN_ISLAND')).toBe(true);
     expect(regions.has('WESTCHESTER')).toBe(true);
     expect(regions.has('LONG_ISLAND')).toBe(true);
 

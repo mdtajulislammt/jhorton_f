@@ -25,6 +25,7 @@ export interface DispensaryItemDto {
   deliveryHoursToday: HoursWindowDto | null;
   distanceMiles: number | null;
   handoffChannel: HandoffChannel;
+  websiteUrl?: string | null;
   handoffUrlTemplate?: string | null;
 }
 
