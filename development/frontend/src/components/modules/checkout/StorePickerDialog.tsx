@@ -5,7 +5,7 @@ import { Store, CheckCircle2, AlertCircle, Clock, MapPin } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlternativeDispensary } from '@/server/distribution/types';
+import { AlternativeDispensary } from '@/types/api.generated';
 
 interface StorePickerDialogProps {
   isOpen: boolean;

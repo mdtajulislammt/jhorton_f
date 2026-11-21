@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signAgeToken, AGE_COOKIE_NAME } from '@/server/age-session/crypto';
+import { isAgeVerified, AGE_COOKIE_NAME } from '@/lib/session';
 
 const cookieStore = new Map<string, string>();
 
@@ -9,7 +9,25 @@ vi.mock('next/headers', () => ({
   }),
 }));
 
-import { isAgeVerified } from '@/server/age-session/verified';
+async function signAgeToken(ttlMs = 30 * 24 * 60 * 60 * 1000): Promise<{ token: string }> {
+  const encoder = new TextEncoder();
+  const secret = 'owtlet_age_cookie_default_secret_min_32_chars';
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify']
+  );
+  const nonceBytes = new Uint8Array(16);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = Array.from(nonceBytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  const exp = Date.now() + ttlMs;
+  const payload = `${nonce}.${exp}`;
+  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  const sigHex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return { token: `${payload}.${sigHex}` };
+}
 
 describe('isAgeVerified (server-side owt_age check for TerrificEmbed, TASK-023)', () => {
   beforeEach(() => cookieStore.clear());
@@ -33,7 +51,7 @@ describe('isAgeVerified (server-side owt_age check for TerrificEmbed, TASK-023)'
   });
 
   it('returns false for an expired token', async () => {
-    const { token } = await signAgeToken(undefined, -1000);
+    const { token } = await signAgeToken(-1000);
     cookieStore.set(AGE_COOKIE_NAME, token);
     expect(await isAgeVerified()).toBe(false);
   });

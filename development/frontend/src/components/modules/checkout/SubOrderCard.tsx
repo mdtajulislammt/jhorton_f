@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AllocatedSubOrder } from '@/server/distribution/types';
+import { AllocatedSubOrder } from '@/types/api.generated';
 import { StorePickerDialog } from './StorePickerDialog';
 
 interface SubOrderCardProps {

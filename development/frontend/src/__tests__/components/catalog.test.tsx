@@ -4,8 +4,8 @@ import { renderToString } from 'react-dom/server';
 import { ProductCard } from '@/components/catalog/product-card';
 import { StoreAvailabilityList } from '@/components/catalog/store-availability-list';
 import { ProductGridSkeleton, ProductDetailSkeleton } from '@/components/catalog/catalog-skeleton';
-import { ProductSummaryDto, StoreAvailabilityDto } from '@/server/products';
-import { StrainType } from '@prisma/client';
+import { ProductSummaryDto, StoreAvailabilityDto } from '@/types/api.generated';
+import { StrainType } from '@/types/api.generated';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({

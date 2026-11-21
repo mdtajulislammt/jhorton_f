@@ -1,15 +1,13 @@
 import * as React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { HandoffButton } from '@/components/modules/checkout/HandoffButton';
-import { CART_COOKIE_NAME } from '@/server/cart/session';
-import { getOrderById, OrderDetailDto } from '@/server/orders';
-import { verifyShopperToken } from '@/server/shopper-account/crypto';
+import { serverFetch } from '@/lib/server-api';
+import { OrderDetailDto } from '@/types/api.generated';
 import {
   CheckCircle2,
   ShieldCheck,
@@ -40,25 +38,11 @@ export default async function OrderConfirmationPage({
   params,
   searchParams,
 }: OrderConfirmationPageProps) {
-  const cookieStore = cookies();
-  const cartToken = cookieStore.get(CART_COOKIE_NAME)?.value || null;
-  const rawShopperCookie = cookieStore.get('owt_shopper')?.value || null;
-  let shopperId: string | null = null;
-  if (rawShopperCookie) {
-    const verification = await verifyShopperToken(rawShopperCookie);
-    if (verification.valid && verification.shopperId) {
-      shopperId = verification.shopperId;
-    }
-  }
   const isJustConfirmed = searchParams?.confirmed === 'true';
 
   let order: OrderDetailDto | null = null;
   try {
-    order = await getOrderById(params.id, {
-      cartSessionToken: cartToken,
-      shopperId,
-      isAdmin: false,
-    });
+    order = await serverFetch<OrderDetailDto>(`/orders/${params.id}`);
   } catch {
     order = null;
   }
@@ -128,166 +112,111 @@ export default async function OrderConfirmationPage({
           {/* Just-Confirmed Alert Banner */}
           {isJustConfirmed && (
             <div className="rounded-2xl border border-primary/40 bg-primary/10 p-4 sm:p-5 flex items-start gap-3.5 shadow-sm">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-primary mt-0.5" />
-              <div className="space-y-0.5 text-xs sm:text-sm">
-                <p className="font-heading font-semibold text-foreground">
-                  Dispensary Confirmation Recorded
+              <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">
+                  Handoff Successfully Completed!
                 </p>
-                <p className="text-muted-foreground">
-                  The partner dispensary confirmation webhook has been verified. Your order status has been updated in real time.
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Your dispensary received your reservation. The store team is preparing your order.
                 </p>
               </div>
             </div>
           )}
 
-          {/* Compliance & Zero Payment Banner */}
-          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:p-5 flex items-start gap-3.5">
-            <ShieldCheck className="h-5 w-5 shrink-0 text-primary mt-0.5" />
-            <div className="space-y-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              <p className="font-heading font-semibold text-foreground text-xs uppercase tracking-wide">
-                Compliant Dispensary Fulfillment
-              </p>
-              <p>
-                Owtlet routes your cannabis items to licensed NY dispensary partners. Under NY state
-                regulations, <strong>final payment and physical 21+ government photo ID verification</strong>{' '}
-                occur directly with each partner dispensary at fulfillment.
-              </p>
-            </div>
-          </div>
-
-          {/* Sub-Orders List with Confirmation Details */}
-          {order && order.subOrders.length > 0 ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  Dispensary Sub-Orders ({order.subOrders.length})
-                </h2>
-                <span className="text-xs text-muted-foreground font-medium">
-                  Total: ${order.subtotal}
-                </span>
-              </div>
-
-              <div className="space-y-5">
+          {/* Sub-Orders List */}
+          {order && order.subOrders && order.subOrders.length > 0 ? (
+            <div className="space-y-4">
+              <h2 className="font-heading text-lg font-bold text-foreground">
+                Dispensary Fulfillment &amp; Handoff
+              </h2>
+              <div className="space-y-4">
                 {order.subOrders.map((subOrder) => {
                   const isSubConfirmed = subOrder.status === 'CONFIRMED';
                   const isSubRejected = subOrder.status === 'REJECTED';
-                  const isSubHandedOff = subOrder.status === 'HANDED_OFF';
+                  const isPickup = subOrder.fulfillmentType === 'PICKUP';
 
                   return (
                     <div
                       key={subOrder.id}
-                      className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm"
+                      className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs"
                     >
-                      {/* Sub-Order Header */}
-                      <div className="p-4 sm:p-5 border-b border-border/60 bg-secondary/20 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                            <Store className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-heading text-sm font-semibold text-foreground">
+                      {/* Sub-order header */}
+                      <div className="p-4 sm:p-5 flex items-start justify-between gap-4 border-b border-border/60">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            {isPickup ? (
+                              <Store className="h-4 w-4 text-primary" />
+                            ) : (
+                              <Truck className="h-4 w-4 text-accent" />
+                            )}
+                            <h3 className="font-heading font-bold text-base text-foreground">
                               {subOrder.dispensaryName}
                             </h3>
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                {subOrder.fulfillmentType === 'DELIVERY' ? (
-                                  <>
-                                    <Truck className="h-3 w-3" /> NY Delivery
-                                  </>
-                                ) : (
-                                  <>
-                                    <Store className="h-3 w-3" /> Dispensary Pickup
-                                  </>
-                                )}
-                              </span>
-                              <span>•</span>
-                              <span>Subtotal: ${subOrder.subtotal}</span>
-                            </div>
                           </div>
+                          <p className="text-xs text-muted-foreground">
+                            {subOrder.dispensaryAddress}
+                          </p>
+                          <span className="inline-block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            {isPickup ? 'In-Store Pickup' : 'Direct Delivery'}
+                          </span>
                         </div>
 
-                        {/* Status Badge */}
-                        {isSubConfirmed ? (
-                          <Badge className="bg-primary/20 text-primary border-primary/30 text-xs font-semibold px-2.5 py-0.5 flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3" /> Confirmed
-                          </Badge>
-                        ) : isSubRejected ? (
+                        <div>
                           <Badge
-                            variant="destructive"
-                            className="text-xs font-semibold px-2.5 py-0.5 flex items-center gap-1"
+                            className={`text-xs font-semibold ${
+                              isSubConfirmed
+                                ? 'bg-primary/20 text-primary border-primary/30'
+                                : isSubRejected
+                                ? 'bg-destructive/15 text-destructive border-destructive/30'
+                                : 'bg-secondary text-secondary-foreground'
+                            }`}
                           >
-                            <AlertTriangle className="h-3 w-3" /> Declined
+                            {subOrder.status.replace('_', ' ')}
                           </Badge>
-                        ) : isSubHandedOff ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-primary/10 text-primary border border-primary/20 text-xs font-medium px-2.5 py-0.5 flex items-center gap-1"
-                          >
-                            <CheckCircle2 className="h-3 w-3" /> Transferred to Store
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="text-xs text-muted-foreground border-border px-2.5 py-0.5 flex items-center gap-1"
-                          >
-                            <Clock className="h-3 w-3" /> Pending Review
-                          </Badge>
-                        )}
+                        </div>
                       </div>
 
-                      {/* Items List */}
-                      <div className="p-4 sm:p-5 space-y-2.5">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Allocated Products
-                        </p>
-                        <ul className="divide-y divide-border/40 text-xs">
-                          {subOrder.items.map((item) => (
-                            <li
-                              key={item.id}
-                              className="py-2 flex items-center justify-between gap-2"
-                            >
-                              <span className="text-foreground font-medium">
-                                {item.quantity}× {item.name}
+                      {/* Line items in this sub-order */}
+                      <div className="p-4 sm:p-5 divide-y divide-border/40">
+                        {subOrder.lines.map((line) => (
+                          <div
+                            key={line.productId}
+                            className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between text-xs"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="font-medium text-foreground">
+                                {line.productName}
                               </span>
-                              <span className="font-mono text-muted-foreground">
-                                ${item.lineTotal}
+                              <span className="text-muted-foreground">
+                                &times; {line.quantity}
                               </span>
-                            </li>
-                          ))}
-                        </ul>
+                            </div>
+                            <span className="font-mono text-muted-foreground">
+                              ${line.lineTotal}
+                            </span>
+                          </div>
+                        ))}
+
+                        <div className="pt-3 flex justify-between font-bold text-xs text-foreground">
+                          <span>Sub-Order Total</span>
+                          <span className="font-mono">${subOrder.total}</span>
+                        </div>
                       </div>
 
-                      {/* Confirmation Details Card (when CONFIRMED) */}
+                      {/* Confirmation details (when CONFIRMED) */}
                       {isSubConfirmed && (
                         <div className="mx-4 sm:mx-5 mb-4 p-3.5 rounded-xl border border-primary/30 bg-primary/5 space-y-2 text-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-foreground flex items-center gap-1.5">
-                              <CheckCircle2 className="h-4 w-4 text-primary" />
-                              Store Confirmation
-                            </span>
-                            {subOrder.confirmationRef && (
-                              <span className="font-mono font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
-                                Ref: {subOrder.confirmationRef}
-                              </span>
-                            )}
-                          </div>
-                          {subOrder.confirmedAt && (
-                            <p className="text-muted-foreground text-[11px]">
-                              Confirmed by {subOrder.dispensaryName} at{' '}
-                              <span className="text-foreground font-medium">
-                                {new Date(subOrder.confirmedAt).toLocaleString('en-US', {
-                                  timeZone: 'America/New_York',
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true,
-                                })}{' '}
-                                EST
-                              </span>
-                            </p>
-                          )}
+                          <p className="font-semibold text-foreground flex items-center gap-1.5">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Confirmed by {subOrder.dispensaryName}
+                          </p>
+                          <p className="text-muted-foreground text-[11px]">
+                            {isPickup
+                              ? 'Your items are reserved and will be held for pickup during regular store hours. Bring valid 21+ government photo ID.'
+                              : 'Your delivery has been scheduled with the dispensary. You will receive SMS updates from the store driver.'}
+                          </p>
                           {subOrder.confirmationUrl && (
                             <div className="pt-1">
                               <a
@@ -341,29 +270,6 @@ export default async function OrderConfirmationPage({
                 Your order details have been recorded. If you do not see the dispensary handoff
                 buttons, please refresh this page with your active session.
               </p>
-            </div>
-          )}
-
-          {/* Guest Shopper: Save Info for Next Time Prompt */}
-          {order && !order.shopperId && (
-            <div className="p-5 rounded-2xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h4 className="font-heading font-semibold text-foreground text-sm flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  Save your info for next time
-                </h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Create an optional shopper profile to remember your default store and addresses for faster future checkouts.
-                </p>
-              </div>
-              <Link
-                href={`/account/register?email=${encodeURIComponent(order.contact.email)}&firstName=${encodeURIComponent(order.contact.firstName)}&lastName=${encodeURIComponent(order.contact.lastName)}&phone=${encodeURIComponent(order.contact.phone)}&zip=${encodeURIComponent(order.zip)}`}
-                className="shrink-0"
-              >
-                <Button className="min-h-[40px] text-xs font-bold px-4 active:scale-[0.98]">
-                  Create Profile
-                </Button>
-              </Link>
             </div>
           )}
 

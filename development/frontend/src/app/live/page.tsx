@@ -1,15 +1,13 @@
 import * as React from 'react';
 import { Metadata } from 'next';
-import Link from 'next/link';
-import { prisma } from '@/server/db';
-import { isAgeVerified } from '@/server/age-session/verified';
+import { serverFetch } from '@/lib/server-api';
+import { isAgeVerified } from '@/lib/session';
+import { LiveShowDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
 import { ShowRail } from '@/components/modules/live/ShowRail';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Radio, Play, Sparkles, Video, Clock } from 'lucide-react';
+import { Radio } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Live Cannabis Shopping, Replays & Shoppable Videos — Owtlet™',
@@ -22,28 +20,8 @@ export const revalidate = 60;
 export default async function LiveIndexPage() {
   // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
   const ageVerified = await isAgeVerified();
-  const allShows = await prisma.liveShow.findMany({
-    orderBy: [
-      { status: 'asc' }, // LIVE sorts first
-      { scheduledAt: 'desc' },
-      { createdAt: 'desc' },
-    ],
-    include: {
-      brand: true,
-      products: {
-        orderBy: { sortOrder: 'asc' },
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              owtletPrice: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const result = await serverFetch<{ items: LiveShowDto[] }>('/live-shows').catch(() => ({ items: [] }));
+  const allShows = result?.items ?? [];
 
   const featuredLive = allShows.find((s) => s.status === 'LIVE' && s.format === 'LIVE_SHOW') || allShows[0];
 
@@ -55,14 +33,14 @@ export default async function LiveIndexPage() {
       description: s.description,
       format: s.format,
       status: s.status,
-      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
-      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      scheduledAt: s.scheduledAt,
+      endedAt: s.endedAt,
       thumbnailUrl: s.thumbnailUrl,
       brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
-      products: s.products.map((p) => ({
-        productId: p.product.id,
-        name: p.product.name,
-        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      products: (s.products || []).map((p: any) => ({
+        productId: p.productId || p.id,
+        name: p.name,
+        owtletPrice: p.owtletPrice ? String(p.owtletPrice) : null,
       })),
     }));
 
@@ -74,14 +52,14 @@ export default async function LiveIndexPage() {
       description: s.description,
       format: s.format,
       status: s.status,
-      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
-      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      scheduledAt: s.scheduledAt,
+      endedAt: s.endedAt,
       thumbnailUrl: s.thumbnailUrl,
       brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
-      products: s.products.map((p) => ({
-        productId: p.product.id,
-        name: p.product.name,
-        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      products: (s.products || []).map((p: any) => ({
+        productId: p.productId || p.id,
+        name: p.name,
+        owtletPrice: p.owtletPrice ? String(p.owtletPrice) : null,
       })),
     }));
 
@@ -93,14 +71,14 @@ export default async function LiveIndexPage() {
       description: s.description,
       format: s.format,
       status: s.status,
-      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
-      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      scheduledAt: s.scheduledAt,
+      endedAt: s.endedAt,
       thumbnailUrl: s.thumbnailUrl,
       brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
-      products: s.products.map((p) => ({
-        productId: p.product.id,
-        name: p.product.name,
-        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      products: (s.products || []).map((p: any) => ({
+        productId: p.productId || p.id,
+        name: p.name,
+        owtletPrice: p.owtletPrice ? String(p.owtletPrice) : null,
       })),
     }));
 
@@ -129,7 +107,7 @@ export default async function LiveIndexPage() {
               <div className="rounded-2xl p-1 bg-gradient-to-tr from-primary/30 via-accent/20 to-border shadow-xl">
                 <TerrificEmbed
                   ageVerified={ageVerified}
-                  embeddingId={featuredLive.embeddingId}
+                  embeddingId={featuredLive.embeddingId || 'Cki70GhqvLgWGhJbSxg2'}
                   liveShowId={featuredLive.id}
                   source={featuredLive.status === 'REPLAY' ? 'terrific_replay' : 'terrific_live'}
                   title={featuredLive.title}

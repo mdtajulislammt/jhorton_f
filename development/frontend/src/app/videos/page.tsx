@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { prisma } from '@/server/db';
+import { serverFetch } from '@/lib/server-api';
+import { LiveShowDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { ShowCard } from '@/components/modules/live/ShowCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Video, Sparkles, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Video, Sparkles, ShoppingBag } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Shoppable Cannabis Videos & Product Reels — Owtlet™',
@@ -18,31 +19,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 export default async function VideosIndexPage() {
-  const videos = await prisma.liveShow.findMany({
-    where: {
-      format: 'SHOPPABLE_VIDEO',
-    },
-    orderBy: [
-      { status: 'asc' }, // LIVE sorts first
-      { scheduledAt: 'desc' },
-      { createdAt: 'desc' },
-    ],
-    include: {
-      brand: true,
-      products: {
-        orderBy: { sortOrder: 'asc' },
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              owtletPrice: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const result = await serverFetch<{ items: LiveShowDto[] }>('/live-shows?format=SHOPPABLE_VIDEO').catch(() => ({ items: [] }));
+  const videos = result?.items ?? [];
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -97,14 +75,14 @@ export default async function VideosIndexPage() {
                     description={v.description}
                     format="SHOPPABLE_VIDEO"
                     status={v.status}
-                    scheduledAt={v.scheduledAt ? v.scheduledAt.toISOString() : null}
-                    endedAt={v.endedAt ? v.endedAt.toISOString() : null}
+                    scheduledAt={v.scheduledAt}
+                    endedAt={v.endedAt}
                     thumbnailUrl={v.thumbnailUrl}
                     brand={v.brand ? { slug: v.brand.slug, name: v.brand.name } : null}
-                    products={v.products.map((p) => ({
-                      productId: p.product.id,
-                      name: p.product.name,
-                      owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+                    products={(v.products || []).map((p: any) => ({
+                      productId: p.productId || p.id,
+                      name: p.name,
+                      owtletPrice: p.owtletPrice ? String(p.owtletPrice) : null,
                     }))}
                   />
                 ))}
@@ -143,4 +121,3 @@ export default async function VideosIndexPage() {
     </div>
   );
 }
-

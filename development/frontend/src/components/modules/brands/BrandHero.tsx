@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Link from 'next/link';
-import { BrandSummaryDto, BrandDispensarySummaryDto } from '@/server/brands';
+import { BrandSummaryDto, BrandDispensarySummaryDto } from '@/types/api.generated';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sparkles, MapPin, Store, ShieldCheck, ArrowLeft } from 'lucide-react';

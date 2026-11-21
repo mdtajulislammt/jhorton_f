@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, PackageSearch } from 'lucide-react';
-import type { ProductSummaryDto } from '@/server/products';
+import type { ProductSummaryDto } from '@/types/api.generated';
 import { ProductCard } from './product-card';
 import { ProductGridSkeleton } from './catalog-skeleton';
 import { ActiveFilterChips, CatalogTransitionContext, FilterRail, MobileFilterSheet } from './filter-rail';

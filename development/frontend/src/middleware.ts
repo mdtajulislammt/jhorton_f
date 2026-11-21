@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyAgeToken, AGE_COOKIE_NAME } from './server/age-session/crypto';
-import { verifyAdminToken, ADMIN_COOKIE_NAME } from './server/admin/crypto';
-import { verifyShopperToken, SHOPPER_COOKIE_NAME } from './server/shopper-account/edge-crypto';
+import { verifyAgeToken, AGE_COOKIE_NAME } from '@/lib/session';
+import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/session';
+import { verifyShopperToken, SHOPPER_COOKIE_NAME } from '@/lib/session';
 
 // Public endpoints that do not require 21+ age cookie
 const PUBLIC_BYPASS_PREFIXES = [

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { AlertCircle, Trash2, ArrowRight, Store, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { UnfulfillableLine } from '@/server/distribution/types';
+import { UnfulfillableLine } from '@/types/api.generated';
 
 interface UnfulfillableListProps {
   unfulfillable: UnfulfillableLine[];

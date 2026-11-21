@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Clock, Flame, AlertTriangle } from 'lucide-react';
-import { CartHoldMetadata } from '@/server/cart/types';
+import { CartHoldMetadata } from '@/types/api.generated';
 import { Badge } from '@/components/ui/badge';
 
 interface CartTimerProps {
@@ -21,6 +21,7 @@ export function CartTimer({ hold, onExpired, className = '' }: CartTimerProps) {
     }
 
     const calculateRemaining = () => {
+      if (!hold?.expiresAt) return 0;
       const expires = new Date(hold.expiresAt).getTime();
       const diff = Math.max(0, expires - Date.now());
       return Math.floor(diff / 1000);

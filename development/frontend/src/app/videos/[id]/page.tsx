@@ -2,16 +2,16 @@ import * as React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { prisma } from '@/server/db';
-import { isAgeVerified } from '@/server/age-session/verified';
+import { serverFetch } from '@/lib/server-api';
+import { isAgeVerified } from '@/lib/session';
+import { formatMoney } from '@/lib/pricing';
+import { LiveShowDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
 import { PinnedProductRail } from '@/components/modules/live/PinnedProductRail';
 import { LiveBadge } from '@/components/modules/live/LiveBadge';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Sparkles, ShieldCheck, MapPin, Clock } from 'lucide-react';
-import { formatMoney } from '@/server/pricing';
+import { ArrowLeft, Sparkles, ShieldCheck, MapPin } from 'lucide-react';
 
 interface ShoppableVideoPageProps {
   params: {
@@ -20,11 +20,7 @@ interface ShoppableVideoPageProps {
 }
 
 export async function generateMetadata({ params }: ShoppableVideoPageProps): Promise<Metadata> {
-  const video = await prisma.liveShow.findFirst({
-    where: {
-      OR: [{ id: params.id }, { terrificShowId: params.id }],
-    },
-  });
+  const video = await serverFetch<LiveShowDto>(`/live-shows/${params.id}`).catch(() => null);
 
   if (!video) {
     return {
@@ -41,43 +37,31 @@ export async function generateMetadata({ params }: ShoppableVideoPageProps): Pro
 export default async function ShoppableVideoPage({ params }: ShoppableVideoPageProps) {
   // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
   const ageVerified = await isAgeVerified();
-  const video = await prisma.liveShow.findFirst({
-    where: {
-      OR: [{ id: params.id }, { terrificShowId: params.id }],
-    },
-    include: {
-      brand: true,
-      products: {
-        orderBy: { sortOrder: 'asc' },
-        include: {
-          product: {
-            include: {
-              category: { select: { slug: true, name: true } },
-              strain: { select: { name: true, type: true } },
-              brand: { select: { slug: true, name: true } },
-            },
-          },
-        },
-      },
-    },
-  });
+  let video: LiveShowDto;
+  try {
+    video = await serverFetch<LiveShowDto>(`/live-shows/${params.id}`);
+  } catch (error: any) {
+    if (error?.status === 404 || error?.code === 'NOT_FOUND') {
+      notFound();
+    }
+    throw error;
+  }
 
-  if (!video) {
+  if (!video || (video as any).code === 'NOT_FOUND') {
     notFound();
   }
 
-  const pinnedProducts = video.products.map((sp) => {
-    const p = sp.product;
+  const pinnedProducts = (video.products || []).map((p: any) => {
     return {
-      productId: p.id,
+      productId: p.productId || p.id,
       slug: p.slug,
       name: p.name,
       terrificProductId: p.terrificProductId,
       owtletPrice: p.owtletPrice ? formatMoney(p.owtletPrice) : '0.00',
-      imageUrls: p.imageUrls,
-      categoryName: p.category?.name ?? null,
-      strainName: p.strain?.name ?? null,
-      sortOrder: sp.sortOrder,
+      imageUrls: p.imageUrls || [],
+      categoryName: p.categoryName || p.category?.name || null,
+      strainName: p.strainName || p.strain?.name || null,
+      sortOrder: p.sortOrder ?? 0,
     };
   });
 
@@ -179,4 +163,3 @@ export default async function ShoppableVideoPage({ params }: ShoppableVideoPageP
     </div>
   );
 }
-

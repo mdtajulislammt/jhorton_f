@@ -6,7 +6,7 @@ import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { StoreAvailabilityList } from './store-availability-list';
 import { cn } from '@/lib/utils';
-import type { StoreAvailabilityDto } from '@/server/products';
+import type { StoreAvailabilityDto } from '@/types/api.generated';
 
 interface PurchaseContextValue {
   selectedId: string | null;

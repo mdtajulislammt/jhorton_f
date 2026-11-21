@@ -32,9 +32,6 @@ if [ -d "development/frontend" ] && [ -f "development/frontend/package.json" ]; 
   if [ -f "development/frontend/src/components/ui/button.tsx" ]; then
     echo "  ✔ Core UI primitives verified."
   fi
-  if [ -f "development/frontend/prisma/schema.prisma" ]; then
-    echo "  ✔ Prisma schema present in frontend."
-  fi
   if [ -f "development/frontend/src/types/api.generated.ts" ]; then
     echo "  ✔ Synchronized API contracts verified (Friday ↔ Edith)."
   fi

@@ -5,8 +5,8 @@ import { CartTimer } from '@/components/modules/cart/cart-timer';
 import { CartLine } from '@/components/modules/cart/cart-line';
 import { CartSkeleton } from '@/components/modules/cart/cart-skeleton';
 import { CartDrawer } from '@/components/modules/cart/cart-drawer';
-import { CartLineDto } from '@/server/cart/types';
-import { ShowStatus } from '@prisma/client';
+import { CartLineDto } from '@/types/api.generated';
+import { ShowStatus } from '@/types/api.generated';
 
 // Mock useCart hook
 vi.mock('@/hooks/useCart', () => ({

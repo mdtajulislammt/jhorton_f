@@ -2,14 +2,14 @@ import * as React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { prisma } from '@/server/db';
-import { isAgeVerified } from '@/server/age-session/verified';
+import { serverFetch } from '@/lib/server-api';
+import { isAgeVerified } from '@/lib/session';
+import { formatMoney } from '@/lib/pricing';
+import { LiveShowDto, ProductSummaryDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
 import { ProductCard } from '@/components/catalog/product-card';
-import { computeCatalogPricing, formatMoney } from '@/server/pricing';
-import { ProductSummaryDto } from '@/server/products';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SectionHeader } from '@/components/ui/section-header';
@@ -22,11 +22,7 @@ interface LiveShowPageProps {
 }
 
 export async function generateMetadata({ params }: LiveShowPageProps): Promise<Metadata> {
-  const show = await prisma.liveShow.findFirst({
-    where: {
-      OR: [{ id: params.showId }, { terrificShowId: params.showId }],
-    },
-  });
+  const show = await serverFetch<LiveShowDto>(`/live-shows/${params.showId}`).catch(() => null);
 
   if (!show) {
     return {
@@ -43,53 +39,37 @@ export async function generateMetadata({ params }: LiveShowPageProps): Promise<M
 export default async function LiveShowPage({ params }: LiveShowPageProps) {
   // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
   const ageVerified = await isAgeVerified();
-  const show = await prisma.liveShow.findFirst({
-    where: {
-      OR: [{ id: params.showId }, { terrificShowId: params.showId }],
-    },
-    include: {
-      brand: true,
-      products: {
-        orderBy: { sortOrder: 'asc' },
-        include: {
-          product: {
-            include: {
-              category: { select: { slug: true, name: true } },
-              strain: { select: { name: true, type: true } },
-              brand: { select: { slug: true, name: true } },
-              inventory: {
-                include: { dispensary: true },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
+  let show: LiveShowDto;
+  try {
+    show = await serverFetch<LiveShowDto>(`/live-shows/${params.showId}`);
+  } catch (error: any) {
+    if (error?.status === 404 || error?.code === 'NOT_FOUND') {
+      notFound();
+    }
+    throw error;
+  }
 
-  if (!show) {
+  if (!show || (show as any).code === 'NOT_FOUND') {
     notFound();
   }
 
-  const pinnedProducts: ProductSummaryDto[] = show.products.map((sp) => {
-    const p = sp.product;
-    const pricing = computeCatalogPricing(p, p.inventory);
+  const pinnedProducts: ProductSummaryDto[] = (show.products || []).map((sp: any) => {
     return {
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      description: p.description,
-      category: p.category,
-      strain: p.strain,
-      thcPercent: p.thcPercent ? formatMoney(p.thcPercent) : null,
-      cbdPercent: p.cbdPercent ? formatMoney(p.cbdPercent) : null,
-      weightGrams: p.weightGrams ? formatMoney(p.weightGrams) : null,
-      imageUrls: p.imageUrls,
-      brand: p.brand,
-      priceMode: pricing.priceMode,
-      owtletPrice: pricing.owtletPrice,
-      fromPrice: pricing.fromPrice,
-      availableAtCount: p.inventory.filter((inv) => inv.stockQty > 0).length,
+      id: sp.productId || sp.id,
+      slug: sp.slug || sp.id,
+      name: sp.name,
+      description: sp.description || null,
+      category: { slug: sp.categorySlug || 'flower', name: sp.categoryName || 'Flower' },
+      strain: sp.strainName ? { name: sp.strainName, type: (sp.strainType || 'HYBRID') as any } : null,
+      thcPercent: sp.thcPercent ? formatMoney(sp.thcPercent) : null,
+      cbdPercent: sp.cbdPercent ? formatMoney(sp.cbdPercent) : null,
+      weightGrams: sp.weightGrams ? formatMoney(sp.weightGrams) : null,
+      imageUrls: sp.imageUrls || [],
+      brand: show.brand ? { slug: show.brand.slug, name: show.brand.name } : null,
+      priceMode: 'OWTLET',
+      owtletPrice: sp.owtletPrice ? formatMoney(sp.owtletPrice) : '0.00',
+      fromPrice: sp.owtletPrice ? formatMoney(sp.owtletPrice) : '0.00',
+      availableAtCount: 1,
     };
   });
 
@@ -107,7 +87,7 @@ export default async function LiveShowPage({ params }: LiveShowPageProps) {
         minute: '2-digit',
         timeZone: 'America/New_York',
         timeZoneName: 'short',
-      }).format(show.scheduledAt)
+      }).format(new Date(show.scheduledAt))
     : null;
 
   const steps = [
@@ -134,28 +114,28 @@ export default async function LiveShowPage({ params }: LiveShowPageProps) {
             </Link>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-              <div className="lg:col-span-8">
-                <div className="overflow-hidden rounded-3xl ring-1 ring-border">
+              <div className="space-y-4 lg:col-span-8">
+                <div className="overflow-hidden rounded-3xl p-1 bg-gradient-to-tr from-primary/30 via-accent/20 to-border shadow-xl">
                   <TerrificEmbed
                     ageVerified={ageVerified}
-                    embeddingId={show.embeddingId}
+                    embeddingId={show.embeddingId || 'Cki70GhqvLgWGhJbSxg2'}
                     liveShowId={show.id}
                     source={source}
                     title={show.title}
-                    showBadge={true}
+                    showBadge={false}
                     aspectRatio="video"
                     className="w-full"
                   />
                 </div>
 
-                <div className="mt-5 space-y-3">
+                <div className="space-y-3 pt-2">
                   <div className="flex flex-wrap items-center gap-2">
                     {isLive ? (
-                      <Badge variant="live" className="animate-live-ring">Live now</Badge>
+                      <Badge variant="default" className="bg-destructive text-destructive-foreground animate-pulse">
+                        LIVE NOW
+                      </Badge>
                     ) : isReplay ? (
-                      <Badge variant="replay" className="dark:bg-card">Replay</Badge>
-                    ) : isScheduled ? (
-                      <Badge variant="upcoming">Upcoming</Badge>
+                      <Badge variant="secondary">DROP REPLAY</Badge>
                     ) : (
                       <Badge variant="outline" className="uppercase">{show.status}</Badge>
                     )}

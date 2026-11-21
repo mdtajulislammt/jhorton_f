@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { Minus, Plus, Tag, Trash2 } from 'lucide-react';
-import { CartLineDto } from '@/server/cart/types';
+import { CartLineDto } from '@/types/api.generated';
 import { FallbackImage } from '@/components/ui/fallback-image';
 import { strainTint } from '@/components/ui/strain-badge';
 import { categoryPhoto } from '@/lib/brand-photos';

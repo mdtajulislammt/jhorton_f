@@ -12,7 +12,7 @@ import { StorePickerDialog } from '@/components/modules/checkout/StorePickerDial
 import { DeliveryAddressForm } from '@/components/modules/checkout/DeliveryAddressForm';
 import { PickupLocationForm } from '@/components/modules/checkout/PickupLocationForm';
 import { useCheckoutStore } from '@/stores/checkout.store';
-import { AllocatedSubOrder, UnfulfillableLine } from '@/server/distribution/types';
+import { AllocatedSubOrder, UnfulfillableLine } from '@/types/api.generated';
 
 const renderClean = (component: React.ReactElement) => {
   return renderToString(component).replace(/<!--.*?-->/g, '');

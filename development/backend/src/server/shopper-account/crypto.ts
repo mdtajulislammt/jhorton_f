@@ -52,6 +52,15 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
+function getShopperSecret(customSecret?: string): string {
+  if (customSecret) return customSecret;
+  const envSecret = process.env.SHOPPER_SESSION_SECRET;
+  if (!envSecret && process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL SECURITY ERROR: SHOPPER_SESSION_SECRET environment variable is missing in production.');
+  }
+  return envSecret || 'owtlet_shopper_session_secret_min_32_chars';
+}
+
 /**
  * Creates an HMAC-SHA256 signed session token for the shopper.
  * Format: `<shopperId>.<expiresAtTimestampMs>.<hmacSha256Hex>`
@@ -61,10 +70,7 @@ export async function signShopperToken(
   customSecret?: string,
   ttlMs = SHOPPER_COOKIE_TTL_MS
 ): Promise<{ token: string; expiresAt: Date }> {
-  const secret =
-    customSecret ||
-    process.env.SHOPPER_SESSION_SECRET ||
-    'owtlet_shopper_session_secret_min_32_chars';
+  const secret = getShopperSecret(customSecret);
   const key = await getHmacKey(secret);
 
   const expiresAt = new Date(Date.now() + ttlMs);
@@ -117,10 +123,7 @@ export async function verifyShopperToken(
     return { valid: false, reason: 'MALFORMED' };
   }
 
-  const secret =
-    customSecret ||
-    process.env.SHOPPER_SESSION_SECRET ||
-    'owtlet_shopper_session_secret_min_32_chars';
+  const secret = getShopperSecret(customSecret);
   const key = await getHmacKey(secret);
 
   const dataToSign = `${shopperId}.${expiresAtStr}`;

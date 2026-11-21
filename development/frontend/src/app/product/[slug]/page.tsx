@@ -3,7 +3,8 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, ShieldCheck, Zap } from 'lucide-react';
-import { getProductBySlug } from '@/server/products';
+import { serverFetch } from '@/lib/server-api';
+import { ProductDetailDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import {
@@ -26,7 +27,8 @@ export interface ProductPageProps {
 }
 
 export async function generateMetadata({ params, searchParams }: ProductPageProps): Promise<Metadata> {
-  const product = await getProductBySlug(params.slug, { zip: searchParams?.zip });
+  const query = searchParams?.zip ? `?zip=${encodeURIComponent(searchParams.zip)}` : '';
+  const product = await serverFetch<ProductDetailDto>(`/products/${params.slug}${query}`).catch(() => null);
 
   if (!product) {
     return {
@@ -50,10 +52,15 @@ function Spec({ label, value }: { label: string; value: string }) {
 }
 
 export default async function ProductDetailPage({ params, searchParams }: ProductPageProps) {
-  const product = await getProductBySlug(params.slug, { zip: searchParams?.zip });
-
-  if (!product) {
-    notFound();
+  const query = searchParams?.zip ? `?zip=${encodeURIComponent(searchParams.zip)}` : '';
+  let product: ProductDetailDto;
+  try {
+    product = await serverFetch<ProductDetailDto>(`/products/${params.slug}${query}`);
+  } catch (error: any) {
+    if (error?.status === 404 || error?.code === 'NOT_FOUND') {
+      notFound();
+    }
+    throw error;
   }
 
   const isOwtletPrice = !!(product.priceMode === 'OWTLET' && product.owtletPrice);

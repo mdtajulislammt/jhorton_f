@@ -1,5 +1,6 @@
-import { prisma } from '@/server/db';
-import { isAgeVerified } from '@/server/age-session/verified';
+import { isAgeVerified } from '@/lib/session';
+import { serverFetch } from '@/lib/server-api';
+import { formatMoney } from '@/lib/pricing';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { VideoReel } from '@/components/modules/home/VideoReel';
@@ -12,8 +13,7 @@ import { HowItWorks } from '@/components/modules/home/HowItWorks';
 import { CoverageBand } from '@/components/modules/home/CoverageBand';
 import { SectionHeader } from '@/components/ui/section-header';
 import { EmptyState } from '@/components/ui/empty-state';
-import { computeCatalogPricing, formatMoney } from '@/server/pricing';
-import { ProductSummaryDto } from '@/server/products';
+import { ProductSummaryDto, LiveShowDto, BrandSummaryDto } from '@/types/api.generated';
 import { formatPct } from '@/lib/utils';
 import { TerrificEmbed } from '@/components/modules/live/TerrificEmbed';
 import { BrandGrid } from '@/components/modules/brands';
@@ -24,77 +24,43 @@ export const revalidate = 60; // Revalidate every minute
 export default async function HomePage() {
   // owt_age is HttpOnly; verify it here so the Terrific SDK only loads for 21+ visitors.
   const ageVerified = await isAgeVerified();
-  // Query active or next scheduled live show with pinned products
-  const activeShow = await prisma.liveShow.findFirst({
-    where: {
-      status: { in: ['LIVE', 'SCHEDULED'] },
-    },
-    orderBy: [
-      { status: 'asc' }, // LIVE sorts before SCHEDULED alphabetically
-      { scheduledAt: 'desc' },
-    ],
-    include: {
-      brand: true,
-      products: {
-        orderBy: { sortOrder: 'asc' },
-        include: {
-          product: {
-            include: {
-              category: { select: { slug: true, name: true } },
-              strain: { select: { name: true, type: true } },
-              brand: { select: { slug: true, name: true } },
-              inventory: {
-                include: { dispensary: true },
-              },
-            },
-          },
-        },
-      },
-    },
+
+  const [showsResult, brandsResult] = await Promise.all([
+    serverFetch<{ items: LiveShowDto[] }>('/live-shows').catch(() => ({ items: [] })),
+    serverFetch<{ items: BrandSummaryDto[] }>('/brands').catch(() => ({ items: [] })),
+  ]);
+
+  const allShows = showsResult?.items || [];
+  const brands = brandsResult?.items || [];
+
+  // Active show: LIVE first, then SCHEDULED
+  const activeShow =
+    allShows.find((s) => s.status === 'LIVE' && s.format === 'LIVE_SHOW') ||
+    allShows.find((s) => s.status === 'SCHEDULED' && s.format === 'LIVE_SHOW') ||
+    allShows[0] ||
+    null;
+
+  const pinnedProducts: ProductSummaryDto[] = (activeShow?.products || []).map((sp: any) => {
+    return {
+      id: sp.productId || sp.id,
+      slug: sp.slug || sp.id,
+      name: sp.name,
+      description: sp.description || null,
+      category: { slug: sp.categorySlug || 'flower', name: sp.categoryName || 'Flower' },
+      strain: sp.strainName ? { name: sp.strainName, type: (sp.strainType || 'HYBRID') as any } : null,
+      thcPercent: sp.thcPercent ? formatMoney(sp.thcPercent) : null,
+      cbdPercent: sp.cbdPercent ? formatMoney(sp.cbdPercent) : null,
+      weightGrams: sp.weightGrams ? formatMoney(sp.weightGrams) : null,
+      imageUrls: sp.imageUrls || [],
+      brand: activeShow?.brand ? { slug: activeShow.brand.slug, name: activeShow.brand.name } : null,
+      priceMode: 'OWTLET',
+      owtletPrice: sp.owtletPrice ? formatMoney(sp.owtletPrice) : '0.00',
+      fromPrice: sp.owtletPrice ? formatMoney(sp.owtletPrice) : '0.00',
+      availableAtCount: 1,
+    };
   });
 
-  const pinnedProducts: ProductSummaryDto[] =
-    activeShow?.products.map((sp) => {
-      const p = sp.product;
-      const pricing = computeCatalogPricing(p, p.inventory);
-      return {
-        id: p.id,
-        slug: p.slug,
-        name: p.name,
-        description: p.description,
-        category: p.category,
-        strain: p.strain,
-        thcPercent: p.thcPercent ? formatMoney(p.thcPercent) : null,
-        cbdPercent: p.cbdPercent ? formatMoney(p.cbdPercent) : null,
-        weightGrams: p.weightGrams ? formatMoney(p.weightGrams) : null,
-        imageUrls: p.imageUrls,
-        brand: p.brand,
-        priceMode: pricing.priceMode,
-        owtletPrice: pricing.owtletPrice,
-        fromPrice: pricing.fromPrice,
-        availableAtCount: p.inventory.filter((inv) => inv.stockQty > 0).length,
-      };
-    }) ?? [];
-
-  const additionalShows = await prisma.liveShow.findMany({
-    where: {
-      id: { not: activeShow?.id || '' },
-    },
-    take: 6,
-    orderBy: [
-      { status: 'asc' },
-      { scheduledAt: 'desc' },
-      { createdAt: 'desc' },
-    ],
-    include: {
-      brand: true,
-      products: {
-        include: {
-          product: { select: { id: true, name: true, owtletPrice: true } },
-        },
-      },
-    },
-  });
+  const additionalShows = allShows.filter((s) => s.id !== activeShow?.id);
 
   const replayAndUpcomingShows = additionalShows
     .filter((s) => s.format === 'LIVE_SHOW')
@@ -105,14 +71,14 @@ export default async function HomePage() {
       description: s.description,
       format: s.format,
       status: s.status,
-      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
-      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      scheduledAt: s.scheduledAt,
+      endedAt: s.endedAt,
       thumbnailUrl: s.thumbnailUrl,
       brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
-      products: s.products.map((p) => ({
-        productId: p.product.id,
-        name: p.product.name,
-        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      products: (s.products || []).map((p: any) => ({
+        productId: p.productId || p.id,
+        name: p.name,
+        owtletPrice: p.owtletPrice ? String(p.owtletPrice) : null,
       })),
     }));
 
@@ -125,70 +91,25 @@ export default async function HomePage() {
       description: s.description,
       format: s.format,
       status: s.status,
-      scheduledAt: s.scheduledAt ? s.scheduledAt.toISOString() : null,
-      endedAt: s.endedAt ? s.endedAt.toISOString() : null,
+      scheduledAt: s.scheduledAt,
+      endedAt: s.endedAt,
       thumbnailUrl: s.thumbnailUrl,
       brand: s.brand ? { slug: s.brand.slug, name: s.brand.name } : null,
-      products: s.products.map((p) => ({
-        productId: p.product.id,
-        name: p.product.name,
-        owtletPrice: p.product.owtletPrice ? String(p.product.owtletPrice) : null,
+      products: (s.products || []).map((p: any) => ({
+        productId: p.productId || p.id,
+        name: p.name,
+        owtletPrice: p.owtletPrice ? String(p.owtletPrice) : null,
       })),
     }));
 
-
-  // Brand Storefronts row (design v3): partner stores, product count, next show
-  const brandRows = await prisma.brand.findMany({
-    where: { isActive: true },
-    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    take: 3,
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      logoUrl: true,
-      bannerUrl: true,
-      sortOrder: true,
-      dispensaries: { select: { dispensary: { select: { name: true, isActive: true } } } },
-      _count: { select: { products: { where: { isActive: true } } } },
-      liveShows: {
-        where: { status: { in: ['LIVE', 'SCHEDULED'] } },
-        select: { status: true, scheduledAt: true },
-        orderBy: [{ status: 'asc' }, { scheduledAt: 'asc' }],
-        take: 1,
-      },
-    },
-  });
-
-  const showTime = (d: Date) =>
-    new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }).format(d);
-
-  const brandCards = brandRows.map(({ dispensaries, _count, liveShows, ...b }) => {
-    const next = liveShows[0];
-    return {
-      ...b,
-      partnerNames: dispensaries.filter((d) => d.dispensary.isActive).map((d) => d.dispensary.name),
-      productsCount: _count.products,
-      nextShowLabel: next
-        ? next.status === 'LIVE'
-          ? 'Live tonight'
-          : next.scheduledAt
-            ? `Next show ${showTime(next.scheduledAt)}`
-            : 'Show coming up'
-        : null,
-    };
-  });
-
-  // ---- View models for presentational sections (no new data queries) ----
   const heroShow = activeShow
     ? {
         id: activeShow.id,
         title: activeShow.title,
         status: activeShow.status,
         brandName: activeShow.brand?.name ?? null,
-        startedAt: activeShow.startedAt ? activeShow.startedAt.toISOString() : null,
-        scheduledAt: activeShow.scheduledAt ? activeShow.scheduledAt.toISOString() : null,
+        startedAt: activeShow.startedAt || null,
+        scheduledAt: activeShow.scheduledAt || null,
       }
     : null;
 
@@ -207,7 +128,7 @@ export default async function HomePage() {
             title: activeShow.title,
             status: activeShow.status,
             brandName: activeShow.brand?.name ?? null,
-            scheduledAt: activeShow.scheduledAt ? activeShow.scheduledAt.toISOString() : null,
+            scheduledAt: activeShow.scheduledAt || null,
             pinnedCount: activeShow.products.length,
           },
         ]
@@ -234,7 +155,6 @@ export default async function HomePage() {
       <StoreHeader />
 
       <main className="flex-1">
-        {/* Terrific SDK anchor (AC-LIVE-01). The embedding renders as Terrific's floating player, so no in-page frame. */}
         <TerrificEmbed
           bare
           ageVerified={ageVerified}
@@ -248,7 +168,7 @@ export default async function HomePage() {
 
         <ShowLineup shows={lineup} />
 
-        {/* Pinned in today's shows (design v3 4-up grid) */}
+        {/* Pinned in today's shows */}
         <section className="mx-auto max-w-content px-4 pb-14 sm:px-7 lg:pb-[60px]">
           <SectionHeader
             title={activeShow?.status === 'LIVE' ? "Pinned in today's shows" : 'Pinned in the next show'}
@@ -276,14 +196,14 @@ export default async function HomePage() {
 
         <HowItWorks />
 
-        {/* Brand Storefronts (design v3 3-up cards) */}
+        {/* Brand Storefronts */}
         <section className="mx-auto max-w-content px-4 pb-14 sm:px-7 lg:pb-[60px]">
           <SectionHeader
             title="Brand Storefronts"
             description="Every brand's shows, videos and products in one place."
             action={{ href: '/brands', label: 'All brands' }}
           />
-          <BrandGrid brands={brandCards} />
+          <BrandGrid brands={brands} />
         </section>
 
         <CoverageBand />

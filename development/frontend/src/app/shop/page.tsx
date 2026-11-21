@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Metadata } from 'next';
-import { listProducts } from '@/server/products';
-import { prisma } from '@/server/db';
+import { serverFetch } from '@/lib/server-api';
+import { ProductSummaryDto, CategorySummaryDto, BrandSummaryDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { CatalogView } from '@/components/catalog/catalog-view';
@@ -38,31 +38,27 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const cursor = searchParams?.cursor;
   const limit = searchParams?.limit ? parseInt(searchParams.limit, 10) : 24;
 
-  const [productsResult, categories, brands] = await Promise.all([
-    listProducts({
-      category,
-      strainType,
-      minThc,
-      maxThc,
-      brand,
-      q,
-      cursor,
-      limit,
-    }),
-    prisma.category.findMany({
-      orderBy: { sortOrder: 'asc' },
-      select: { slug: true, name: true },
-    }),
-    prisma.brand.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: 'asc' },
-      select: { slug: true, name: true },
-    }),
+  const queryParams = new URLSearchParams();
+  if (category) queryParams.set('category', category);
+  if (strainType) queryParams.set('strainType', strainType);
+  if (minThc !== undefined) queryParams.set('minThc', String(minThc));
+  if (maxThc !== undefined) queryParams.set('maxThc', String(maxThc));
+  if (brand) queryParams.set('brand', brand);
+  if (q) queryParams.set('q', q);
+  if (cursor) queryParams.set('cursor', cursor);
+  if (limit) queryParams.set('limit', String(limit));
+
+  const [productsResult, categories, brandsResult] = await Promise.all([
+    serverFetch<{ items: ProductSummaryDto[]; nextCursor: string | null }>(
+      `/products?${queryParams.toString()}`
+    ),
+    serverFetch<CategorySummaryDto[]>('/products/categories').catch(() => []),
+    serverFetch<{ items: BrandSummaryDto[] }>('/brands').catch(() => ({ items: [] })),
   ]);
 
   const categoriesWithAll = [
     { slug: '', name: 'All Products' },
-    ...categories,
+    ...(categories || []),
   ];
 
   return (
@@ -70,10 +66,10 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       <StoreHeader />
       <main className="flex-1">
         <CatalogView
-          initialProducts={productsResult.items}
-          initialNextCursor={productsResult.nextCursor}
+          initialProducts={productsResult?.items || []}
+          initialNextCursor={productsResult?.nextCursor || null}
           categories={categoriesWithAll}
-          brands={brands}
+          brands={brandsResult?.items || []}
           currentCategory={category}
         />
       </main>
@@ -81,4 +77,3 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     </div>
   );
 }
-

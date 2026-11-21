@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ProductSummaryDto } from '@/server/products';
+import { ProductSummaryDto } from '@/types/api.generated';
 import { ProductCard } from '@/components/catalog/product-card';
 import { useCart } from '@/hooks/useCart';
 import { ShoppingBag } from 'lucide-react';

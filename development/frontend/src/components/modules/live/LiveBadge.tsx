@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Radio, Play, Clock, Video } from 'lucide-react';
-import { ShowStatus, VideoFormat } from '@prisma/client';
+import { ShowStatus, VideoFormat } from '@/types/api.generated';
 
 export interface LiveBadgeProps {
   status?: ShowStatus | 'SCHEDULED' | 'LIVE' | 'REPLAY' | 'ARCHIVED';

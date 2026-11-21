@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CartDetailDto } from '@/server/cart/types';
+import { CartDetailDto } from '@/types/api.generated';
 
 interface CartState {
   cart: CartDetailDto | null;

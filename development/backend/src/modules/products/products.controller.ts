@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { StrainType } from '@prisma/client';
 import { z } from 'zod';
 import { listProducts, getProductBySlug, resolveProduct } from '../../server/products';
+import { prisma } from '../../server/db';
 
 const listQuerySchema = z.object({
   category: z.string().min(1).max(100).optional(),
@@ -35,6 +36,19 @@ const resolveQuerySchema = z
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
+  @Get('categories')
+  @ApiOperation({ summary: 'List all product categories' })
+  async listCategories() {
+    const categories = await prisma.category.findMany({
+      orderBy: { sortOrder: 'asc' },
+      select: { id: true, slug: true, name: true, sortOrder: true },
+    });
+    return {
+      data: categories,
+      message: 'Categories retrieved successfully',
+    };
+  }
+
   @Get()
   @ApiOperation({ summary: 'List cannabis products with filtering and pagination' })
   async listProducts(@Query() query: Record<string, string>) {

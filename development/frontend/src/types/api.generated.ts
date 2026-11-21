@@ -44,7 +44,7 @@ export interface DispensaryListItemDto {
   name: string;
   offersPickup: boolean;
   offersDelivery: boolean;
-  isOpenNow: boolean;
+  isOpenNow?: boolean;
   hoursToday: DispensaryHoursWindowDto | null;
   isDeliveringNow: boolean;
   deliveryHoursToday: DispensaryHoursWindowDto | null;
@@ -73,7 +73,7 @@ export interface AlternativeDispensaryDto {
   canSupplyAll: boolean;
   missingProductIds: string[];
   distanceMiles: number | null;
-  isOpenNow: boolean;
+  isOpenNow?: boolean;
 }
 
 export interface PreviewSubOrderDto {
@@ -87,7 +87,7 @@ export interface PreviewSubOrderDto {
     name: string;
     slug: string;
   } | null;
-  isOpenNow: boolean;
+  isOpenNow?: boolean;
   hoursToday: DispensaryHoursWindowDto | null;
   isDeliveringNow: boolean;
   deliveryHoursToday: DispensaryHoursWindowDto | null;
@@ -574,5 +574,356 @@ export interface UpdateShopperAddressInput {
   isDefault?: boolean;
 }
 
+// ============================================================================
+// Runtime Enums as Const Objects & Types
+// ============================================================================
+
+export const ShowStatus = {
+  SCHEDULED: 'SCHEDULED',
+  LIVE: 'LIVE',
+  REPLAY: 'REPLAY',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+export type ShowStatus = (typeof ShowStatus)[keyof typeof ShowStatus];
+
+export const VideoFormat = {
+  LIVE_SHOW: 'LIVE_SHOW',
+  SHOPPABLE_VIDEO: 'SHOPPABLE_VIDEO',
+} as const;
+export type VideoFormat = (typeof VideoFormat)[keyof typeof VideoFormat];
+
+export const StrainType = {
+  INDICA: 'INDICA',
+  SATIVA: 'SATIVA',
+  HYBRID: 'HYBRID',
+  CBD: 'CBD',
+} as const;
+export type StrainType = (typeof StrainType)[keyof typeof StrainType];
+
+export const SubOrderStatus = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  REJECTED: 'REJECTED',
+  HANDED_OFF: 'HANDED_OFF',
+} as const;
+export type SubOrderStatus = (typeof SubOrderStatus)[keyof typeof SubOrderStatus];
+
+export const OrderStatus = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  PARTIALLY_CONFIRMED: 'PARTIALLY_CONFIRMED',
+  CANCELLED: 'CANCELLED',
+  HANDED_OFF: 'HANDED_OFF',
+} as const;
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
+
+export const FulfillmentType = {
+  PICKUP: 'PICKUP',
+  DELIVERY: 'DELIVERY',
+} as const;
+export type FulfillmentType = (typeof FulfillmentType)[keyof typeof FulfillmentType];
+
+export const AssignmentSource = {
+  MANUAL: 'MANUAL',
+  ALGORITHM_PRIMARY: 'ALGORITHM_PRIMARY',
+  ALGORITHM_ALTERNATIVE: 'ALGORITHM_ALTERNATIVE',
+  REBALANCED: 'REBALANCED',
+  SHOPPER_CHANGED: 'SHOPPER_CHANGED',
+} as const;
+export type AssignmentSource = (typeof AssignmentSource)[keyof typeof AssignmentSource];
+
+export const HandoffChannel = {
+  DUTCHIE: 'DUTCHIE',
+  MEADOW: 'MEADOW',
+  TREEZ: 'TREEZ',
+  JANE: 'JANE',
+  BLAZE: 'BLAZE',
+  RETAILER_PORTAL: 'RETAILER_PORTAL',
+  MANUAL: 'MANUAL',
+  LEAFLY: 'LEAFLY',
+} as const;
+export type HandoffChannel = (typeof HandoffChannel)[keyof typeof HandoffChannel];
+
+// ============================================================================
+// Cart & Terrific Types (from backend/src/server/cart/types.ts)
+// ============================================================================
+
+export type CartSyncAction = 'addProductToCart' | 'updateProductInCart' | 'removeProductFromCart';
+
+export interface CartProductInput {
+  externalId?: string;
+  productId?: string;
+  sku?: string;
+  quantity?: number;
+  preferredDispensaryId?: string;
+}
+
+export interface CartSyncPayload {
+  action: CartSyncAction;
+  source?: 'catalog' | 'brand_storefront' | 'terrific_live' | 'terrific_replay' | 'terrific_video';
+  liveShowId?: string;
+  channelBrandSlug?: string;
+  cartProducts: CartProductInput[];
+}
+
+export interface CartLineDto {
+  id: string;
+  productId: string;
+  slug: string;
+  name: string;
+  imageUrl: string | null;
+  quantity: number;
+  priceMode: 'OWTLET' | 'PER_STORE';
+  unitPrice: string;
+  fromPrice: string;
+  lineTotal: string;
+  source: string;
+  channelBrand: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  preferredDispensaryId: string | null;
+  strain: {
+    name: string;
+    type: string;
+  } | null;
+  category: {
+    name: string;
+    slug: string;
+  };
+}
+
+export interface CartHoldMetadata {
+  isHeld?: boolean;
+  reason?: 'LIVE_SHOW' | 'INACTIVITY' | 'NONE';
+  expiresAt: string | null;
+  secondsRemaining?: number | null;
+  liveShowId?: string | null;
+  showTitle?: string | null;
+  showStatus?: ShowStatus | null;
+}
+
+export interface CartDetailDto {
+  id: string;
+  sessionToken: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CHECKED_OUT' | 'ABANDONED';
+  expiresAt: string;
+  lastActivityAt: string;
+  hold: CartHoldMetadata;
+  items: CartLineDto[];
+  itemCount: number;
+  estimatedSubtotal: string;
+}
+
+// ============================================================================
+// Distribution & Checkout Types (from backend/src/server/distribution/types.ts)
+// ============================================================================
+
+export interface AlternativeDispensary {
+  dispensaryId: string;
+  dispensaryName: string;
+  canSupplyAll: boolean;
+  missingProductIds: string[];
+  distanceMiles: number | null;
+  isOpenNow?: boolean;
+}
+
+export interface DispensarySuggestion {
+  dispensaryId: string;
+  dispensaryName: string;
+  fulfillmentTypes: FulfillmentType[];
+  distanceMiles: number | null;
+}
+
+export interface UnfulfillableLine {
+  productId: string;
+  name: string;
+  reason: 'NOT_IN_STOCK_FOR_ZIP' | 'NOT_AT_SELECTED_STORE' | 'NO_ELIGIBLE_STORES' | 'OUT_OF_STOCK' | 'DISPENSARY_CLOSED' | 'NO_DISPENSARY_COVERS_ZIP';
+  suggestions?: DispensarySuggestion[];
+}
+
+export interface AllocatedOrderItem {
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice: string;
+  priceMode: 'OWTLET' | 'PER_STORE';
+  lineTotal: string;
+}
+
+export interface AllocatedSubOrder {
+  dispensaryId: string;
+  dispensaryName: string;
+  dispensaryAddress?: string;
+  dispensaryPhone?: string | null;
+  fulfillmentType: FulfillmentType;
+  assignment: AssignmentSource | string;
+  channelBrandId: string | null;
+  channelBrand?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  isOpenNow?: boolean;
+  hoursToday?: DispensaryHoursWindowDto | null;
+  isDeliveringNow?: boolean;
+  deliveryHoursToday?: DispensaryHoursWindowDto | null;
+  distanceMiles: number | null;
+  items: AllocatedOrderItem[];
+  subtotal: string;
+  handoffChannel: HandoffChannel;
+  alternatives: AlternativeDispensary[];
+}
+
+export interface DistributionResult {
+  zip: string | null;
+  fulfillmentType: FulfillmentType;
+  subOrders: AllocatedSubOrder[];
+  unfulfillable: UnfulfillableLine[];
+  total: string;
+  previewHash: string;
+}
+
+export interface CreateOrderInput {
+  previewHash: string;
+  fulfillmentType: FulfillmentType;
+  zip: string;
+  preferredDispensaryId?: string | null;
+  itemOverrides?: Array<{ productId: string; dispensaryId: string }>;
+  saveToProfile?: boolean;
+  contact: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  deliveryAddress?: {
+    line1: string;
+    line2?: string | null;
+    city: string;
+    state?: string;
+    zip: string;
+  } | null;
+}
+
+export interface OrderCreatedDto {
+  orderId: string;
+  id?: string;
+  orderNumber: string;
+  status: OrderStatus;
+  subOrders: Array<{
+    id: string;
+    dispensaryId: string;
+    dispensaryName: string;
+    handoffChannel: string;
+    handoffUrl?: string | null;
+    status: string;
+  }>;
+}
+
+export interface OrderDetailDto {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  createdAt: string;
+  zip: string;
+  contact: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  shopperId?: string | null;
+  subOrders: Array<{
+    id: string;
+    dispensaryId: string;
+    dispensaryName: string;
+    dispensaryAddress: string;
+    fulfillmentType: FulfillmentType;
+    handoffChannel: string;
+    handoffUrl?: string | null;
+    confirmationUrl?: string | null;
+    status: string;
+    lines: Array<{
+      productId: string;
+      productName: string;
+      quantity: number;
+      unitPrice: string;
+      lineTotal: string;
+    }>;
+    subtotal: string;
+    tax: string;
+    deliveryFee: string;
+    total: string;
+  }>;
+  totals: {
+    itemCount: number;
+    subtotal: string;
+    tax: string;
+    deliveryFee: string;
+    total: string;
+  };
+}
+
+// ============================================================================
+// Product & Brand & Live Show Types
+// ============================================================================
+
+export interface StoreAvailabilityDto {
+  dispensaryId: string;
+  dispensaryName?: string;
+  dispensarySlug?: string;
+  name?: string;
+  address?: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string | null;
+  distanceMiles: number | null;
+  offersPickup: boolean;
+  offersDelivery: boolean;
+  deliversToZip?: boolean;
+  handoffChannel?: string;
+  isOpenNow?: boolean;
+  hoursToday?: DispensaryHoursWindowDto | null;
+  inStock: boolean;
+  stockQty: number;
+  price: string;
+  originalPrice?: string | null;
+}
+
+export interface ProductSummaryDto {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  category: { slug: string; name: string };
+  strain?: { name: string; type: any } | null;
+  thcPercent: string | null;
+  cbdPercent: string | null;
+  weightGrams: string | null;
+  imageUrls: string[];
+  brand: { slug: string; name: string } | null;
+  priceMode: 'OWTLET' | 'PER_STORE';
+  owtletPrice: string | null;
+  fromPrice: string | null;
+  availableAtCount: number;
+}
+
+export interface ProductDetailDto extends ProductSummaryDto {
+  sku: string | null;
+  terrificProductId: string | null;
+  externalId: string | null;
+  availability: StoreAvailabilityDto[];
+}
+
+export interface CategorySummaryDto {
+  id?: string;
+  slug: string;
+  name: string;
+  sortOrder?: number;
+}
 
 

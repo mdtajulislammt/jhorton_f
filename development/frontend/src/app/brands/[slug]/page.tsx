@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getBrandStorefront, BrandNotFoundError } from '@/server/brands';
+import { serverFetch } from '@/lib/server-api';
+import { BrandStorefrontDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { BrandHero, BrandProductGrid } from '@/components/modules/brands';
 import { ShowRail } from '@/components/modules/live/ShowRail';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Radio } from 'lucide-react';
 
 export interface BrandStorefrontPageProps {
   params: {
@@ -19,7 +19,7 @@ export async function generateMetadata({
   params,
 }: BrandStorefrontPageProps): Promise<Metadata> {
   try {
-    const storefront = await getBrandStorefront(params.slug);
+    const storefront = await serverFetch<BrandStorefrontDto>(`/brands/${params.slug}`);
     return {
       title: `${storefront.brand.name} — Brand Storefront | Owtlet™`,
       description:
@@ -39,11 +39,11 @@ export const revalidate = 30;
 export default async function BrandStorefrontPage({
   params,
 }: BrandStorefrontPageProps) {
-  let storefront;
+  let storefront: BrandStorefrontDto;
   try {
-    storefront = await getBrandStorefront(params.slug);
-  } catch (error) {
-    if (error instanceof BrandNotFoundError) {
+    storefront = await serverFetch<BrandStorefrontDto>(`/brands/${params.slug}`);
+  } catch (error: any) {
+    if (error?.status === 404 || error?.code === 'NOT_FOUND') {
       notFound();
     }
     throw error;
@@ -119,4 +119,3 @@ export default async function BrandStorefrontPage({
     </div>
   );
 }
-

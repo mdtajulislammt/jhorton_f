@@ -11,11 +11,11 @@ import {
   DistributionResult,
   AllocatedSubOrder,
   UnfulfillableLine,
-} from '@/server/distribution/types';
+} from '@/types/api.generated';
 import {
   CreateOrderInput,
   OrderCreatedDto,
-} from '@/server/orders/types';
+} from '@/types/api.generated';
 
 export const CHECKOUT_PREVIEW_QUERY_KEY = ['checkout-preview'] as const;
 

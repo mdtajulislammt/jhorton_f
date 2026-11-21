@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Link from 'next/link';
-import { BrandSummaryDto } from '@/server/brands';
+import { BrandSummaryDto } from '@/types/api.generated';
 import { Store } from 'lucide-react';
 import { FallbackImage } from '@/components/ui/fallback-image';
 import { LogoImage } from './LogoImage';

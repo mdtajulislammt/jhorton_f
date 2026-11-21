@@ -9,7 +9,7 @@ import { StrainBadge, strainLabel } from '@/components/ui/strain-badge';
 import { FallbackImage } from '@/components/ui/fallback-image';
 import { BRAND_PHOTOS, categoryPhoto } from '@/lib/brand-photos';
 import { cn, formatPct } from '@/lib/utils';
-import type { ProductSummaryDto } from '@/server/products';
+import type { ProductSummaryDto } from '@/types/api.generated';
 
 export interface HomeHeroShow {
   id: string;

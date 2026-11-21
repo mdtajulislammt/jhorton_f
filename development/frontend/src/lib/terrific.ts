@@ -9,7 +9,7 @@
 import { apiClient, ApiError } from '@/lib/api-client';
 import { useCartStore } from '@/stores/cart.store';
 import { toast } from '@/stores/toast.store';
-import { CartDetailDto, CartSyncPayload, CartProductInput } from '@/server/cart/types';
+import { CartDetailDto, CartSyncPayload, CartProductInput } from '@/types/api.generated';
 
 export type TerrificAction = 'addProductToCart' | 'updateProductInCart' | 'removeProductFromCart';
 

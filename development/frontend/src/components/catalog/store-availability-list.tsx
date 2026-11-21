@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { StoreAvailabilityDto } from '@/server/products';
+import { StoreAvailabilityDto } from '@/types/api.generated';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, Loader2, MapPin, ShoppingBag, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';

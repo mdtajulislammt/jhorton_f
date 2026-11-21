@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCartStore } from '@/stores/cart.store';
 import { apiClient } from '@/lib/api-client';
-import { CartDetailDto, CartSyncPayload } from '@/server/cart/types';
+import { CartDetailDto, CartSyncPayload } from '@/types/api.generated';
 
 export const CART_QUERY_KEY = ['cart'] as const;
 

@@ -1,11 +1,6 @@
-import { Decimal } from '@prisma/client/runtime/library';
-
 export type PriceMode = 'OWTLET' | 'PER_STORE';
 
-/**
- * Formats a money value to USD two-decimal string format (e.g. "45.00")
- */
-export function formatMoney(amount: Decimal | number | string | null | undefined): string {
+export function formatMoney(amount: number | string | null | undefined): string {
   if (amount === null || amount === undefined) {
     return '0.00';
   }
@@ -21,26 +16,17 @@ export function formatMoney(amount: Decimal | number | string | null | undefined
   return numeric.toFixed(2);
 }
 
-/**
- * Determines price mode according to REQ-F-015 and ADR-011:
- * - OWTLET: Show product with standardized Owtlet price across all partner dispensaries.
- * - PER_STORE: Catalog product with store-specific retail pricing.
- */
 export function determinePriceMode(product: {
-  owtletPrice?: Decimal | number | string | null;
+  owtletPrice?: number | string | null;
 }): PriceMode {
   return product.owtletPrice !== null && product.owtletPrice !== undefined
     ? 'OWTLET'
     : 'PER_STORE';
 }
 
-/**
- * Resolves the unit price for a product at a specific dispensary:
- * unitPrice(product, inventory) = owtletPrice ?? inventory.price
- */
 export function resolveUnitPrice(
-  product: { owtletPrice?: Decimal | number | string | null },
-  inventory?: { price?: Decimal | number | string | null } | null
+  product: { owtletPrice?: number | string | null },
+  inventory?: { price?: number | string | null } | null
 ): string {
   if (product.owtletPrice !== null && product.owtletPrice !== undefined) {
     return formatMoney(product.owtletPrice);
@@ -51,15 +37,10 @@ export function resolveUnitPrice(
   return '0.00';
 }
 
-/**
- * Computes catalog pricing summary:
- * - When owtletPrice is present: priceMode = 'OWTLET', fromPrice = owtletPrice
- * - When per-store: priceMode = 'PER_STORE', fromPrice = min price of in-stock inventories
- */
 export function computeCatalogPricing(
-  product: { owtletPrice?: Decimal | number | string | null },
+  product: { owtletPrice?: number | string | null },
   inventories: Array<{
-    price?: Decimal | number | string | null;
+    price?: number | string | null;
     stockQty?: number;
   }> = []
 ): {
@@ -78,8 +59,6 @@ export function computeCatalogPricing(
     };
   }
 
-  // Per store mode: find lowest price
-  // Prioritize in-stock inventories first
   const inStockWithPrice = inventories.filter(
     (inv) => (inv.stockQty === undefined || inv.stockQty > 0) && inv.price !== null && inv.price !== undefined
   );
@@ -116,4 +95,3 @@ export function computeCatalogPricing(
     fromPrice: formatMoney(minPrice),
   };
 }
-

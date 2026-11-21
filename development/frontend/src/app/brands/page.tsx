@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { listActiveBrands } from '@/server/brands';
-import { prisma } from '@/server/db';
+import { serverFetch } from '@/lib/server-api';
+import { BrandSummaryDto } from '@/types/api.generated';
 import { StoreHeader } from '@/components/layout/store-header';
 import { StoreFooter } from '@/components/layout/store-footer';
 import { BrandGrid } from '@/components/modules/brands';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ShoppingBag } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Brand Storefronts & Partner Channels — Owtlet™',
@@ -19,7 +19,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 export default async function BrandsIndexPage() {
-  const brands = await listActiveBrands();
+  const result = await serverFetch<{ items: BrandSummaryDto[] }>('/brands');
+  const brands = result?.items ?? [];
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -73,4 +74,3 @@ export default async function BrandsIndexPage() {
     </div>
   );
 }
-

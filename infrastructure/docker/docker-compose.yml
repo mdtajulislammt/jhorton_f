@@ -43,6 +43,8 @@ services:
     container_name: owtlet_backend
     restart: unless-stopped
     profiles: ["prod"]
+    command: >
+      sh -c "npx prisma migrate deploy && node dist/main.js"
     env_file:
       - ../../.env
     environment:
@@ -73,17 +75,15 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-owtlet}:${POSTGRES_PASSWORD:-owtlet}@postgres:5432/${POSTGRES_DB:-owtlet}?schema=public
       NEXT_PUBLIC_BACKEND_URL: http://backend:4000
+      INTERNAL_BACKEND_URL: http://backend:4000
     expose:
       - "3000"
     depends_on:
-      postgres:
-        condition: service_healthy
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
